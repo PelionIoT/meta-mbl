@@ -16,7 +16,6 @@ The meta-mbl layer depends on:
 	branch: master
 
 
-
 Notes
 -------------------------
 

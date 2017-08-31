@@ -1,14 +1,55 @@
-SUMMARY = "Mbed Linux Basic Console Image"
+###############################################################################
+# mbed Linux 
+# Copyright (c) 2015 ARM Limited
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+###############################################################################
 
-IMAGE_FEATURES += "splash package-management debug-tweaks ssh-server-openssh hwcodecs tools-debug"
+###############################################################################
+# mbl-console-image.bb
+#   This file is the mbed linux OpenEmbedded recipe for building a minimal 
+#   uboot/kernel/filesystem image 
+###############################################################################
+SUMMARY = "Mbed Linux Basic Minimal Image"
+
+###############################################################################
+# IMAGE_INSTALL: Specify the packages installed in the distribution images
+#   packagegroup-core-boot        Essential packages to boot minimal sysmtem.
+#   CORE_IMAGE_EXTRA_INSTALL      Symbol conventionally defined in local.conf 
+#                                 to add extra packages.
+#
+# IMAGE_FEATURES: specify additional packages
+#   debug-tweaks                  
+#       Included in image so root has empty password.The extrausers class 
+#       in also used so EXTRA_USERS_PARAMS can specify the empty password. 
+###############################################################################
+IMAGE_INSTALL = "packagegroup-core-boot ${CORE_IMAGE_EXTRA_INSTALL}"
+IMAGE_LINGUAS = " "
+IMAGE_FEATURES += "debug-tweaks"
 
 LICENSE = "MIT"
 
-inherit core-image distro_features_check extrausers
+inherit core-image extrausers
 
-# let's make sure we have a good image..
-REQUIRED_DISTRO_FEATURES = "pam systemd"
+IMAGE_ROOTFS_SIZE ?= "8192"
+IMAGE_ROOTFS_EXTRA_SPACE_append = "${@bb.utils.contains("DISTRO_FEATURES", "systemd", " + 4096", "" ,d)}"
 
-EXTRA_USERS_PARAMS = "\
-useradd -p '' linaro; \
-"
+# Add a root account with empty password
+EXTRA_USERS_PARAMS = "useradd -p '' root;"
+
+# Build History: uncomment this stanza to enable build history with
+# installed package size information and image info. 
+INHERIT += "buildhistory"
+INHERIT += "image-buildinfo"
+BUILDHISTORY_COMMIT = "1"

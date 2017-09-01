@@ -1,14 +1,29 @@
 # Introduction to meta-mbl
 
-This is the (Unofficial) mbed Linux OpenEmbedded (OE) distribution layer for creating mbed linux IoT file system images.
+This is the (Unofficial) mbed Linux (MBL) OpenEmbedded (OE) distribution layer for creating mbed linux IoT file system images.
 
 The main components of the layer are: 
 - meta-mbl/conf/mbl.conf. This is the OE distribution configuration for creating an mbed linux distribution.
 - meta-mbl/recipes-core/images/mbl-console-image.bb. This is the OE recipe for creating a minimal image. 
 
 The current size information is as follows:
-- size of rootfs: ~12MB.
-- size of sdcard image: ~56MB.
+- size of bcm2835-bootfiles (uboot?): ~12MB
+- size of kernel Image: ~13MB
+- size of rootfs: ~12MB (approx 8MB files actually present).
+- size of sdcard image: ~56MB (system is ~33MB where boot partition is ~25MB (kernel+uboot) and rootfs partition is ~8MB).
+
+An indicative list installed packages is as follows:
+- base-files base-passwd busybox busybox-syslog busybox-udhcpc 
+- eudev
+- init-ifupdown initscripts-functions initscripts
+- kbd keymaps
+- libattr1 libblkid1 libc6 libkmod2 libuuid1 libz1
+- modutils-initscripts
+- netbase
+- packagegroup-core-boot
+- run-postinsts
+- shadow-base shadow-securetty shadow sysvinit-inittab sysvinit-pidof sysvinit
+- udev-cache update-alternatives-opkg update-rc.d util-linux-sulogin
 
 # Dependencies
 

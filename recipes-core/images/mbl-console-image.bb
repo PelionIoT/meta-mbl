@@ -1,6 +1,6 @@
 ###############################################################################
 # mbed Linux 
-# Copyright (c) 2015 ARM Limited
+# Copyright (c) 2017 ARM Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -48,8 +48,3 @@ IMAGE_ROOTFS_EXTRA_SPACE_append = "${@bb.utils.contains("DISTRO_FEATURES", "syst
 # Add a root account with empty password
 EXTRA_USERS_PARAMS = "useradd -p '' root;"
 
-# Build History: uncomment this stanza to enable build history with
-# installed package size information and image info. 
-INHERIT += "buildhistory"
-INHERIT += "image-buildinfo"
-BUILDHISTORY_COMMIT = "1"

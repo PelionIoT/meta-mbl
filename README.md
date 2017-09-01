@@ -6,24 +6,18 @@ The main components of the layer are:
 - meta-mbl/conf/mbl.conf. This is the OE distribution configuration for creating an mbed linux distribution.
 - meta-mbl/recipes-core/images/mbl-console-image.bb. This is the OE recipe for creating a minimal image. 
 
-The current size information is as follows:
+The image size information (without docker) is as follows:
 - size of bcm2835-bootfiles (uboot?): ~12MB
 - size of kernel Image: ~13MB
 - size of rootfs: ~12MB (approx 8MB files actually present).
 - size of sdcard image: ~56MB (system is ~33MB where boot partition is ~25MB (kernel+uboot) and rootfs partition is ~8MB).
 
+Including docker changes:
+- size of rootfs: ~166MB (due to including the docker package which requires meta-virtualization, meta-networking etc.).
+
 An indicative list installed packages is as follows:
-- base-files base-passwd busybox busybox-syslog busybox-udhcpc 
-- eudev
-- init-ifupdown initscripts-functions initscripts
-- kbd keymaps
-- libattr1 libblkid1 libc6 libkmod2 libuuid1 libz1
-- modutils-initscripts
-- netbase
-- packagegroup-core-boot
-- run-postinsts
-- shadow-base shadow-securetty shadow sysvinit-inittab sysvinit-pidof sysvinit
-- udev-cache update-alternatives-opkg update-rc.d util-linux-sulogin
+- The packages from packagegroup-core-boot. See Appendix 1 for a list.
+- The docker package. 
 
 # Dependencies
 
@@ -50,7 +44,7 @@ The following is a list of outstanding issues:
 		- bblayers.conf to include the meta-mbl.conf file be default?
 		- Shall I make a PR to the mbl-ci branch?
 - What header needs to be on our files? Currently a modified version of the mbedOS file header has been added.
-- Docker package needs to be added.
+
 
 # Instructions for Building Image
 
@@ -111,3 +105,19 @@ The github issue tracker (https://github.com/armmbed/meta-mbl/issues) is being u
 
 * Simon Hughes <simon.hughes@arm.com>
 * Marcus Shawcroft <marcus.shawcroft@arm.com>
+
+
+# Appendix 1: packagegroup-core-boot packages 
+
+These are the packages included in packagegroup-core-boot:
+- base-files base-passwd busybox busybox-syslog busybox-udhcpc 
+- eudev
+- init-ifupdown initscripts-functions initscripts
+- kbd keymaps
+- libattr1 libblkid1 libc6 libkmod2 libuuid1 libz1
+- modutils-initscripts
+- netbase
+- packagegroup-core-boot
+- run-postinsts
+- shadow-base shadow-securetty shadow sysvinit-inittab sysvinit-pidof sysvinit
+- udev-cache update-alternatives-opkg update-rc.d util-linux-sulogin

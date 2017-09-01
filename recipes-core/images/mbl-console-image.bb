@@ -24,17 +24,25 @@
 SUMMARY = "Mbed Linux Basic Minimal Image"
 
 ###############################################################################
-# IMAGE_INSTALL: Specify the packages installed in the distribution images
-#   packagegroup-core-boot        Essential packages to boot minimal sysmtem.
-#   CORE_IMAGE_EXTRA_INSTALL      Symbol conventionally defined in local.conf 
-#                                 to add extra packages.
+# IMAGE_INSTALL: 
+#   Specify the packages installed in the distribution images prior to
+#   inheriting from core-image to override the default behaviour. 
+#   
+#     packagegroup-core-boot        Essential packages to boot minimal sysmtem.
+#     packagegroup-mbl              mbed linux packages added for this image.
+#     CORE_IMAGE_EXTRA_INSTALL      Symbol conventionally defined in local.conf 
+#                                   to add extra packages.
 #
 # IMAGE_FEATURES: specify additional packages
 #   debug-tweaks                  
 #       Included in image so root has empty password.The extrausers class 
 #       in also used so EXTRA_USERS_PARAMS can specify the empty password. 
 ###############################################################################
-IMAGE_INSTALL = "packagegroup-core-boot ${CORE_IMAGE_EXTRA_INSTALL}"
+IMAGE_INSTALL = "\
+	packagegroup-core-boot \
+	packagegroup-mbl \
+	${CORE_IMAGE_EXTRA_INSTALL}"
+
 IMAGE_LINGUAS = " "
 IMAGE_FEATURES += "debug-tweaks"
 

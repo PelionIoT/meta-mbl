@@ -291,6 +291,7 @@ The github issue tracker (https://github.com/armmbed/meta-mbl/issues) is being u
 
 ### Maintainers
 
+* Jonathan Haigh <jonathan.haigh@arm.com>
 * Simon Hughes <simon.hughes@arm.com>
 * Marcus Shawcroft <marcus.shawcroft@arm.com>
 

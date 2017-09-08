@@ -350,7 +350,6 @@ The following is a list of outstanding issues:
 	- bblayers.conf to include the meta-mbl.conf file by default?
 	- Are PRs to be made to the mbl-ci branch?
 - What header needs to be on our files? Currently a modified version of the mbedOS file header has been added.
-- The configuration enable_uart=1 should appear at the end of the boot partition config.txt file so console trace is enabled by default.
 - dockerd should start automatically on boot.
 
 	

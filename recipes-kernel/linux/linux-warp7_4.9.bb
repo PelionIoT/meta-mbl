@@ -9,10 +9,15 @@ with additional patches to cover devices specific on WaRP7 board."
 DEPENDS += "lzop-native bc-native"
 
 SRCBRANCH = "mbl"
-SRCREV = "cf4651b6c80e6878807e0eff22d02d9d48471886"
+SRCREV = "57911eaae746e7fe6d6b5aeeb1e2ca32aab68b16"
 LOCALVERSION = "-${SRCBRANCH}-warp7"
 
-SRC_URI = "git://git@github.com/ARMmbed/mbl-linux.git;protocol=ssh;branch=${SRCBRANCH} \
-           file://defconfig"
+KBUILD_DEFCONFIG_imx7s-warp ?= "warp7_mbl_defconfig"
+
+SRC_URI = "git://git@github.com/ARMmbed/mbl-linux.git;protocol=ssh;branch=${SRCBRANCH}"
 
 COMPATIBLE_MACHINE = "(imx7s-warp)"
+
+do_configure () {
+        oe_runmake ${KBUILD_DEFCONFIG_imx7s-warp}
+}

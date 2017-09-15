@@ -27,7 +27,7 @@ do_preconfigure() {
 	kernel_conf_variable LOCALVERSION "\"${LOCALVERSION}\""
 	kernel_conf_variable LOCALVERSION_AUTO y
 
-	sed -e "${CONF_SED_SCRIPT}" < '${WORKDIR}/arch/arm/configs/${KBUILD_DEFCONFIG_imx7s-warp}' >> '${B}/.config'
+	sed -e "${CONF_SED_SCRIPT}" < '${S}/arch/arm/configs/${KBUILD_DEFCONFIG_imx7s-warp}' >> '${B}/.config'
 
 	if [ "${SCMVERSION}" = "y" ]; then
 		# Add GIT revision to the local version

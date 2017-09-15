@@ -1,0 +1,27 @@
+From 33f754df0d296d3a6981a459a3c59b0df8457641 Mon Sep 17 00:00:00 2001
+From: "Ying-Chun Liu (PaulLiu)" <paulliu@debian.org>
+Date: Fri, 15 Sep 2017 11:51:39 +0800
+Subject: [PATCH] warp7.h: Temporary use mmcboot instead of mmcbootsec until we
+ finish the OPTEE integration
+
+Signed-off-by: Ying-Chun Liu (PaulLiu) <paulliu@debian.org>
+---
+ include/configs/warp7.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/configs/warp7.h b/include/configs/warp7.h
+index 09f03f4b05..e69bf48f3d 100644
+--- a/include/configs/warp7.h
++++ b/include/configs/warp7.h
+@@ -96,7 +96,7 @@
+ 	   "mmc dev ${mmcdev};" \
+ 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
+ 		   "if run loadimage; then " \
+-			   "run mmcbootsec; " \
++			   "run mmcboot; " \
+ 		   "fi; " \
+ 	   "fi"
+ 
+-- 
+2.14.1
+

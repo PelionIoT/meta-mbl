@@ -3,7 +3,7 @@
 This is the mbed Linux OpenEmbedded (OE) distribution layer for creating mbed linux IoT file system images.
 mbed linux provides the software stack for a secure trusted execution environment for applications. This is 
 built using the following main components:
-- Uboot.
+- The bootloader chain (Broadcom bootloader and/or u-boot for example).
 - Optee (https://github.com/OP-TEE/optee_os).
 - Docker
 
@@ -85,23 +85,21 @@ if not then install the missing package e.g.
 
 Create a work space directory (e.g. mblws) and cd into it. Then initialise the workspace with repo init from mbl-manifest:
 
-	repo init -u https://github.com/armmbed/mbl-manifest.git -b mbl-ci -m pinned-manifest.xml
+	repo init -u https://github.com/armmbed/mbl-manifest.git -b master -m pinned-manifest.xml
 
 where: 
 
+- The -b option specifies the branch to check out.
 - The -m option specifies the manifest. The pinned-manifest.xml has specific revisions (git commit SHA ids) of
   the repositories to select a working set.
-- The -b option specifies the branch to check out.
 
-
-The mblws/.repo/manifests/pinned-manifest.xml needs to be edited to include the armmbed/meta-mbl line
-after the openembedded/openembedded-core line:
+The mblws/.repo/manifests/pinned-manifest.xml specifies revisions for OE layers used to build the project workspace. 
+Edit the armmbed/meta-mbl revision="4e0bea5..." to be the latest 
+commit ID for the armmbed/meta-mbl repo (see the line after the openembedded/openembedded-core line):
 
 	  <project name="openembedded/openembedded-core" path="layers/openembedded-core" remote="github" revision="598e5da5a2af2bd93ad890687dd32009e348fc85" upstream="master"/>
 	  <project name="armmbed/meta-mbl" path="layers/meta-mbl" remote="github" revision="4e0bea5faf8559db69e9da145c3bb5cfa4cf1015" upstream="master"/>
 	</manifest>
-
-Update the meta-mbl revision to be the latest commit ID for the armmbed/meta-mbl repo. 
 
 Next get repo to retrieve the git projects specified in the manifest:
 
@@ -120,16 +118,7 @@ Next, initialise the environment by sourcing the setup-environment script. Sourc
 
 	MACHINE=raspberrypi3 DISTRO=mbl . setup-environment
 
-This creates a build directory mblws/build-mbl. Edit the mblws/build-mbl/conf/bblayers.conf file so that 
-BBLAYERS includes the meta-mbl layer i.e.:
-
-	BBLAYERS = " \
-	  ${OEROOT}/layers/meta-mbl \
-	  ${BASELAYERS} \
-	  ${BSPLAYERS} \
-	  ${EXTRALAYERS} \
-	  ${OEROOT}/layers/openembedded-core/meta \
-	  "
+This creates a build directory mblws/build-mbl. 
 
 
 ### Step 4: Build the Image
@@ -337,15 +326,4 @@ The meta-mbl layer depends on:
 	layers: meta-oe
 	branch: master
 
-	
-# Appendix 2: Outstanding Issues
 
-The following is a list of outstanding issues:
-- We need to update the mbl-manifest repo: 
-	- pinned-manifest.xml to include the addition of the meta-mbl repo? 
-	- bblayers.conf to include the meta-mbl.conf file by default?
-	- Are PRs to be made to the mbl-ci branch?
-- What header needs to be on our files? Currently a modified version of the mbedOS file header has been added.
-- dockerd should start automatically on boot.
-
-	

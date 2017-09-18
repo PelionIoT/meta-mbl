@@ -1,0 +1,44 @@
+From f295a00e1d0416d5735be28b98164ce1a3d03f93 Mon Sep 17 00:00:00 2001
+From: Simon Hughes <simon.hughes@arm.com>
+Date: Thu, 14 Sep 2017 14:09:33 +0100
+Subject: [PATCH] Fix to start daemon
+
+This changes the sysvinit file:
+ 
+    meta-virtualization/recipes-containers/docker/files/docker.init
+
+used by the docker_git.bb recipe so that the docker v1.13.0 daemon 
+dockerd is started/stopped correctly i.e.
+- The program name is changed from docker to dockerd
+- The unsupported command line option -d is removed.
+
+Signed-off-by: Simon Hughes <simon.hughes@arm.com>
+---
+ recipes-containers/docker/files/docker.init | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/recipes-containers/docker/files/docker.init b/recipes-containers/docker/files/docker.init
+index 9c01c75..5a048fa 100644
+--- a/recipes-containers/docker/files/docker.init
++++ b/recipes-containers/docker/files/docker.init
+@@ -22,7 +22,7 @@
+ # Source function library.
+ . /etc/init.d/functions
+ 
+-prog="docker"
++prog="dockerd"
+ unshare=/usr/bin/unshare
+ exec="/usr/bin/$prog"
+ pidfile="/var/run/$prog.pid"
+@@ -39,7 +39,7 @@ start() {
+     if ! [ -f $pidfile ]; then
+         printf "Starting $prog:\t"
+         echo "\n$(date)\n" >> $logfile
+-        "$unshare" -m -- $exec -d $other_args &>> $logfile &
++        "$unshare" -m -- $exec $other_args &>> $logfile &
+         pid=$!
+         touch $lockfile
+         # wait up to 10 seconds for the pidfile to exist.  see
+-- 
+2.7.4
+

@@ -200,10 +200,6 @@ The board should boot to the login prompt. Use the following login credentials:
 - username: root
 - password: (emtpy, just type RETURN)
 
-At present, the docker daemon doesn't start automatically, so start the daemon as follows:
-
-	$ dockerd &
-	
 Check that the docker cli is working (independent of the ability to fetch images) by using:
 
 	docker info

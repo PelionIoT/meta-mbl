@@ -1,5 +1,5 @@
 
-DEPENDS += " u-boot-fslc u-boot-mkimage-native "
+DEPENDS += " u-boot-mkimage-native "
 
 SRCBRANCH="linaro-warp7"
 SRCREV="8e7cfe09dfc6d75f70716250422a5edc973de1ca"
@@ -24,7 +24,7 @@ EXTRA_OEMAKE = "PLATFORM=${OPTEEMACHINE} \
 OPTEE_ARCH_imx7s-warp = "arm32"
 
 do_uboot_image() {
-    uboot-mkimage -A arm -T firmware -C none -d ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.bin ${D}/lib/firmware/uTee.optee
+    uboot-mkimage -A arm -T optee -C none -d ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.bin ${D}/lib/firmware/uTee.optee
 }
 
-addtask uboot_image before do_build after do_deploy
+addtask uboot_image before do_deploy after do_install

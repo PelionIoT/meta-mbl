@@ -1,5 +1,5 @@
 SRCBRANCH = "linaro-warp7"
-SRCREV = "${SRCBRANCH}"
+SRCREV = "ce2a7353dbc47bef59db647614ad52a83247c8b6"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 

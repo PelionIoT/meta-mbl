@@ -4,7 +4,9 @@ SECTION = "base"
 LICENSE = "Proprietary"
 
 SRCBRANCH = "master"
-SRCREV = "${SRCBRANCH}"
+SRCREV_linuxfirmware = "a61ac5cf8374edbfe692d12f805a1b194f7fead2"
+SRCREV_recalboxbuildroot = "f648e4b54eb5e4be593746d6cc51375b22a7efbd"
+SRCREV_miscfirmware = "487c7ee143ba6e8a25cf1883938ff91c9e5d6f19"
 
 BB_STRICT_CHECKSUM = "0"
 SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git;branch=${SRCBRANCH};destsuffix=${S}/git1;name=linuxfirmware \

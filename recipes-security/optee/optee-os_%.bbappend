@@ -2,7 +2,7 @@
 DEPENDS += " u-boot-mkimage-native "
 
 SRCBRANCH="linaro-warp7"
-SRCREV="${SRCBRANCH}"
+SRCREV="8e7cfe09dfc6d75f70716250422a5edc973de1ca"
 SRC_URI="git://git@github.com/ARMmbed/mbl-optee_os.git;protocol=ssh;branch=${SRCBRANCH} \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "

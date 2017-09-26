@@ -9,7 +9,7 @@ with additional patches to cover devices specific on WaRP7 board."
 DEPENDS += "lzop-native bc-native"
 
 SRCBRANCH = "linaro"
-SRCREV = "${SRCBRANCH}"
+SRCREV = "cb0a3fda3ca591f60b40ac68e21217af44d7f19a"
 LOCALVERSION = "-${SRCBRANCH}-warp7"
 
 KBUILD_DEFCONFIG_imx7s-warp ?= "warp7_mbl_defconfig"

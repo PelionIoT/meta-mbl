@@ -56,3 +56,6 @@ IMAGE_ROOTFS_EXTRA_SPACE_append = "${@bb.utils.contains("DISTRO_FEATURES", "syst
 # Add a root account with empty password
 EXTRA_USERS_PARAMS = "useradd -p '' root;"
 
+
+# Select the working u-boot 2017.05 release rather than the 2017.07, if available.
+PREFERRED_VERSION_u-boot = "2017.05"

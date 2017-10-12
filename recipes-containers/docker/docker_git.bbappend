@@ -25,7 +25,7 @@
 #         script correctly.  
 ###############################################################################
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
-SRC_URI += "file://0001-Fix-to-start-daemon.patch;striplevel=4;patchdir=${WORKDIR}"
+SRC_URI += "file://0001-IOTMBL-7-docker.init-commit-to-create-patch-for-dock.patch;striplevel=4;patchdir=${WORKDIR}"
 OS_DEFAULT_INITSCRIPT_PARAMS := "defaults" 
 
 

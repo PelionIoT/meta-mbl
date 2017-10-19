@@ -1,8 +1,7 @@
-From cee3e32d68514ac29c71cda32349652128069cef Mon Sep 17 00:00:00 2001
+From 8a81fd3f02f4b3062ea684a2a9cd20a7c9060721 Mon Sep 17 00:00:00 2001
 From: Simon Hughes <simon.hughes@arm.com>
-Date: Thu, 12 Oct 2017 14:09:51 +0100
-Subject: [PATCH] IOTMBL-7: docker.init: commit to create patch for dockerd
- startup fix.
+Date: Thu, 19 Oct 2017 15:11:14 +0100
+Subject: [PATCH] IOTMBL-7-docker.init-commit-to-create-patch-for-docker.
 
 Signed-off-by: Simon Hughes <simon.hughes@arm.com>
 ---
@@ -10,7 +9,7 @@ Signed-off-by: Simon Hughes <simon.hughes@arm.com>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/recipes-containers/docker/files/docker.init b/recipes-containers/docker/files/docker.init
-index 2e8eb9e..1a1ec80 100644
+index 2e8eb9e..d41bc8a 100644
 --- a/recipes-containers/docker/files/docker.init
 +++ b/recipes-containers/docker/files/docker.init
 @@ -22,7 +22,7 @@
@@ -27,7 +26,7 @@ index 2e8eb9e..1a1ec80 100644
          printf "Starting $prog:\t"
          echo -e "\n$(date)\n" >> $logfile
 -        "$unshare" -m -- $exec daemon $other_args &>> $logfile &
-+        "$unshare" -m -- $exec $other_args &>> $logfile &
++        "$unshare" -m -- $exec $other_args >> $logfile 2>&1 &
          pid=$!
          touch $lockfile
          # wait up to 10 seconds for the pidfile to exist.  see

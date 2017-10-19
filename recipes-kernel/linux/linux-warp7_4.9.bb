@@ -35,3 +35,13 @@ do_preconfigure() {
 		printf "%s%s" +g $head > ${S}/.scmversion
 	fi
 }
+
+do_install_append() {
+        install -d ${D}/boot
+        make -C ${S} O=${B} ARCH=$ARCH dtbs || true
+        install -m 0644 ${B}/arch/$ARCH/boot/dts/*.dtb ${D}/boot || true
+}
+
+ALLOW_EMPTY_kernel-devicetree = "1"
+FILES_kernel-devicetree += "/boot/*.dtb"
+RDEPENDS_kernel-image_append = " kernel-devicetree"

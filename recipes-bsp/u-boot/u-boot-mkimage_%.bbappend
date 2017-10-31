@@ -1,3 +1,3 @@
 SRCBRANCH = "linaro-warp7"
-SRCREV = "0a35577ba0a2d23a8c8f088dbcdbedb3490a47e9"
+SRCREV = "9643d8cd1cfde007058e373f027a08263f47cd0d"
 SRC_URI = "git://git@github.com/ARMmbed/mbl-u-boot.git;protocol=ssh;branch=${SRCBRANCH}"

@@ -1,7 +1,7 @@
 
 DEPENDS += " u-boot-mkimage-native "
 
-SRCREV="8e7cfe09dfc6d75f70716250422a5edc973de1ca"
+SRCREV="1730946791678320e4d0aaa0f11ee9128d47e420"
 SRC_URI="git://git@github.com/ARMmbed/mbl-optee_os.git;protocol=ssh;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "

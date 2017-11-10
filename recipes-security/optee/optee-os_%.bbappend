@@ -17,7 +17,7 @@ EXTRA_OEMAKE = "PLATFORM=${OPTEEMACHINE} \
                 LIBGCC_LOCATE_CFLAGS=--sysroot=${STAGING_DIR_HOST} \
                 CFG_PAGEABLE_ADDR=0 CFG_NS_ENTRY_ADDR=0x80800000 \
                 CFG_DT_ADDR=0x83000000 CFG_DDR_SIZE=0x20000000 \
-                CFG_DT=y CFG_TEE_CORE_LOG_LEVEL=4 \
+                CFG_DT=y CFG_TEE_CORE_LOG_LEVEL=1 \
         "
 
 OPTEE_ARCH_imx7s-warp = "arm32"

@@ -1,0 +1,42 @@
+From c6a3e87ff9e9b543c218396a576950780a8eef5f Mon Sep 17 00:00:00 2001
+From: Simon Hughes <simon.hughes@arm.com>
+Date: Tue, 14 Nov 2017 17:32:32 +0000
+Subject: [PATCH] IOTMBL58: bootmisc.sh: fix issue with setting system date
+ time
+
+The following provides more information on this commit:
+- The upgrade of busybox from 1.24.1 -> 1.27.2
+  (openembedded-core commit 55740077a1f3bed5956fe02ef17ba1d99176ea24)
+  caused the setting of the system date-time from the /etc/timestamp
+  file to fail. This is because busybox treats the comparison arguments
+  in the line:
+      if [ ${TIMESTAMP} -gt $SYSTEMDATE ]; then
+  to be integers, and TIMESTAMP is out of range. This is fixed by
+  treating the comparison arguments as strings and using the '>'
+  operator instead.
+
+Signed-off-by: Simon Hughes <simon.hughes@arm.com>
+---
+ meta/recipes-core/initscripts/initscripts-1.0/bootmisc.sh | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/meta/recipes-core/initscripts/initscripts-1.0/bootmisc.sh b/meta/recipes-core/initscripts/initscripts-1.0/bootmisc.sh
+index df553bc..ec12d53 100755
+--- a/meta/recipes-core/initscripts/initscripts-1.0/bootmisc.sh
++++ b/meta/recipes-core/initscripts/initscripts-1.0/bootmisc.sh
+@@ -66,9 +66,10 @@ fi
+ test -x /etc/init.d/hwclock.sh && /etc/init.d/hwclock.sh start
+ if test -e /etc/timestamp
+ then
+-	SYSTEMDATE=`date -u +%4Y%2m%2d%2H%2M%2S`
++	SYSTEMDATE=`date -u +%4Y%2m%2d%2H`
+ 	read TIMESTAMP < /etc/timestamp
+-	if [ ${TIMESTAMP} -gt $SYSTEMDATE ]; then
++	TIMESTAMP_CMP=`echo $TIMESTAMP | rev | cut -c 5- | rev`
++	if [ ${TIMESTAMP_CMP} -gt $SYSTEMDATE ]; then
+ 		# format the timestamp as date expects it (2m2d2H2M4Y.2S)
+ 		TS_YR=${TIMESTAMP%??????????}
+ 		TS_SEC=${TIMESTAMP#????????????}
+-- 
+2.7.4
+

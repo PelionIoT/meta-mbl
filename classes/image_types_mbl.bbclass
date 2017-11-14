@@ -4,12 +4,16 @@ _generate_boot_image_append() {
     if [ -f ${WORKDIR}/rootfs/lib/firmware/uTee.optee ]; then
         mcopy -i ${WORKDIR}/boot.img -s ${WORKDIR}/rootfs/lib/firmware/uTee.optee ::/uTee.optee
     fi
+    if [ -f ${WORKDIR}/rootfs/boot/boot.scr ]; then
+        mcopy -i ${WORKDIR}/boot.img -s ${WORKDIR}/rootfs/boot/boot.scr ::/boot.scr
+    fi
+    mkfs.ext3 ${WORKDIR}/boot.img -d ${WORKDIR}/rootfs/boot/bootscr
 }
 
 generate_imx_sdcard () {
 	# Create partition table
 	parted -s ${SDCARD} mklabel msdos
-	#parted -s ${SDCARD} unit KiB mkpart primary fat32 ${IMAGE_ROOTFS_ALIGNMENT} $(expr ${IMAGE_ROOTFS_ALIGNMENT} \+ ${BOOT_SPACE_ALIGNED})
+	parted -s ${SDCARD} unit KiB mkpart primary ${IMAGE_ROOTFS_ALIGNMENT} $(expr ${IMAGE_ROOTFS_ALIGNMENT} \+ ${BOOT_SPACE_ALIGNED})
 	parted -s ${SDCARD} unit KiB mkpart primary $(expr  ${IMAGE_ROOTFS_ALIGNMENT} \+ ${BOOT_SPACE_ALIGNED}) $(expr ${IMAGE_ROOTFS_ALIGNMENT} \+ ${BOOT_SPACE_ALIGNED} \+ $ROOTFS_SIZE)
 	parted -s ${SDCARD} unit KiB mkpart primary $(expr  ${IMAGE_ROOTFS_ALIGNMENT} \+ ${BOOT_SPACE_ALIGNED} \+ $ROOTFS_SIZE) $(expr ${IMAGE_ROOTFS_ALIGNMENT} \+ ${BOOT_SPACE_ALIGNED} \+ $ROOTFS_SIZE \+ $ROOTFS_SIZE)
 	parted -s ${SDCARD} unit KiB mkpart primary $(expr  ${IMAGE_ROOTFS_ALIGNMENT} \+ ${BOOT_SPACE_ALIGNED} \+ $ROOTFS_SIZE \+ $ROOTFS_SIZE) $(expr ${IMAGE_ROOTFS_ALIGNMENT} \+ ${BOOT_SPACE_ALIGNED} \+ $ROOTFS_SIZE \+ $ROOTFS_SIZE \+ $ROOTFS_SIZE)

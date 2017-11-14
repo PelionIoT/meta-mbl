@@ -1,0 +1,2 @@
+setenv mmcpart 2
+setenv uuidpart 0:2

@@ -40,6 +40,7 @@ SUMMARY = "Mbed Linux Basic Minimal Image"
 ###############################################################################
 IMAGE_INSTALL = "\
 	packagegroup-core-boot \
+	packagegroup-base \
 	packagegroup-mbl \
 	${CORE_IMAGE_EXTRA_INSTALL}"
 

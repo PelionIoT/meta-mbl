@@ -33,5 +33,6 @@ IMAGE_FEATURES += " \
 	tools-sdk \
 	tools-debug \
 	tools-testapps \
+	${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'optee-test', '', d)} \
 	"
 IMAGE_INSTALL += "kernel-devsrc"

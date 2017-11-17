@@ -16,4 +16,6 @@ RDEPENDS_packagegroup-mbl = "\
     docker \
     iptables \
     kernel-modules \
+    optee-os \
+    ${@bb.utils.contains('MACHINE_ARCH', 'imx7s-warp', 'optee-os', '', d)} \
     "

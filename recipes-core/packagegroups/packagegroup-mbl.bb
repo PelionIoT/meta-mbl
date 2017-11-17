@@ -10,11 +10,16 @@ inherit packagegroup
 #      - iptables. Required by docker for building iptables DOCKER-ISOLATION 
 #        and DOCKER chains for the FORWARD table.
 #      - kernel-modules. Required by iptables related modules (e.g. netfilter
-#        connection tracking. 
+#        connection tracking.
+#      - optee-os. If the machine supports optee include the os.
+#      - optee-client. If the machine supports optee include the client.
 ###############################################################################
 RDEPENDS_packagegroup-mbl = "\
     docker \
     iptables \
     kernel-modules \
     rng-tools \
+    ${@bb.utils.contains("MACHINE", "imx7s-warp", "optee-os ", "", d)} \
+    ${@bb.utils.contains("MACHINE", "imx7s-warp", "optee-client ", "", d)} \
     "
+

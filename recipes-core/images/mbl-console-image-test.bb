@@ -33,5 +33,6 @@ IMAGE_FEATURES += " \
 	tools-sdk \
 	tools-debug \
 	tools-testapps \
+	optee-test \
 	"
 IMAGE_INSTALL += "kernel-devsrc"

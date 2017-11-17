@@ -34,4 +34,6 @@ IMAGE_FEATURES += " \
 	tools-debug \
 	tools-testapps \
 	"
-IMAGE_INSTALL += "kernel-devsrc"
+IMAGE_INSTALL += " \
+	packagegroup-mbl-test \
+	"

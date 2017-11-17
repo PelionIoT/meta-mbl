@@ -27,3 +27,5 @@ do_install() {
 
 ALLOW_EMPTY_${PN} = "1"
 FILES_${PN} = "${base_libdir}/firmware/brcm/brcmfmac43430* ${base_libdir}/firmware/BCM43430A1.hcd"
+
+COMPATIBLE_MACHINE = "(imx7s-warp)"

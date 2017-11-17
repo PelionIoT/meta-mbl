@@ -14,7 +14,7 @@ git://github.com/recalbox/recalbox-buildroot.git;protocol=https;branch=${SRCBRAN
 git://github.com/OpenELEC/misc-firmware.git;protocol=https;branch=${SRCBRANCH};destsuffix=${S}/git3;name=miscfirmware "
 LIC_FILES_CHKSUM = "file://git1/LICENCE.broadcom_bcm43xx;md5=3160c14df7228891b868060e1951dfbc \
                     file://git2/COPYING;md5=e4edbc78b8892db416b6a07e0d97309a \
-		    file://git3/GPL-3;md5=f27defe1e96c2e1ecd4e0c9be8967949 "
+                    file://git3/GPL-3;md5=f27defe1e96c2e1ecd4e0c9be8967949 "
 
 do_install() {
     install -d ${D}${base_libdir}/firmware

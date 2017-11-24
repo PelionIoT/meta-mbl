@@ -17,4 +17,5 @@ RDEPENDS_packagegroup-mbl = "\
     iptables \
     kernel-modules \
     optee-os \
+    optee-client \
     "

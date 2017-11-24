@@ -1,4 +1,5 @@
 inherit image_types_fsl
+inherit image_sign_mbl
 
 _generate_boot_image_append() {
     if [ -f ${WORKDIR}/rootfs/lib/firmware/uTee.optee ]; then
@@ -30,7 +31,11 @@ generate_imx_sdcard () {
 			dd if=${DEPLOY_DIR_IMAGE}/${SPL_BINARY} of=${SDCARD} conv=notrunc seek=2 bs=512
 			dd if=${DEPLOY_DIR_IMAGE}/u-boot-${MACHINE}.${UBOOT_SUFFIX_SDCARD} of=${SDCARD} conv=notrunc seek=69 bs=1K
 		else
-			dd if=${DEPLOY_DIR_IMAGE}/u-boot-${MACHINE}.${UBOOT_SUFFIX_SDCARD} of=${SDCARD} conv=notrunc seek=2 bs=512
+			if [ -e ${DEPLOY_DIR_IMAGE}/${UBOOT_IMX}-signed ]; then
+				dd if=${DEPLOY_DIR_IMAGE}/${UBOOT_IMX}-signed of=${SDCARD} conv=notrunc seek=2 bs=512
+			else
+				dd if=${DEPLOY_DIR_IMAGE}/u-boot-${MACHINE}.${UBOOT_SUFFIX_SDCARD} of=${SDCARD} conv=notrunc seek=2 bs=512
+			fi
 		fi
 		;;
 		barebox)

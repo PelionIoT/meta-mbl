@@ -21,4 +21,5 @@ RDEPENDS_packagegroup-mbl = "\
 
 RDEPENDS_packagegroup-mbl_imx7s-warp = "\
     optee-os \
+    optee-client \
     "

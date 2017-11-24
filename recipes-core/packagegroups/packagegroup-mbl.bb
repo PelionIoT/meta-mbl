@@ -18,4 +18,5 @@ RDEPENDS_packagegroup-mbl = "\
     kernel-modules \
     optee-os \
     ${@bb.utils.contains('MACHINE_ARCH', 'imx7s-warp', 'optee-os', '', d)} \
+    ${@bb.utils.contains('MACHINE_ARCH', 'imx7s-warp', 'optee-client', '', d)} \
     "

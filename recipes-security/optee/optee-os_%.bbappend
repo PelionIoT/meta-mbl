@@ -1,5 +1,5 @@
 
-DEPENDS += " u-boot-mkimage-native "
+DEPENDS += "u-boot-mkimage-native u-boot imx7-cst-native warp7-csf-native warp7-keys-native "
 
 SRCREV="b207787cd6055f78e15a05eb8c43fbc88910087f"
 SRC_URI="git://git@github.com/ARMmbed/mbl-optee_os.git;protocol=ssh;nobranch=1 \
@@ -22,8 +22,21 @@ EXTRA_OEMAKE = "PLATFORM=${OPTEEMACHINE} \
 
 OPTEE_ARCH_imx7s-warp = "arm32"
 
+inherit image_sign_mbl
+OPTEE="uTee.optee"
+OPTEE_IMX="uTee.optee.imx"
+OPTEE_CSF="optee_sign.csf"
+OPTEE_ADDR="CONFIG_OPTEE_LOAD_ADDR"
+BOARDNAME="warp7"
+UBOOT_WARP_CFG="board/warp7/imximage.cfg.cfgtmp"
+
+_generate_signed_optee_image() {
+    image_sign_mbl_binary ${D}/lib/firmware ${BOARDNAME} ${OPTEE} ${OPTEE_IMX} ${OPTEE_ADDR} ${OPTEE_CSF} imximage.cfg.cfgtmp
+}
+
 do_uboot_image() {
     uboot-mkimage -A arm -T optee -C none -d ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.bin ${D}/lib/firmware/uTee.optee
+    _generate_signed_optee_image
 }
 
 addtask uboot_image before do_deploy after do_install

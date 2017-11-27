@@ -19,6 +19,6 @@ do_install_append() {
     cp -rfv git3/firmware/brcm/BCM43430A1.hcd ${D}${base_libdir}/firmware
 }
 
-FILES_${PN}-brcm += "${base_libdir}/firmware/brcm/brcmfmac43430* ${base_libdir}/firmware/BCM43430A1.hcd"
+FILES_${PN} += "${base_libdir}/firmware/brcm/brcmfmac43430* ${base_libdir}/firmware/BCM43430A1.hcd"
 
 COMPATIBLE_MACHINE = "(imx7s-warp)"

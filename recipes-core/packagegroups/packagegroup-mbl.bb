@@ -16,4 +16,5 @@ RDEPENDS_packagegroup-mbl = "\
     docker \
     iptables \
     kernel-modules \
+    rng-tools \
     "

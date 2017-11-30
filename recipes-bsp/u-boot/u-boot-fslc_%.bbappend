@@ -1,5 +1,5 @@
 inherit image_sign_mbl
-SRCREV = "9d0cacf402425e29a316b09610be2debbf38dc6c"
+SRCREV = "099f462ab03bf5908045789c4824dcd563b91a3b"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 

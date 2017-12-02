@@ -9,6 +9,8 @@ SRC_URI = "git://git@github.com/ARMmbed/mbl-u-boot.git;protocol=ssh;nobranch=1"
 
 UBOOT_CONFIG[sd] = "warp7_secure_optee_defconfig,sdcard"
 
+RRECOMMENDS_${PN}_append_imx7s-warp += "warp7-u-boot-scr"
+
 do_compile_append () {
 	install -d ${UBOOT_SHARED_DATA}
 	cp ${WORKDIR}/build/warp7_secure_optee_defconfig/${UBOOT_CFG} ${UBOOT_SHARED_DATA}

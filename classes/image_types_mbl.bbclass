@@ -1,6 +1,8 @@
 inherit image_types_fsl
 inherit image_sign_mbl
 
+IMAGE_INSTALL_append_imx7s-warp += "warp7-u-boot-scr"
+
 _generate_boot_image_append() {
     if [ -f ${WORKDIR}/rootfs/lib/firmware/uTee.optee ]; then
         mcopy -i ${WORKDIR}/boot.img -s ${WORKDIR}/rootfs/lib/firmware/uTee.optee ::/uTee.optee

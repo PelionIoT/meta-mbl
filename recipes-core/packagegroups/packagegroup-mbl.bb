@@ -19,7 +19,7 @@ RDEPENDS_packagegroup-mbl = "\
     iptables \
     kernel-modules \
     rng-tools \
-    ${@bb.utils.contains("MACHINE", "imx7s-warp", "optee-os ", "", d)} \
-    ${@bb.utils.contains("MACHINE", "imx7s-warp", "optee-client ", "", d)} \
+    ${@bb.utils.contains_any("MACHINE", "imx7s-warp imx7s-warp-mbl", "optee-os ", "", d)} \
+    ${@bb.utils.contains_any("MACHINE", "imx7s-warp imx7s-warp-mbl", "optee-client ", "", d)} \
     "
 

@@ -12,6 +12,6 @@ inherit packagegroup
 ###############################################################################
 RDEPENDS_packagegroup-mbl-test += "\
     kernel-devsrc \
-    ${@bb.utils.contains("MACHINE", "imx7s-warp", "optee-test", "", d)} \
+    ${@bb.utils.contains_any("MACHINE", "imx7s-warp imx7s-warp-mbl", "optee-test ", "", d)} \
     "
 

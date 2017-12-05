@@ -12,12 +12,12 @@ SRCBRANCH = "linaro"
 SRCREV = "5b6271b196834b7868784c3d0dcabd313847337f"
 LOCALVERSION = "-${SRCBRANCH}-warp7"
 
-KBUILD_DEFCONFIG_imx7s-warp ?= "warp7_mbl_defconfig"
+KBUILD_DEFCONFIG_imx7s-warp-mbl ?= "warp7_mbl_defconfig"
 
 SRC_URI = "git://git@github.com/ARMmbed/mbl-linux.git;protocol=ssh;branch=${SRCBRANCH} \
            file://defconfig"
 
-COMPATIBLE_MACHINE = "(imx7s-warp)"
+COMPATIBLE_MACHINE = "(imx7s-warp|imx7s-warp-mbl)"
 
 do_preconfigure() {
 	mkdir -p ${B}
@@ -27,7 +27,7 @@ do_preconfigure() {
 	kernel_conf_variable LOCALVERSION "\"${LOCALVERSION}\""
 	kernel_conf_variable LOCALVERSION_AUTO y
 
-	sed -e "${CONF_SED_SCRIPT}" < '${S}/arch/arm/configs/${KBUILD_DEFCONFIG_imx7s-warp}' >> '${B}/.config'
+	sed -e "${CONF_SED_SCRIPT}" < '${S}/arch/arm/configs/${KBUILD_DEFCONFIG_imx7s-warp-mbl}' >> '${B}/.config'
 
 	if [ "${SCMVERSION}" = "y" ]; then
 		# Add GIT revision to the local version

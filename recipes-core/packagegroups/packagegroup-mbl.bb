@@ -22,4 +22,3 @@ RDEPENDS_packagegroup-mbl = "\
     ${@bb.utils.contains_any("MACHINE", "imx7s-warp imx7s-warp-mbl", "optee-os ", "", d)} \
     ${@bb.utils.contains_any("MACHINE", "imx7s-warp imx7s-warp-mbl", "optee-client ", "", d)} \
     "
-

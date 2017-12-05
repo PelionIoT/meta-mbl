@@ -20,7 +20,7 @@ EXTRA_OEMAKE = "PLATFORM=${OPTEEMACHINE} \
                 CFG_DT=y CFG_TEE_CORE_LOG_LEVEL=1 \
         "
 
-OPTEE_ARCH_imx7s-warp = "arm32"
+OPTEE_ARCH_imx7s-warp-mbl = "arm32"
 
 do_uboot_image() {
     uboot-mkimage -A arm -T optee -C none -d ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.bin ${D}/lib/firmware/uTee.optee

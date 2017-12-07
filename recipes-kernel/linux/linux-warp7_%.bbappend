@@ -1,12 +1,11 @@
 # Copyright (C) 2016 NXP Semiconductors
 # Released under the MIT license (see COPYING.MIT for the terms)
 
-SRCBRANCH = "linaro"
-SRCREV = "5b6271b196834b7868784c3d0dcabd313847337f"
+SRCREV = "39dd955086186f08693cb85f27e43711b9a017d1"
 
 KBUILD_DEFCONFIG_imx7s-warp-mbl ?= "warp7_mbl_defconfig"
 
-SRC_URI = "git://git@github.com/ARMmbed/mbl-linux.git;protocol=ssh;branch=${SRCBRANCH}"
+SRC_URI = "git://git@github.com/ARMmbed/mbl-linux.git;protocol=ssh;nobranch=1"
 
 do_preconfigure() {
 	mkdir -p ${B}

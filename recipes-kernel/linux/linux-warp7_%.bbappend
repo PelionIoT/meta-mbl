@@ -3,12 +3,11 @@
 
 DEPENDS += "u-boot-mkimage-native u-boot imx7-cst-native warp7-csf-native warp7-keys-native "
 
-SRCBRANCH = "linaro"
-SRCREV = "5b6271b196834b7868784c3d0dcabd313847337f"
+SRCREV = "5db494e98fb768a8bb5a93ec3fa71b1a48bda7c5"
 
 KBUILD_DEFCONFIG_imx7s-warp ?= "warp7_mbl_defconfig"
 
-SRC_URI = "git://git@github.com/ARMmbed/mbl-linux.git;protocol=ssh;branch=${SRCBRANCH}"
+SRC_URI = "git://git@github.com/ARMmbed/mbl-linux.git;protocol=ssh;nobranch=1"
 
 do_preconfigure() {
 	mkdir -p ${B}

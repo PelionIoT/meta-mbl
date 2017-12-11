@@ -49,9 +49,7 @@ _generate_signed_optee_image() {
     image_sign_mbl_binary ${D}/lib/firmware ${BOARDNAME} ${OPTEE} ${OPTEE_IMX} ${OPTEE_ADDR} ${OPTEE_CSF} imximage.cfg.cfgtmp
 }
 
-do_uboot_image() {
+do_install_append() {
     uboot-mkimage -A arm -T optee -C none -d ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.bin ${D}/lib/firmware/uTee.optee
     _generate_signed_optee_image
 }
-
-addtask uboot_image before do_deploy after do_install

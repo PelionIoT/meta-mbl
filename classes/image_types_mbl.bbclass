@@ -3,14 +3,22 @@ inherit image_sign_mbl
 
 IMAGE_INSTALL_append_imx7s-warp += "warp7-u-boot-scr"
 
-_generate_boot_image_append() {
-    if [ -f ${WORKDIR}/rootfs/lib/firmware/uTee.optee ]; then
-        mcopy -i ${WORKDIR}/boot.img -s ${WORKDIR}/rootfs/lib/firmware/uTee.optee ::/uTee.optee
-    fi
-    if [ -f ${WORKDIR}/rootfs/boot/boot.scr ]; then
-        mcopy -i ${WORKDIR}/boot.img -s ${WORKDIR}/rootfs/boot/boot.scr ::/boot.scr
-    fi
-    mkfs.ext3 ${WORKDIR}/boot.img -d ${WORKDIR}/rootfs/boot/bootscr
+_generate_boot_image() {
+	local boot_part=$1
+	# Create boot partition image
+	BOOT_BLOCKS=$(LC_ALL=C parted -s ${SDCARD} unit b print \
+		| awk "/ $boot_part / { print substr(\$4, 1, length(\$4 -1)) / 1024 }")
+	# mkdosfs will sometimes use FAT16 when it is not appropriate,
+	# resulting in a boot failure from SYSLINUX. Use FAT32 for
+	# images larger than 512MB, otherwise let mkdosfs decide.
+	if [ $(expr $BOOT_BLOCKS / 1024) -gt 512 ]; then
+	        FATSIZE="-F 32"
+	fi
+	rm -f ${WORKDIR}/boot.img
+	# Create the image by BOOT_BLOCKS
+	mkfs.vfat -n "${BOOTDD_VOLUME_ID}" -S 512 ${FATSIZE} -C ${WORKDIR}/boot.img $BOOT_BLOCKS
+	# make it as ext3
+	mkfs.ext3 ${WORKDIR}/boot.img -d ${WORKDIR}/rootfs/boot/bootscr
 }
 
 generate_imx_sdcard () {

@@ -3,7 +3,7 @@
 
 DEPENDS += "u-boot-mkimage-native u-boot imx7-cst-native warp7-csf-native warp7-keys-native "
 
-SRCREV = "5db494e98fb768a8bb5a93ec3fa71b1a48bda7c5"
+SRCREV = "39dd955086186f08693cb85f27e43711b9a017d1"
 
 KBUILD_DEFCONFIG_imx7s-warp ?= "warp7_mbl_defconfig"
 

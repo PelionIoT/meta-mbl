@@ -3,8 +3,7 @@ DESCRIPTION = "boot.scr Freescale IMX WaRP7"
 SECTION = "base"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
-DEPENDS += "u-boot-mkimage-native imx7-cst-native warp7-csf-native warp7-keys-native "
-RECOMMENDS_imx7s-warp += "u-boot-fslc"
+DEPENDS += "u-boot-fslc u-boot-mkimage-native imx7-cst-native warp7-csf-native warp7-keys-native "
 
 PACKAGE_ARCH = "all"
 

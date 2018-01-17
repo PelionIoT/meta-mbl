@@ -5,7 +5,8 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 DEPENDS += "u-boot-mkimage-native imx7-cst-native warp7-csf-native warp7-keys-native "
 
-SRC_URI = "git://git@github.com/ARMmbed/mbl-u-boot.git;protocol=ssh;nobranch=1"
+SRC_URI = "git://git@github.com/ARMmbed/mbl-u-boot.git;protocol=ssh;nobranch=1 \
+file://warp7_secure_optee_defconfig.patch "
 
 UBOOT_CONFIG[sd] = "warp7_secure_optee_defconfig,sdcard"
 PARALLEL_MAKE = ""

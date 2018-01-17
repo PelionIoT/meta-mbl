@@ -1,14 +1,25 @@
 inherit image_sign_mbl
-SRCREV = "d332b3e3c0d6f8265a3020bdff5cf64c06a027dc"
+SRCREV = "a17a1c5f5885130eca07e546eb39573c7a1fed35"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 DEPENDS += "u-boot-mkimage-native imx7-cst-native warp7-csf-native warp7-keys-native "
 
-SRC_URI = "git://git@github.com/ARMmbed/mbl-u-boot.git;protocol=ssh;nobranch=1"
+SRC_URI = "git://git@github.com/ARMmbed/mbl-u-boot.git;protocol=ssh;nobranch=1 \
+file://warp7_secure_optee_defconfig.txt "
 
 UBOOT_CONFIG[sd] = "warp7_secure_optee_defconfig,sdcard"
 PARALLEL_MAKE = ""
+
+export MBL_WARP7_UART
+
+do_patch () {
+	cd ${S}
+
+	if [ "$MBL_WARP7_UART" -eq "6" ]; then
+		patch -p1 < ${WORKDIR}/warp7_secure_optee_defconfig.txt
+	fi
+}
 
 do_compile_append () {
 	install -d ${UBOOT_SHARED_DATA}

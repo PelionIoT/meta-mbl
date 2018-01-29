@@ -1,7 +1,7 @@
 
 DEPENDS += "u-boot-mkimage-native u-boot imx7-cst-native warp7-csf-native warp7-keys-native openssl-native"
 
-SRCREV="b207787cd6055f78e15a05eb8c43fbc88910087f"
+SRCREV="eb8018ee60f0c9816b28080f5ea9090766358d96"
 SRC_URI="git://git@github.com/ARMmbed/mbl-optee_os.git;protocol=ssh;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "

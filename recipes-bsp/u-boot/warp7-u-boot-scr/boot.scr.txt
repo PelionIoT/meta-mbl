@@ -1,3 +1,4 @@
 setenv mmcpart 2
 setenv uuidpart 0:2
 setenv optee_file /lib/firmware/uTee.optee
+setenv image_signed /boot/zImage.imx-signed

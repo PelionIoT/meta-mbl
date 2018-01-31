@@ -3,3 +3,4 @@ setenv uuidpart 0:2
 setenv optee_file /lib/firmware/uTee.optee
 setenv image_signed /boot/zImage.imx-signed
 setenv fdt_file_signed /boot/imx7s-warp.dtb.imx-signed
+setenv optee_file_signed /lib/firmware/uTee.optee.imx-signed

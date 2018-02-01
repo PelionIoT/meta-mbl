@@ -13,3 +13,11 @@ if test ${hab_enabled} -eq 1; then
 else
 	run loadimage;
 fi
+# This section is responsbile for loading a signed FDT image
+if test ${hab_enabled} -eq 1; then
+	hab_get_ivt_addr ${fdt_addr} ${ivt_offset}
+	${loadcmd} mmc ${mmcdev}:${mmcpart} ${hab_ivt_addr} ${fdt_file_signed}
+	run warp7_auth_or_fail
+else
+	run loadfdt;
+fi

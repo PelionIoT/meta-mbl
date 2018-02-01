@@ -5,3 +5,11 @@ setenv image_signed /boot/zImage.imx-signed
 setenv fdt_file_signed /boot/imx7s-warp.dtb.imx-signed
 setenv optee_file_signed /lib/firmware/uTee.optee.imx-signed
 setenv loadoptee "${loadcmd} mmc ${mmcdev}:${mmcpart} ${optee_addr} ${optee_file}"
+# This section is responsbile for loading a signed Linux kernel
+if test ${hab_enabled} -eq 1; then
+	hab_get_ivt_addr ${loadaddr} ${ivt_offset}
+	${loadcmd} mmc ${mmcdev}:${mmcpart} ${hab_ivt_addr} ${image_signed}
+	run warp7_auth_or_fail
+else
+	run loadimage;
+fi

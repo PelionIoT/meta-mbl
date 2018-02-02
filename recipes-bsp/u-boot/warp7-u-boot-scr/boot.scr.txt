@@ -21,3 +21,11 @@ if test ${hab_enabled} -eq 1; then
 else
 	run loadfdt;
 fi
+# This section is responsbile for loading a signed OPTEE image
+if test ${hab_enabled} -eq 1; then
+	hab_get_ivt_addr ${optee_addr} ${ivt_offset}
+	${loadcmd} mmc ${mmcdev}:${mmcpart} ${hab_ivt_addr} ${optee_file_signed}
+	run warp7_auth_or_fail
+else
+	run loadoptee;
+fi

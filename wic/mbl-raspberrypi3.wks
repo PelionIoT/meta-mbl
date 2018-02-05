@@ -1,4 +1,5 @@
 # Specification of partitioning of raspberrypi3 SD card to support mbed Update
+# See docs/partitions.md
 
 # Note 1: don't specify mount points and "on-device" options - if we do that then
 # WIC will try to add the devices to fstab, but it will only add them to fstab
@@ -8,22 +9,22 @@
 #
 # Note 2: the labels are important - fstab uses them and so does activate_script.
 
-# Partition 1: Boot partition (Linux image, U-boot script etc.)
+# Partition 1: Boot partition
 part --source bootimg-partition --fstype=vfat --label boot --active --align 4096 --fixed-size 20
 
-# Partition 2: Boot flags (to decide which partition to use as root)
+# Partition 2: Boot flags
 part --fstype=ext4 --label bootflags --fixed-size 20
 
 # Partition 3: First root partition
-part --source rootfs --fstype=ext4 --label rootfs1 --fixed-size 500
+part --source rootfs --fstype=ext4 --exclude-path=config/ --label rootfs1 --fixed-size 500
 
 # Partition 4: Second root partition
-part --source rootfs --fstype=ext4 --label rootfs2 --fixed-size 500
+part --source rootfs --fstype=ext4 --exclude-path=config/ --label rootfs2 --fixed-size 500
 
-# Partition 5: Config partition (used by mbed's ESFS)
-part --fstype=ext4 --label config --fixed-size 40
+# Partition 5: Config partition
+part --source rootfs-subdir --sourceparams subdir=config --fstype=ext4 --label config --fixed-size 40
 
-# Partition 6: Cache partition (for firmware downloads)
+# Partition 6: Cache partition
 part --fstype=ext4 --label cache --fixed-size 500
 
 bootloader --ptable msdos

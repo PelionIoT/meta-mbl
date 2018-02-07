@@ -165,7 +165,11 @@ Connect to the Warp7's console with something like
 ```
 minicom -D /dev/ttyUSB0
 ```
-You should see a U-Boot prompt.  At the U-Boot prompt, type
+Use a baud rate of 115200, [8N1](https://en.wikipedia.org/wiki/8-N-1) encoding, and no hardware flow control.
+
+Depending on the previous contents of the device's storage, you may get a U-boot prompt or you may see an operating system (e.g. Android) boot. If an operating system boots, reboot the device and then press a key when U-Boot starts to prevent it booting the operating system.
+
+When you get a U-Boot prompt, type
 ```
 ums 0 mmc 0
 ```
@@ -212,6 +216,7 @@ Connect to the Raspberry Pi 3's console with something like
 ```
 minicom -D /dev/ttyUSB0
 ```
+Use a baud rate of 115200, [8N1](https://en.wikipedia.org/wiki/8-N-1) encoding, and no hardware flow control.
 
 Now connect the Raspberry Pi 3's micro USB socket to a USB power supply. It should now boot into Mbed Linux.
 

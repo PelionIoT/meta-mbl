@@ -34,3 +34,5 @@ echo Booting secure Linux/OPTEE OS from mmc ...;
 run finduuid;
 run mmcargs;
 bootm ${optee_addr} - ${fdt_addr};
+# Failsafe if something goes wrong
+hab_failsafe

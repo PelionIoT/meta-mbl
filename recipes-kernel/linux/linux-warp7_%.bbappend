@@ -1,7 +1,7 @@
 # Copyright (C) 2016 NXP Semiconductors
 # Released under the MIT license (see COPYING.MIT for the terms)
 
-SRCREV = "2de036a7927b753b8ad4d03cf0ffdd2aeea34318"
+SRCREV = "5912ae9b74dcaf6471b828a83429652f7b704fcc"
 
 KBUILD_DEFCONFIG_imx7s-warp-mbl ?= "warp7_mbl_defconfig"
 

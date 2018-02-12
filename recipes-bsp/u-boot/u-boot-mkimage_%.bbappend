@@ -1,2 +1,2 @@
-SRCREV = "d332b3e3c0d6f8265a3020bdff5cf64c06a027dc"
+SRCREV = "627c5723fb3cc3468c407f3d8c4a53bfe9e4566d"
 SRC_URI = "git://git@github.com/ARMmbed/mbl-u-boot.git;protocol=ssh;nobranch=1"

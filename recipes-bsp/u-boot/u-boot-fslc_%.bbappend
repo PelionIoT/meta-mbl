@@ -4,4 +4,4 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI = "git://git@github.com/ARMmbed/mbl-u-boot.git;protocol=ssh;nobranch=1"
 
-UBOOT_CONFIG[sd] = "warp7_secure_optee_defconfig,sdcard"
+UBOOT_CONFIG[sd] = "warp7_secure_defconfig,sdcard"

@@ -1,0 +1,26 @@
+From 15865cd3d3f42b6a9da2d6c12a4c733b4e9a988e Mon Sep 17 00:00:00 2001
+From: Ryan Harkin <ryan.harkin@linaro.org>
+Date: Mon, 19 Feb 2018 10:14:08 +0000
+Subject: [PATCH] warp7: use UART6 in defconfig
+
+Signed-off-by: Ryan Harkin <ryan.harkin@linaro.org>
+---
+ configs/warp7_defconfig | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/configs/warp7_defconfig b/configs/warp7_defconfig
+index d1d2495..990a753 100644
+--- a/configs/warp7_defconfig
++++ b/configs/warp7_defconfig
+@@ -12,6 +12,8 @@ CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/warp7/imximage.cfg"
+ CONFIG_HUSH_PARSER=y
+ # CONFIG_CMD_BOOTD is not set
+ CONFIG_CMD_BOOTZ=y
++CONFIG_MXC_CONSOLE_NUM=6
++CONFIG_SERIAL_MXC_DTE_MODE=y
+ # CONFIG_CMD_IMI is not set
+ # CONFIG_CMD_XIMG is not set
+ CONFIG_CMD_MEMTEST=y
+-- 
+2.7.4
+

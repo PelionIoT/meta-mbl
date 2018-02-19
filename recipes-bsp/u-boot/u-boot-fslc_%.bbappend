@@ -2,7 +2,8 @@ SRCREV = "e9f595924a34c75eb3cc571fbc604911460e0fd0"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1"
+SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1 \
+file://files/0001-warp7-use-UART6-in-secure-defconfig.patch "
 
 UBOOT_CONFIG[sd] = "warp7_defconfig,sdcard"
 

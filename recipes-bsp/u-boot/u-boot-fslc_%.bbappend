@@ -5,7 +5,8 @@ LIC_FILES_CHKSUM_append = "file://Licenses/README;md5=a2c678cfd4a4d97135585cad90
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1"
+SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1 \
+file://files/0001-warp7-use-UART6-in-defconfig.patch "
 
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=a2c678cfd4a4d97135585cad908541c6"
 

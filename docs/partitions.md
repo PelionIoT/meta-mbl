@@ -6,7 +6,7 @@ The partition layout for every board includes at least the following partitions
 
 | Label     | ro/rw | Type | Mount point | Size     | Contains |
 |-----------|-------|------|-------------|----------|----------|
-| boot      | rw    | vfat | /boot       | 16-20MiB | Kernel, device tree, U-boot script |
+| boot      | rw    | vfat | /boot       | 20-32MiB | Kernel, device tree, U-boot script |
 | bootflags | rw    | ext4 | /mnt/flags  | 20MiB    | Flags to determine which rootfs is active |
 | rootfs1   | rw    | ext4 | /           | 500MiB   | Root filesystem for installation 1 |
 | rootfs2   | rw    | ext4 | /           | 500MiB   | Root filesystem for installation 2 |
@@ -19,15 +19,15 @@ The partition layout for every board includes at least the following partitions
 
 Full partition layout:
 
-| Label     | Offset         | Size   | U-Boot iface dev:part | Linux device file | Notes    |
-|-----------|----------------|--------|-----------------------|-------------------|----------|
-| boot      | 4MiB           | 20MiB  | mmc 0:1               | mmcblk0p1         | Primary  |
-| bootflags | 24MiB          | 20MiB  | mmc 0:2               | mmcblk0p2         | Primary  |
-| rootfs1   | 44MiB          | 500MiB | mmc 0:3               | mmcblk0p3         | Primary  |
-| -         | 544MiB         | -      | mmc 0:4               | mmcblk0p4         | Extended |
-| rootfs2   | 544MiB+0.5KiB  | 500MiB | mmc 0:5               | mmcblk0p5         | Logical  |
-| config    | 1044MiB+1KiB   | 40MiB  | mmc 0:6               | mmcblk0p6         | Logical  |
-| cache     | 1084MiB+1.5KiB | 500MiB | mmc 0:7               | mmcblk0p7         | Logical  |
+| Label     | Size   | U-Boot iface dev:part | Linux device file | Notes    |
+|-----------|--------|-----------------------|-------------------|----------|
+| boot      | 20MiB  | mmc 0:1               | mmcblk0p1         | Primary  |
+| bootflags | 20MiB  | mmc 0:2               | mmcblk0p2         | Primary  |
+| rootfs1   | 500MiB | mmc 0:3               | mmcblk0p3         | Primary  |
+| -         | -      | mmc 0:4               | mmcblk0p4         | Extended |
+| rootfs2   | 500MiB | mmc 0:5               | mmcblk0p5         | Logical  |
+| config    | 40MiB  | mmc 0:6               | mmcblk0p6         | Logical  |
+| cache     | 500MiB | mmc 0:7               | mmcblk0p7         | Logical  |
 
 
 ### Warp7
@@ -37,16 +37,16 @@ first "partition" although it is not in the disk's partition table.
 
 Full partition layout:
 
-| Label     | Offset         | Size    | U-Boot iface dev:part | Linux device file | Notes    |
-|-----------|----------------|---------|-----------------------|-------------------|----------|
-| -         | 1MiB           | <= 3MiB | -                     | -                 | U-Boot   |
-| boot      | 4MiB           | 16MiB   | mmc 0:1               | mmcblk1p1         | Primary  |
-| bootflags | 20MiB          | 20MiB   | mmc 0:2               | mmcblk1p2         | Primary  |
-| rootfs1   | 40MiB          | 500MiB  | mmc 0:3               | mmcblk1p3         | Primary  |
-| -         | 540MiB         | -       | mmc 0:4               | mmcblk1p4         | Extended |
-| rootfs2   | 540MiB+0.5KiB  | 500MiB  | mmc 0:5               | mmcblk1p5         | Logical  |
-| config    | 1040MiB+1KiB   | 40MiB   | mmc 0:6               | mmcblk1p6         | Logical  |
-| cache     | 1080MiB+1.5KiB | 500MiB  | mmc 0:7               | mmcblk1p7         | Logical  |
+| Label     | Size    | U-Boot iface dev:part | Linux device file | Notes    |
+|-----------|---------|-----------------------|-------------------|----------|
+| -         | <= 3MiB | -                     | -                 | U-Boot   |
+| boot      | 32MiB   | mmc 0:1               | mmcblk1p1         | Primary  |
+| bootflags | 20MiB   | mmc 0:2               | mmcblk1p2         | Primary  |
+| rootfs1   | 500MiB  | mmc 0:3               | mmcblk1p3         | Primary  |
+| -         | -       | mmc 0:4               | mmcblk1p4         | Extended |
+| rootfs2   | 500MiB  | mmc 0:5               | mmcblk1p5         | Logical  |
+| config    | 40MiB   | mmc 0:6               | mmcblk1p6         | Logical  |
+| cache     | 500MiB  | mmc 0:7               | mmcblk1p7         | Logical  |
 
 
 ## Notes on firmware update

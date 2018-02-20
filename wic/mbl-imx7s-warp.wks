@@ -13,7 +13,7 @@
 part --source rawcopy --sourceparams="file=u-boot.imx" --no-table --align 1
 
 # Partition 1: Boot partition
-part --source bootimg-partition --fstype=vfat --label boot --active --align 4096 --fixed-size 16
+part --source bootimg-partition --fstype=vfat --label boot --active --align 4096 --fixed-size 32
 
 # Partition 2: Boot flags
 part --fstype=ext4 --label bootflags --fixed-size 20

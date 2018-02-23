@@ -2,13 +2,11 @@
 
 This document provides instructions for building Mbed Linux with the meta-mbl-private layer (which provides Mbed Cloud Client) and for performing an over-the-air firmware update.
 
-### Only the Warp7 board is currently supported. Ignore the Raspberry Pi 3 sections
+Warp7 and Raspberry Pi 3 boards are currently supported.
 
 ## Disclaimer
 
 The Mbed Linux project is in its early stages and information found in this document may become stale very quickly. The `jh-unstable` branches of repositories used in these instructions contain hacks and unreviewed code.
-
-### Only the Warp7 board is currently supported. Ignore the Raspberry Pi 3 sections
 
 ## Overview
 
@@ -22,7 +20,9 @@ The process of building Mbed Linux and performing a firmware update has been spl
 7. [Build Mbed Linux](#build-mbl). This builds Mbed Linux and generates (a) an image that can be written directly to the device and (b) an image that can be used as a firmware update payload.
 8. [Write the disk image to your device and boot Mbed Linux](#write-image-and-boot).
 9. [Log in to Mbed Linux](#log-in).
-10. [Perform a firmware update](#do-update).
+10. [Set up a network connection](#set-up-network)
+11. [Check `mbl-cloud-client`'s state](#check-mbl-cc)
+12. [Perform a firmware update](#do-update).
 
 ## <a name="prerequisites"></a> 1. Prerequisites
 To build and run Mbed Linux using this guide you will need:
@@ -38,7 +38,7 @@ To build and run Mbed Linux using this guide you will need:
 
 ### <a name="get-cloud-account"></a> 1.1. Getting an Mbed Cloud account
 
-Contact Nadya.Sandler@arm.com or Jyri.Ryymin@arm.com to get an Mbed Cloud account. 
+Contact Nadya.Sandler@arm.com or Jyri.Ryymin@arm.com to get an Mbed Cloud account.
 - You should report which account to use e.g. arm-mbed-linux.
 - You should say your environment is Linux.
 - You should request an account with a high firmware storage limit - Mbed Linux firmware packages can be 40-50MiB.
@@ -99,17 +99,17 @@ This will generate a file `update_default_resources.c` that will be required dur
 ```
 cd ~/mbl
 mkdir mbl-unstable && cd mbl-unstable
-repo init -u git@github.com/armmbed/mbl-manifest.git -b jh-unstable -m private.xml
+repo init -u ssh://git@github.com/armmbed/mbl-manifest.git -b jh-unstable -m private.xml
 repo sync
 ```
 
 ## <a name="set-up-build-env"></a> 6. Set up the build environment
-To setup the building environment for Warp7, use the following command to source the environment setup script with the MACHINE an DISTRO variable defined:
+To setup the building environment for Warp7, use the following command to source the environment setup script with the MACHINE and DISTRO variables defined.
 ```
 MACHINE=imx7s-warp-mbl DISTRO=mbl . setup_environment
 ```
 
-The following table lists the {MACHINE, DISTRO} values for the Mbed Linux supported devices. Use the appropriate values for the device of interest. 
+The following table lists the {MACHINE, DISTRO} values for the Mbed Linux supported devices. Use the appropriate values for the device of interest.
 
 
 | Device         | MACHINE          | DISTRO     |
@@ -126,34 +126,39 @@ cp ~/mbl/cloud-credentials/mbed_cloud_dev_credentials.c .
 cp ~/mbl/manifests/update_default_resources.c .
 ```
 
-
-Set the Wifi SSID for the device to use:
-```
-echo 'MBL_WIFI_SSID="Guest-AccessNG"' >> conf/local.conf
-```
-
-Currently only open Wifi networks are supported.
-
 ## <a name="build-mbl"></a> 7. Build Mbed Linux
 ```
 bitbake mbl-console-image
 ```
 
-This command will generate two files that we are interested in:
-* a full disk image file which will be written to the device's flash storage;
-* a root file system archive which is used for firmware updates.
+This command will generate two files that we are interested in: a full disk
+image and a root filesystem archive.
 
-The paths of these files are
+The full disk image contains a partition table and all partitions required by
+Mbed Linux, including two root partitions. At any one time, one of the root
+filesystem partitions is "active" and the other is available to receive a new
+version of firmware during an update. To finalize an update, the root partition
+with the new firmware becomes "active" and the other root partition becomes
+available to receive the next firmware update.  The full disk image is an image
+created using the Wic tool from OpenEmbedded and, once decompressed, can be
+directly written to storage media. See [this
+section](https://www.yoctoproject.org/docs/latest/mega-manual/mega-manual.html#creating-partitioned-images-using-wic)
+of the Yocto Mega Manual for more information.
 
-| Warp7                    |     |
-| :---                     | --- |
-| full disk image          | ~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.gz |
-| root file system archive | ~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.tar.xz |
+The full disk image is used to initialize the device's storage once with a full
+set of disk partitions and an initial version of firmware. Once the device
+storage has been initialized, however, firmware updates only involve updating a
+single root partition, and this can be done using the contents of the root
+filesystem archive, which is a compressed tar archive.
 
-| Raspberry Pi 3           |     |
-| :---                     | --- |
-| full disk image          | ~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3/mbl-console-image-raspberrypi3.rpi-sdimg |
-| root file system archive | ~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3/mbl-console-image-raspberrypi3.tar.bz2 |
+The paths of these files are given in the table below, where `<MACHINE>` should
+be replaced with the MACHINE value for your device from the table in [section
+6](#set-up-build-env).
+
+| Image type               | Path |
+|--------------------------|------|
+| Full disk image          | `~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.wic.gz` |
+| Root file system archive | `~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.tar.xz` |
 
 
 ## <a name="write-image-and-boot"></a> 8. Write the disk image to your device and boot Mbed Linux
@@ -184,7 +189,7 @@ replacing `/dev/sdX` with the correct device file for the Warp7's flash device. 
 
 When `dd` has finished eject the device:
 ```
-eject /dev/sdX
+sudo eject /dev/sdX
 ```
 
 Back on the Warp7's U-Boot prompt, press Ctrl-C to exit USB mass storage mode, then type
@@ -199,13 +204,13 @@ Connect a micro SD card to your PC. You should see the SD card device file in `/
 
 Write the disk image to the SD card with
 ```
-sudo dd status=progress conv=fsync bs=4M if=~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3/mbl-console-image-raspberrypi3.rpi-sdimg of=/dev/sdX
+gunzip -c ~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3/mbl-console-image-raspberrypi3.wic.gz | sudo dd status=progress conv=fsync bs=4M of=/dev/sdX
 ```
 replacing `/dev/sdX` with the correct device file for the SD card. This may take some time.
 
 When `dd` has finished eject the device:
 ```
-eject /dev/sdX
+sudo eject /dev/sdX
 ```
 
 Detach the micro SD card from your PC and plug it into the Raspberry Pi 3.
@@ -220,23 +225,34 @@ Use a baud rate of 115200, [8N1](https://en.wikipedia.org/wiki/8-N-1) encoding, 
 
 Now connect the Raspberry Pi 3's micro USB socket to a USB power supply. It should now boot into Mbed Linux.
 
-## <a name="log-in"></a> 9. Log in to Mbed Linux 
+## <a name="log-in"></a> 9. Log in to Mbed Linux
 
 To log in, use the username `root` with no password.
 
-During Mbed Linux boot, `mbl-cloud-client` should automatically start and connect to the Mbed Cloud. You can check this by using the Mbed Cloud web interface or by reviewing `mbl-cloud-client`'s log file at `/var/log/mbl-cloud-client.log`.
+## <a name="set-up-network"></a> 10. Set up a network connection
 
-## <a name="do-update"></a> 10. Perform a firmware update
+If your device is connected to a network with a DHCP server via Ethernet then it will automatically connect to that network. Otherwise, see https://github.com/ARMmbed/meta-mbl/blob/master/docs/wifi.md for help on setting up wifi in Mbed Linux.
+
+## <a name="check-mbl-cc"></a> 11. Check `mbl-cloud-client`'s state
+During Mbed Linux boot, `mbl-cloud-client` should start automatically start and connect to the Mbed Cloud. If networking wasn't configured appropriately during boot, however, mbl-cloud-client may not have connected to the Mbed Cloud. It will periodically retry to connect, but it may connect more quickly if it is restarted:
+```
+/etc/init.d/mbl-cloud-client restart
+```
+You can check whether the device has connected to the Mbed Cloud by using the
+Mbed Cloud web interface ([Figure 8](#fig8)) or by reviewing
+`mbl-cloud-client`'s log file at `/var/log/mbl-cloud-client.log`.
+
+## <a name="do-update"></a> 12. Perform a firmware update
 
 The following sections describe 2 ways to perform an update:
 
-- 10.1. [Update Method 1.](#update-method-1) Using the manifest-tool. The development machine runs the manifest-tool to request a firmware update via a web API.
-- 10.2. [Update Method 2.](#update-method-2) Using the mbed-cloud web interface. A firmware update is initiated using the mbed cloud web interface.
+- 12.1. [Update Method 1.](#update-method-1) Using the manifest-tool. The development machine runs the manifest-tool to request a firmware update via a web API.
+- 12.2. [Update Method 2.](#update-method-2) Using the mbed-cloud web interface. A firmware update is initiated using the mbed cloud web interface.
 
 Note:  at the current time developers are unable to use Method 1 due to a problem (a bug?) using API keys. Therefore, the following section should be skipped in preference for Method 2, which works fine.
 
 
-### <a name="update-method-1"></a> 10.1. Update Method 1: Perform a Firmware Update Using the Manifest-Tool.
+### <a name="update-method-1"></a> 12.1. Update Method 1: Perform a Firmware Update Using the Manifest-Tool.
 
 After a firmware update, the flash partition used for the root filesystem will change. Check which partition is mounted at `/` now so that you can check that it changes after the update. You can use `lsblk` to do this.
 
@@ -254,12 +270,10 @@ You will also need an Mbed Cloud API key. Follow the instructions at https://clo
 replacing `<api-key>` with the key obtained earlier.
 
 The firmware "payload" used for updates is the "root filesystem archive" generated during the Mbed Linux build process. I've noticed that `manifest-tool` sometimes barks if the path to the firmware image is too long, so link this file into the manifests directory with
-
-| Device         | Command |
-| ---            | --- |
-| Warp 7         | `ln -s ~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.tar.xz test-image` |
-| Raspberry Pi 3 | `ln -s ~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3/mbl-console-image-raspberrypi3.tar.bz2 test-image` |
-
+```
+ln -s ~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.tar.xz test-image
+```
+where `<MACHINE>` is the MACHINE value for your device from the table in [section 6](#set-up-build-env).
 
 Now perform the update with
 ```
@@ -296,20 +310,20 @@ When the update has finished the device should reboot into the new firmware. You
 A short time after the new firmware has booted, `manifest-tool` should report that the state has changed from 'Publishing' to 'Deployed'.
 
 
-### <a name="update-method-2"></a> 10.2. Method 2: Perform a firmware update Using the Mbed Cloud Web Interface
+### <a name="update-method-2"></a> 12.2. Method 2: Perform a firmware update Using the Mbed Cloud Web Interface
 
 This section describes how to preform a device firmware update using the mbed cloud web interface. The steps
 are described in the following sections:
 
-- 10.2.1. [Update Step 1](#update2-1): Prerequisites.
-- 10.2.2. [Update Step 2](#update2-2): Upload a firmware image to the cloud.
-- 10.2.3. [Update Step 3](#update2-3): Create a manifest.
-- 10.2.4. [Update Step 4](#update2-4): Upload the manifest to the cloud.
-- 10.2.5. [Update Step 5](#update2-5): Create a filter for your device.
-- 10.2.6. [Update Step 6](#update2-6): Run an update campaign to update the device firmware.
+- 12.2.1. [Update Step 1](#update2-1): Prerequisites.
+- 12.2.2. [Update Step 2](#update2-2): Upload a firmware image to the cloud.
+- 12.2.3. [Update Step 3](#update2-3): Create a manifest.
+- 12.2.4. [Update Step 4](#update2-4): Upload the manifest to the cloud.
+- 12.2.5. [Update Step 5](#update2-5): Create a filter for your device.
+- 12.2.6. [Update Step 6](#update2-6): Run an update campaign to update the device firmware.
 
 
-#### <a name="update2-1"></a> 10.2.1. Update Step 1: Prerequisites
+#### <a name="update2-1"></a> 12.2.1. Update Step 1: Prerequisites
 
 The following should have already been performed:
 - A build generating a device image.
@@ -331,29 +345,29 @@ Check which partition is mounted at `/` now so that you can check that it change
 You can use `lsblk` to do this.
 
 
-#### <a name="update2-2"></a> 10.2.2. Update Step 2: Upload a Firmware Image to the Cloud
+#### <a name="update2-2"></a> 12.2.2. Update Step 2: Upload a Firmware Image to the Cloud
 
 This requires the following steps:
-- Log into the med cloud portal e.g. at the following link https://portal-os2.mbedcloudstaging.net/login.
-- If more than one team is available, select a team/group e.g. arm-mbed-linux.
-- Navigate to the Firmware Update/Images screen.
-- Select Upload new images
-- Choose an image file from your local hard disk. This should be the mbl-console-image-imx7s-warp-mbl-<date>.rootfs.tar.xz, which contains the root file system image for upgrading. 
+- Log into the [Mbed Cloud portal](https://portal.mbedcloud.com/login) ([Figure 1](#fig1)).
+- If more than one team is available, select a team/group e.g. arm-mbed-linux ([Figure 2](#fig2)).
+- Navigate to the Firmware Update/Images screen ([Figure 4](#fig4)).
+- Select Upload new images.
+- Choose an image file from your local hard disk. This should be the mbl-console-image-imx7s-warp-mbl-<date>.rootfs.tar.xz, which contains the root file system image for upgrading. ([Figure 6](#fig6).)
 - Provide a name for the firmware image e.g. test\_image\_20180125\_1.
 - Optionally, provide a description.
 - Press the "Upload firmware image" button.
-- On the main Firmware Update/Images screen you'll see the image listed in the table.
-- Copy the firmware image URL (2nd column in table) to your clipboard URL by clicking the "2 page" icon in the third column of the table. This URL will be needed for creating the manifest (described in the next section).
+- On the main Firmware Update/Images screen you'll see the image listed in the table ([Figure 4](#fig4)).
+- Copy the firmware image URL (2nd column in table) to your clipboard URL by clicking the "2 page" icon in the third column of the table ([Figure 5](#fig5)). This URL will be needed for creating the manifest (described in the next section).
 
 
-#### <a name="update2-3"></a> 10.2.3. Update Step 3: Create a Manifest
+#### <a name="update2-3"></a> 12.2.3. Update Step 3: Create a Manifest
 
 This step describes how to use the manifest-tool to create a manifest for the firmware image:
-- In the section "Create an Update resources file" earlier in this document, you will have: 
+- In the section "Create an Update resources file" earlier in this document, you will have:
     - Installed the `manifest-tool`,
-    - Created the ~mbl/manifest sub-directory, and 
+    - Created the ~mbl/manifest sub-directory, and
     - Performed the `manifest-tool init` command.
-- Make the current working directory the place where the `manifest-tool init` was performed.  
+- Make the current working directory the place where the `manifest-tool init` was performed.
 - Create a manifest called test-manifest by using the manifest-tool in the following way:
 ```
 manifest-tool create -p test-image -u http://firmware-catalog-media-8a31.s3.dualstack.eu-west-1.amazonaws.com/test-image -o test-manifest
@@ -365,7 +379,7 @@ manifest-tool create -p test-image -u http://firmware-catalog-media-8a31.s3.dual
 - The **test-manifest** is the name of the output manifest file.
 
 
-#### <a name="update2-4"></a> 10.2.4. Update Step 4: Upload the Manifest to the Cloud.
+#### <a name="update2-4"></a> 12.2.4. Update Step 4: Upload the Manifest to the Cloud.
 
 This requires the following steps to upload the test-manifest to the cloud:
 - Navigate to the Firmware Update/Manifests screen
@@ -376,12 +390,12 @@ This requires the following steps to upload the test-manifest to the cloud:
 - Push the "Upload firmware manifest" button.
 
 
-#### <a name="update2-5"></a> 10.2.5. Update Step 5: Create a filter for your device
+#### <a name="update2-5"></a> 12.2.5. Update Step 5: Create a filter for your device
 
 A device filter has to be created before an update campaign can be configure. This is done in the following way:
-- Navigate to the Device Directory screen.
+- Navigate to the Device Directory screen ([Figure 8](#fig8)).
 - Copy the device id to the clipboard. This can be done as follows:
-	- Search for the device id in the device /var/log/mbl-cloud-client.log.
+	- Search for the device id in the `mbl-cloud-client`'s log file `/var/log/mbl-cloud-client.log`.
 ```
 grep -i 'device id' /var/log/mbl-cloud-client.log
 ```
@@ -389,21 +403,21 @@ grep -i 'device id' /var/log/mbl-cloud-client.log
 	- By finding the device in the table presented on the Device Directory screen, clicking on it to get the device specific
 	information page and then copying the device ID to the clipboard.
 - Push the "Create New Filter" button.
-- Push the "Add attribute" button and select "Device ID".
+- Push the "Add attribute" button and select "Device ID" ([Figure 9](#fig9)).
 - Paste the Device ID into the Device ID edit box and click "Save Filter".
-- See that the newly created filter reported on the Device Directory/Saved Filters screen.
+- See that the newly created filter reported on the Device Directory/Saved Filters screen ([Figure 11](#fig11)).
 
-#### <a name="update2-6"></a> 10.2.6. Update Step 6: Run an Update Campaign to Update the Device Firmware
+#### <a name="update2-6"></a> 12.2.6. Update Step 6: Run an Update Campaign to Update the Device Firmware
 
 The following steps are needed to run a test campaign to perform the firmware update:
-- Navigate to the Firmware Update/Update Campaigns screen.
-- Push the "Create Campaign" button.
+- Navigate to the Firmware Update/Update Campaigns screen ([Figure 12](#fig12)).
+- Push the "Create Campaign" button ([Figure 13](#fig13)).
 - Provide a name for the campaign e.g. "test-campaign".
 - Optionally provide a description.
 - Select the previously created test-manifest from the first drop down list box.
 - Select the previously created test-filter from the second drop down list box. The device filter should report the Device ID of your device.
 - Push the "Save" button to save the test campaign.
-- The saved test-campaign will be reported on the screen. Press the "Start" button to run the test campaign.
+- The saved test-campaign will be reported on the screen ([Figure 14](#fig14)). Press the "Start" button to run the test campaign.
 	- You may see the "Something went wrong" screen indicating problems with the update service. Be patient! This kind of thing seems normal. However, sometimes things have gone wrong and the update will not happen.
 - Monitor the device console tail -f /var/log/mbl-cloud-client.log to see the update occurring.
 	- You can also monitor the progress of the update via the web interface. It should report the "Publishing" state.
@@ -411,49 +425,64 @@ The following steps are needed to run a test campaign to perform the firmware up
 - When the device comes up again, login and verify that the running bank (partition) has changed from that noted in Update Step 1.
 
 
- #### 10.2.7. Figures
+ #### 12.2.7. Figures
 
+<a name="fig1"></a>
 ![fig1](pics/01.png "Figure 1")
 Figure 1: The mbed cloud portal login.
 
+<a name="fig2"></a>
 ![fig2](pics/02.png "Figure 2")
 Figure 2: Select the team you want to use e.g. arm-mbed-linux.
 
+<a name="fig3"></a>
 ![fig3](pics/03.png "Figure 3")
 Figure 3: Dashboard after you login.
 
+<a name="fig4"></a>
 ![fig4](pics/04.png "Figure 4")
 Figure 4: Firmware update/Images screen.
 
+<a name="fig5"></a>
 ![fig5](pics/05.png "Figure 5")
 Figure 5: Firmware update/Images screen showing how to copy URL.
 
+<a name="fig6"></a>
 ![fig6](pics/06.png "Figure 6")
 Figure 6: Upload firmware image screen.
 
+<a name="fig7"></a>
 ![fig7](pics/07.png "Figure 7")
 Figure 7: Device details screen.
 
+<a name="fig8"></a>
 ![fig8](pics/08.png "Figure 8")
-Figure 8: Device directory for adding a filter screen.
+Figure 8: Device directory screen for viewing device registration status and adding device filters.
 
+<a name="fig9"></a>
 ![fig9](pics/09.png "Figure 9")
 Figure 9: Device directory for adding a filter device id attribute.
 
+<a name="fig10"></a>
 ![fig10](pics/10.png "Figure 10")
 Figure 10: Device directory for adding a filter.
 
+<a name="fig11"></a>
 ![fig11](pics/11.png "Figure 11")
 Figure 11: Saved filters screen.
 
+<a name="fig12"></a>
 ![fig12](pics/12.png "Figure 12")
 Figure 12: Update campaigns screen.
 
+<a name="fig13"></a>
 ![fig13](pics/13.png "Figure 13")
 Figure 13: New update campaign screen.
 
+<a name="fig14"></a>
 ![fig14](pics/15.png "Figure 14")
-Figure 14: Firmware update/Update campaigns screen.
+Figure 14: Firmware update/Campaign status screen.
 
+<a name="fig15"></a>
 ![fig15](pics/16.png "Figure 15")
 Figure 15: Test campaign details screen.

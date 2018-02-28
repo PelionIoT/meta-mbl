@@ -2,7 +2,7 @@
 DEPENDS += " u-boot-mkimage-native "
 
 SRCREV="b207787cd6055f78e15a05eb8c43fbc88910087f"
-SRC_URI="git://git@github.com/ARMmbed/mbl-optee_os.git;protocol=ssh;nobranch=1 \
+SRC_URI="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "
 OPTEEMACHINE="imx-mx7swarp7"

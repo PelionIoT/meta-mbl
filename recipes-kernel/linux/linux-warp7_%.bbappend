@@ -5,7 +5,7 @@ SRCREV = "0d1a4ac9a5520fbea42ee88647958c731e88e1f4"
 
 KBUILD_DEFCONFIG_imx7s-warp-mbl ?= "warp7_mbl_defconfig"
 
-SRC_URI = "git://git@github.com/ARMmbed/mbl-linux.git;protocol=ssh;nobranch=1"
+SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/linux.git;protocol=https;nobranch=1"
 
 do_preconfigure() {
 	mkdir -p ${B}

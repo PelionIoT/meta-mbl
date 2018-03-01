@@ -20,7 +20,12 @@ fi
 
 # Set the filesystem type and partition target
 setenv loadcmd ext4load
-setenv mmcpart 5
+
+# Boot from rootfs1 by default
+setenv mmcpart 3
+
+# But if the rootfs2 file exists in partition 2, boot from rootfs2
+ext4size mmc 0:2 rootfs2 && setenv mmcpart 5
 
 # This section is responsbile for loading a signed OPTEE image
 setenv optee_file /lib/firmware/uTee.optee

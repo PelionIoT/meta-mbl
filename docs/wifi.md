@@ -20,7 +20,7 @@ By default, the `wpa_supplicant.conf` file contains, among other settings:
 * Zero or more **network blocks** that each specify the configuration for a particular network. The default network block tells `wpa_supplicant` to connect to any open network.
     ```
     network={
-    key_mgmt=NONE
+        key_mgmt=NONE
     }
     ```
     <span class="notes">**Note** This policy may change in the future.</span>
@@ -117,13 +117,13 @@ You can use `wpa_cli` to discover available networks.
 1. Use `wpa_cli` to request a new scan from `wpa_supplicant`, by running the following command:
 
     ```
-    wpa_cli scan
+    # wpa_cli scan
 
     ```
 1. View the results of this scan using the following command:
 
     ```
-    wpa_cli scan_results
+    # wpa_cli scan_results
     Selected interface 'wlan0'
     bssid / frequency / signal level / flags / ssid
     00:53:0a:64:35:01       2462    -62     [ESS]   ExampleOpenNetwork
@@ -139,6 +139,7 @@ You can use `wpa_cli` to discover available networks.
     00:53:76:64:51:07       2412    -71     [ESS]   ExampleOpenNetwork
     00:53:a7:64:95:a1       2437    -81     [ESS]   ExampleOpenNetwork
     00:53:b0:5d:63:91       2437    -87     [ESS]   ExampleOpenNetwork
+    #
     ```
 This output shows three SSIDs:
 
@@ -148,13 +149,13 @@ This output shows three SSIDs:
 
 There are example configurations for networks of these types [below](#network-block-examples).
 
-### Network blocks examples
+### Network block examples
 
-The following sections provide an example network block for connection to a:
+The following sections provide example network blocks for connection to:
 
-* Named open network.
-* WPA-PSK network.
-* WPA2-Enterprise network.
+* Named open networks.
+* WPA-PSK networks.
+* WPA2-Enterprise networks.
 
 For more examples, refer to the `wpa_supplicant` [man page][ws_man_page].
 
@@ -180,20 +181,21 @@ network={
     psk="my-passphrase"
 }
 ```
-Alternatively, you can use a hash of the passphrase rather than using it in plain text to the configuration file.
+Alternatively, you can use a hash of the passphrase rather than using it in plain text in the configuration file.
 
 **Generating a hash of a passphrase**
 
 To generate a network block containing the hash, use the `wpa_passphrase` utility, as follows:
 
 ```
-wpa_passphrase my-ssid my-passphrase
+# wpa_passphrase my-ssid my-passphrase
 
 network={
         ssid="my-ssid"
         #psk="my-passphrase"
         psk=85892d35689549be10f89580f60dd53dd3e65696fe61f4a8e99ac75e110d94c7
 }
+#
 ```
 Remove the line containing `my-passphrase` before adding the network block to `wpa_supplicant.conf`:
 
@@ -227,36 +229,37 @@ Mbed Linux does not currently support saving the username or password in secure 
 If you do not need to persistently store these settings, and want to avoid adding them to configuration file, you can use `wpa_cli` to provide them. To do this:
 
 1. Add the network block to `wpa_supplicant.conf` but without the sensitive information:
-```
-network={
-    ssid="my-ssid"
-    proto=RSN
-    key_mgmt=WPA-EAP
-    auth_alg=OPEN
-    eap=PEAP
-    phase2="MSCHAPV2"
-}
-```
+    ```
+    network={
+        ssid="my-ssid"
+        proto=RSN
+        key_mgmt=WPA-EAP
+        auth_alg=OPEN
+        eap=PEAP
+       phase2="MSCHAPV2"
+    }
+    ```
 1. Bring the wireless interface down and back up:
-```
-ifdown wlan0
-ifup wlan0
-```
-1. Determine the network id that `wpa_supplicant` uses for the network using the following `wpa_cli` command:
-```
-wpa_cli list_networks
-Selected interface 'wlan0'
-network id / ssid / bssid / flags
-0       some-ssid  any
-1       my-ssid    any
-```
-   Make a note of the network id for the SSID of your network (in this example `my-ssid`).
+    ```
+    ifdown wlan0
+    ifup wlan0
+    ```
+1. Determine the network ID that `wpa_supplicant` uses for the network using the following     `wpa_cli` command:
+    ```
+    # wpa_cli list_networks
+    Selected interface 'wlan0'
+    network id / ssid / bssid / flags
+    0       some-ssid  any
+    1       my-ssid    any
+    #
+    ```
+   Make a note of the network ID for the SSID of your network (in this example `my-ssid`).
 1. Use `wpa_cli` to provide the required credentials for this network, as follows:
-```
-wpa_cli set_network 1 identity "my-username"
-wpa_cli set_network 1 password "my-password"
-```
-    ...where `1` is the network id.
+    ```
+    # wpa_cli set_network 1 identity "my-username"
+    # wpa_cli set_network 1 password "my-password"
+    ```
+   Where `1` is the network ID.
 
    These credentials will be used until `wpa_supplicant` dies, but will not be written to `wpa_supplicant.conf` (unless you run `wpa_cli save`).
 

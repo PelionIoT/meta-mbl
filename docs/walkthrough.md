@@ -1,6 +1,6 @@
 ## Introduction
 
-This document provides instructions for building Mbed Linux with the meta-mbl-private layer (which provides Mbed Cloud Client) and for performing an over-the-air firmware update.
+This document provides instructions for building Mbed Linux with the meta-mbl-internal-extras layer (which provides Mbed Cloud Client) and for performing an over-the-air firmware update.
 
 Warp7 and Raspberry Pi 3 boards are currently supported.
 
@@ -99,7 +99,7 @@ This will generate a file `update_default_resources.c` that will be required dur
 ```
 cd ~/mbl
 mkdir mbl-unstable && cd mbl-unstable
-repo init -u ssh://git@github.com/armmbed/mbl-manifest.git -b jh-unstable -m private.xml
+repo init -u ssh://git@github.com/armmbed/mbl-manifest.git -b jh-unstable -m internal.xml
 repo sync
 ```
 

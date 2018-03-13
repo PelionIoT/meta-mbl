@@ -1,0 +1,33 @@
+# SPDX-License-Identifier:      GPL-2.0
+[Header]
+Version = 4.1
+Security Configuration = Open
+Hash Algorithm = sha256
+Engine Configuration = 0
+Certificate Format = X509
+Signature Format = CMS
+Engine = CAAM
+
+[Install SRK]
+File = "SRK_1_2_3_4_2048_table.bin"
+Source index = 0
+
+[Install CSFK]
+File = "CSF1_1_sha256_2048_65537_v3_usr_crt.pem"
+
+[Authenticate CSF]
+
+[Install Key]
+# Key slot index used to authenticate the key to be installed
+Verification index = 0
+# Key to install
+Target index = 2
+File = "IMG1_1_sha256_2048_65537_v3_usr_crt.pem"
+
+[Authenticate Data]
+Verification index = 2
+Blocks = HAB_BLOCKS_REPLACE "IMAGE_IMX_HAB_NAME_REPLACE"
+
+[Authenticate Data]
+Verification index = 2
+Blocks = DCD_BLOCKS_REPLACE "IMAGE_IMX_DCD_NAME_REPLACE"

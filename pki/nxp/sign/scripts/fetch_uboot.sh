@@ -1,5 +1,5 @@
 #!/bin/sh
-# SPDX-License-Identifier:      GPL-2.0
+# SPDX-License-Identifier: Apache-2.0
 #
 # $1 = git
 # $2 = u-boot directory

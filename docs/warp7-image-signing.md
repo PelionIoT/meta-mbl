@@ -2,18 +2,18 @@
 
 # Introduction
 
-The purpose of this document is to describe how is to signed the mbl-console-image for Warp7 images.
-Outstanding Issues with this Document 
+The purpose of this document is to describe how to sign Warp7 images, program One-Time Programmable fuses and check whether 
+the secure boot authentication has been completed successfully. The board can then (optionally) be locked.
 
-The outstanding issues are documented in the sections with titles beginning "Outstanding Questions" throughout this document.
+In order to sign Warp7 images, the Code Signing Tool is obtained from NXP under license. These instructions refer to the 
+use of version 2.3.3 of the CST (cst-2.3.3.tar.gz) 
 
-Some sections are incomplete as indicated by the "todo" comments.
-Terminology
+## Terminology
 
-This section outlines the terminology used throughout the document:
+This section defines the terminology used throughout the document:
 
     BSP: Board Support Package
-    CA: Certificate Authority
+    CA : Certificate Authority
     CSF: Command Sequence File
     CST: Code-Signing Tool
     DCD: Device Configuration Data
@@ -21,95 +21,201 @@ This section outlines the terminology used throughout the document:
     DER: File extension for binary DER encoded certificates
     HAB: High Assurance Boot
     IVT: Image Vector Table
-    NC: No Comment.
+    NC : No Comment
     OTP: One-Time Programmable
     PEM: File extension for X509 base64 encoded certificates
     SiP: Silicon Partner
-    SRK: Super Root Key. These are the keys that will be used how ? TODO: answer this questions.
-    TSP: Target (Family) Support Package e.g. the feature support common to the IMx7 family.
+    SRK: Super Root Key (private signing keys)
+    TSP: Target (Family) Support Package e.g. the feature support common to the IMx7 family
     TPM: Trusted Platform Module
 
 
-# Warp7: How To Configure a Board To Boot a Signed Image
+## Outstanding Issues with this Document 
 
-## Overview 
+The following lists the outstanding issues with this document:
+- The output of the hab_status u-boot command for a signed image booted on a board with factory settings for OTP fuses (all 0x00000000) 
+  is currently not understood. The NXP documentation doesn't appear to clarify this point.
+- The recovery process is currently not documented.
 
-This section describes how to perform a secure boot using a signed image on warp7.
-Overview of Steps
 
-The following summarizes the steps for booting a signed image.
+# Overview 
 
-    Step 1: Prerequisites.
-    Step 2: Generate PKI Tree using hab4_pki_tree.sh
-    Step 3: Generate xxx_fuse.bin and xxx_table.bin using srktool.
-    Step 4: Program OTP fuses with SRK hashes using fuse_util.py.
-    Step 5: Build unsigned image mbl-console-image-test.
-    Step 6. Manually sign image with xxx script.
-    Step 7: Flash and boot signed image.
-    Step 8: OPTIONAL: Close and lock device.
+This section summarizes the developer work-flow steps for booting a signed image:
 
-The following section describe in detail each of the steps.
+- Step 1: Prerequisites. 
+    - Acquire the NXP CST and install required packages.
+- Step 2: Generate Signing Keys.
+    - Use the CST tool hab4_pki_tree.sh to generate signing keys and certificates.
+- Step 3: Generate the Fuse and Table Binaries.
+    - Use the CST srktool to generate the fuse and table binary files for programming OTP fuses.
+- Step 4: Build Unsigned mbl-console-image-test Image.
+    - The test image is used first as it contains Python3 which is required to run the OTP programming tool.
+- Step 5. Sign Image.
+    - Sign the mbl-console-image-test image using the signing makefile tool.
+- Step 6: Flash/Boot the Signed Image. 
+    - Inspect the hab_status report. 
+- Step 7: Program the OTP Fuses. 
+    - Use the imx7-efuse-util.py tool to program the OTP fuses.
+- Step 8: Reboot and Verify Successful Secure Boot. 
+    - Reboot and check the hab_status reports secure boot successful authentication. 
+- Step 9: OPTIONAL: Close and lock device.
 
-## Warp7 : Step 1: Prerequisites
+The following sections describe each of the above steps in detail.
 
-### Acquire the NXP CST
 
-In order to run the commands, the NXP CST must be acquired by NXP approving an OEM Developer request.
+# Step 1: Prerequisites
 
-The top level of the workspace is called TOP_DIR. Once the cst-2.3.2.tar.gz CST tarball has been 
-received, store it in the following location of your workspace:
+This section describes the preparatory step necessary for creating a signed image.
+
+
+## Install Required Packages for Signing
+
+Please consult the [Prerequisites](https://github.com/ARMmbed/meta-mbl/blob/master/docs/walkthrough.md#-1-prerequisites) section of the
+MBL [Instructions for Building Images](https://github.com/ARMmbed/meta-mbl/blob/master/docs/walkthrough.md) to ensure these packages are installed
+on your development host. 
+
+In addition, the following packages should be installed for signing:
+
+    computer:TOP_DIR/$ sudo apt-get install make bash kpartx mktemp
+    
+
+## Create a Workspace for Building Images
+
+Create a mbed Linux workspace by following the relevant instructions in the 
+[Instructions for Building Images](https://github.com/ARMmbed/meta-mbl/blob/master/docs/walkthrough.md).
+
+
+## Acquire the NXP CST
+
+In order to sign Warp7 images the NXP Code Signing Tool (CST) must be downloaded from the NXP site, which requires acceptance of the 
+NXP Software License Agreement (See the [NXP License Page][NXP-Webpage-for-accepting-CST-Licence-agreement-and-downloading-the-tool] for details).
+
+Having downloaded the CST (e.g. cst-2.3.3.tar.gz) copy the tarball to the following location in the workspace:
 
     TOP_DIR/layers/meta-mbl/pki/nxp/boards
     
-### Install Required Packages for Signing
+Throughout this document the top level workspace directory is referred to as TOP_DIR. 
+    
 
-These are the pre-requisite Ubuntu 16.04 packages that need to be installed for the signing scripts to work:
+# Step 2: Generate Signing Keys
 
-    make
-    bash
-    kpartx
-    mktemp
-    awk
-    grep
+This section describes how to create the public/private keys and certificates used to sign boot chain component(s). 
+The secure boot process checks that each boot chain component(s) has been signed by the 
+party trusted to issue valid software images (the signing authority). The secure boot process does not 
+currently implement confidentiality (encryption of images).  
 
+The keying material is composed of the following:
 
-## Warp7 : Step 2: Generate PKI Tree using hab4_pki_tree.sh
+- A top level private key called the CA private key. This is used to sign certificates in the next layer down 
+  from the CA root in the PKI key hierarchy (tree).
+- Super Root Keys (SRK). These private keys used to sign certificates (containing a public key) at the next level down (second level) in the PKI tree hierarchy. 
+  The private keys are stored in key files and the 
+  public keys are stored in certificates signed by the private key. A hash of 1-4 SRK public keys 
+  will be programmed into the OTP fuses. The certificates are embedded in signed images so the secure boot 
+  process can:
+    - Recover the public key, 
+    - Check the signature on the certificate, 
+    - Hash the key and 
+    - Check the hash agrees with the hash in the relevant OTP fuse.
+- CSF keys and certificates are at the third level of the PKI tree hierarchy. 
+    - These keys are subordinate to the corresponding SRKx key at the next level up in the PKI tree hierarchy.
+    - These are used to sign binary components in the boot chain e.g. u-boot, Linux kernel and OPTEE.
+    - These keys are used to verify signatures across CSF commands. See [4] for more information on CSF commands.
+- IMG keys and certificates are also at the third level of the PKI tree hierarchy.
+    - These keys are subordinate to the corresponding SRKx key at the next level up in the PKI tree hierarchy.
+    - These keys are used to verify signatures across product software.
 
-This section describes the creation of the keying material. The keying material is composed of the following:
+In addition to the above, the following provides useful background information:
 
-- A top level private key called the CA private key. This is used to sign certificates in the next layer down from the CA root in the PKI key hierarchy (tree).
-- Super Root Keys. These are used to sign images. The private keys are stored in key files, the public keys are stored in certificates signed by the private key. A hash of 1-4 SRK public keys are stored in the OTP fuses. The certificates are embedded in signed images so the secure boot process can recover the public key, check the signature on the certificate, hash the key and check it agrees with the hash in the relevant OTP fuse.
-- CSF keys and certificates. These are used to sign CSF files.
-- IMG keys and certificates. These are used to sign product binary files.
+- When generating the keying material, the development machine used to create 
+  the keys and certificates is acting as a Certificate Authority.
+- The process described here is for a developer generating keying material so 
+  that he/she may sign images and perform development tasks. The keys 
+  need to be managed i.e. stored securely and privately so they do not leave the 
+  organization where they may be used in future to compromise production devices. 
+  Developer private keys may need to be kept on a TPM 
+  for example, as for production keys, but this depends on the security policy of the organisation. 
+  It is recommended that one person in the development organization be responsible for generating and 
+  securely storing the developer private keys.
 
-Here is some useful orientation information:
+To generate the keying material, perform the following steps:
 
-    When generating the keying material, the development machine used to generate the keys and certificates is acting as a Certificate Authority.
-    The process described here is for a developer generating keying material so that he/she may build signed images and perform development tasks. They keys need to be managed i.e. stored privately and not leave the development organization. However, the private keys do not need to be kept on a TPM for example, as for production keys. It is recommended that one person in the development organization be responsible generating and storing securely the developer private keys.
+#### Step 1
 
-Then do the following:
+Make the boards directory the current working directory.
 
-    computer:TOP_DIR/$ pushd TOP_DIR/layers/meta-mbl/pki/nxp/boards
+    computer:TOP_DIR/$ cd TOP_DIR/layers/meta-mbl/pki/nxp/boards
+
+#### Step 2
+
+Create a sub-directory with the ID of a board (which can be determined from the QR code sticker attached to the board). 
+In this example the board ID 000000-0000-000000-0000 is used, but the actual board ID should be used:
+
     computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/$ mkdir 000000-0000-000000-0000
-    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/$ tar -C 000000-0000-000000-0000 -xvzf cst-2.3.2-tar.gz --strip 1
+    
+
+#### Step 3
+
+Unroll the CST tarball into the board sub-directory stripping off the top level directory from the tarball paths.
+    
+    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/$ tar -C 000000-0000-000000-0000 -xvzf cst-2.3.3.tar.gz --strip 1
+
+#### Step 4
+
+Copy the serial file into the 000000-0000-000000-0000/keys directory. This file contains the base serial index number
+to enumerate (some) HAB tool generated files.
+
     computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/$ cp serial 000000-0000-000000-0000/keys
-    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/$ cp key_pass.txt 000000-0000-000000-0000/keys
-    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/$ pushd 000000-0000-000000-0000/keys
+
+#### Step 5
+
+Create the (private) key pass phrase file key_pass.txt in the 000000-0000-000000-0000/keys directory. The private key files are protected
+using the pass phrase (repeated twice) in this file.
+
+    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards$ cat key_pass.txt 
+    Replace-this-text-with-your-private-pass-phrase
+    Replace-this-text-with-your-private-pass-phrase
+    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards$
+
+This file should be stored securely with the other private keying material. 
+
+
+#### Step 6
+
+ Make the current working directory the 000000-0000-000000-0000/keys directory.
+
+    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/$ cd 000000-0000-000000-0000/keys
+
+#### Step 7
+
+Run the HAB4 tool to generate the keying material:
+
     computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/000000-0000-000000-0000/keys/$ ./hab4_pki_tree.sh
     
-When the hab4_pki_tree.sh tool is run, the tools asks a series of questions:
+When the hab4_pki_tree.sh tool is run, the tool asks a series of questions. The questions and responses are shown
+in the following sample of the console log (with line numbers inserted for reference):
 
-Do you want to use an existing CA key
-
-    Do you want to use an existing CA key (y/n)?: n. This development machine will be a CA and have a top level root key.
-    Do you want to use Elliptic Curve Cryptography (y/n)?: n. This results in the use of RSA cryptography.
-    Enter key length in bIt's for PKI tree: 4096. This is the longest supported key length (strongest).
-    Enter PKI tree duration (years): 10. This specifies when the generated certificates will expire.
-    How many Super Root Keys should be generated? 4. The warp7 has sufficient space for 4 SRK hashes, so we generate 4 keys and proceed on the basis that we're going to program all 4 OTP hash fuses at the same time,
-    Do you want the SRK certificates to have the CA flag set? (y/n)?: y. 
+    1. Do you want to use an existing CA key (y/n)?: n
+    2. Do you want to use Elliptic Curve Cryptography (y/n)?: n 
+    3. Enter key length in bIt's for PKI tree: 2048
+    4. Enter PKI tree duration (years): 10
+    5. How many Super Root Keys should be generated? 4
+    6. Do you want the SRK certificates to have the CA flag set? (y/n)?: y 
 
 
-The following shows what happens when you run the hab4_pki_tree.sh script:
+where:
+1. No specifies this development machine will be a CA and have a top level root key.
+2. No specifies RSA cryptography will be used to generate the keying material.
+3. 2048 specifies the key length (other alternatives are 1024 (shortest/weakest) and 4096 (longest/strongest).
+4. 10 specifies that the generated certificates will expire in 10 years time.
+5. 4 specifies that 4 SRKs will be generated. The warp7 has sufficient space for 4 SRK hashes, 
+   so 4 keys are generated. All 4 SRK key hashes will be programmed into the OTP fuses in one operation, 
+   rather than 4 separate operations.
+6. Yes specifies that the CA flag will be included in certificates.
+
+
+The following shows what happens when all the questions have been answered and the hab4_pki_tree.sh script generates the keying
+material:
 
      +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      This script is a part of the Code signing tools for Freescale's
@@ -144,9 +250,9 @@ The following shows what happens when you run the hab4_pki_tree.sh script:
 
     ... much output deleted.
 
-Make sure the output from the script while generating the keying material doesn't contain any errors.
 
-For example in the keys subdirectory, the following files have been generated:
+Please ensure the script output does not contain any errors. On success, the following files will have been 
+generated in the keys sub-directory:
 
     computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/000000-0000-000000-0000/keys/$ ls -la
     -rw-rw-r-- 1 simhug01 simhug01  7133 Feb 21 14:24 10000000.pem
@@ -194,29 +300,23 @@ For example in the keys subdirectory, the following files have been generated:
     -rw-rw-r-- 1 simhug01 simhug01  2450 Feb 21 14:24 SRK4_sha256_2048_65537_v3_ca_key.der
     -rw-rw-r-- 1 simhug01 simhug01  3394 Feb 21 14:24 SRK4_sha256_2048_65537_v3_ca_key.pem
 
-Note the following:
+and the following provides information as to the purpose of these files:
 
-    The files 10000000.pem to 1000000B.pem are the 4096 bit private key files and have the yyy purpose. TODO explain this yyy.
-
-    The CA1_sha256_2048_65537_v3_ca_key.{pem, der} are the CA root level 4096 bit private keys in plain text and binary encodings.
-    The SRKx_sha256_2048_65537_v3_ca_key.{pem, der} are the SRK (second level) 4096 bit private keys in plain text and binary encodings:
-        A hash of 1 or more of these keys are stored in the warp7 OTP fuses to form the root of trust.
-        These keys are used to sign certificates (containing a public key) at the next level down in the PKI tree hierarchy i.e. at the third level..
-    The CSFx_1_sha256_2048_65537_v3_usr_key.{pem, der} are the (third level) 4096 bit private keys in plain text and binary encodings:
-        These keys are subordiate to the corresponding SRKx key at the next level up in the PKI tree hierarchy.
-        These keys are used to verify signautres across CSF commands.
-    The IMGx_1_sha256_2048_65537_v3_usr_key.{pem, der} are the (third level) 4096 bit private keys in plain text and binary encodings:
-        These keys are subordiate to the corresponding SRKx key at the next level up in the PKI tree hierarchy.
-        These keys are used to verify signautres across product software. TODO: explain what this means.
-    All the private keys are in PKCS#8 format.
+- The CA1_sha256_2048_65537_v3_ca_key.{pem, der} are the CA root level 2048 bit private keys in plain text and binary encodings. These are the first
+  level keys in the PKI tree hierarchy.
+- The SRKx_sha256_2048_65537_v3_ca_key.{pem, der} (x={1,2, 3,4}) are the SRK (second level) 2048 bit private keys in plain text and binary encodings:
+    - The private keys are used to sign the certificates (containing a public key) at the next level down in the PKI tree hierarchy i.e. at the third level.
+- The CSFx_1_sha256_2048_65537_v3_usr_key.{pem, der} (x={1,2, 3,4}) are the (third level) 2048 bit private keys in plain text and binary encodings:
+- The IMGx_1_sha256_2048_65537_v3_usr_key.{pem, der} (x={1,2, 3,4}) are the (third level) 2048 bit private keys in plain text and binary encodings:
+- The 10000000.pem to 1000000B.pem are public keys for the SRK, CSF and IMG private keys mentioned above.
+    - There are 12 files in total, 4 public keys each for the SRK, CSF and IMG private keys).  
+    - The hashes of the 4 SRKx public keys are stored in the warp7 OTP fuses to form the root of trust.
 
 
-For example, in the crts directory the following files have been created:
+On success, the following files will have been generated in the crts sub-directory:
 
     computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/000000-0000-000000-0000/keys/$ ls -la ../crts/
     total 160
-    drwxrwxr-x 2 simhug01 simhug01 4096 Feb 21 14:24 .
-    drwxrwxr-x 9 simhug01 simhug01 4096 Apr  2  2016 ..
     -rw-rw-r-- 1 simhug01 simhug01 1388 Feb 21 14:24 CA1_sha256_2048_65537_v3_ca_crt.der
     -rw-rw-r-- 1 simhug01 simhug01 1935 Feb 21 14:24 CA1_sha256_2048_65537_v3_ca_crt.pem
     -rw-rw-r-- 1 simhug01 simhug01 1358 Feb 21 14:24 CSF1_1_sha256_2048_65537_v3_usr_crt.der
@@ -243,233 +343,136 @@ For example, in the crts directory the following files have been created:
     -rw-rw-r-- 1 simhug01 simhug01 7133 Feb 21 14:24 SRK3_sha256_2048_65537_v3_ca_crt.pem
     -rw-rw-r-- 1 simhug01 simhug01 1384 Feb 21 14:24 SRK4_sha256_2048_65537_v3_ca_crt.der
     -rw-rw-r-- 1 simhug01 simhug01 7133 Feb 21 14:24 SRK4_sha256_2048_65537_v3_ca_crt.pem
-    simhug01@e113506-lin:/data/2284/test/to_delete/20180220/warp7-pki/cst-2.3.2/keys$
+    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/000000-0000-000000-0000/keys/$
 
-Note the following:
+and the following provides information as to the purpose of these files:
 
-    The CA1_sha256_2048_65537_v3_ca_crt.{pem, der} are the CA root level certificate in plain text and binary encodings.
-    The SRKx_sha256_2048_65537_v3_ca_crt.{pem, der} are the SRK (second level) public key certificate in plain text and binary encodings:
-        The certificate contains the public key of the associated SRKx_sha256_2048_65537_v3_ca_key.{pem, der}.
-    The CSFx_1_sha256_2048_65537_v3_usr_crt.{pem, der} are the (third level) public key certificate in plain text and binary encodings:
-        The certificate contains the public key of the associated CSFx_sha256_2048_65537_v3_ca_key.{pem, der}.
-    The IMGx_1_sha256_2048_65537_v3_usr_crt.{pem, der} are the (third level) public key certificate in plain text and binary encodings:
-        The certificate contains the public key of the associated IMGx_sha256_2048_65537_v3_ca_key.{pem, der}.
-    All the certificates are in X509 format.
+- The CA1_sha256_2048_65537_v3_ca_crt.{pem, der} are the CA root level certificate in plain text and binary encodings.
+- The SRKx_sha256_2048_65537_v3_ca_crt.{pem, der} (x={1,2, 3,4}) are the SRK (second level) public key certificates in plain text and binary encodings:
+    - The certificate contains the public key of the associated SRKx_sha256_2048_65537_v3_ca_key.{pem, der} private key.
+- The CSFx_1_sha256_2048_65537_v3_usr_crt.{pem, der} (x={1,2, 3,4}) are the (third level) public key certificates in plain text and binary encodings:
+    - The certificate contains the public key of the associated CSFx_sha256_2048_65537_v3_ca_key.{pem, der} private key.
+- The IMGx_1_sha256_2048_65537_v3_usr_crt.{pem, der} (x={1,2, 3,4}) are the (third level) public key certificates in plain text and binary encodings:
+    - The certificate contains the public key of the associated IMGx_sha256_2048_65537_v3_ca_key.{pem, der} private key.
+- All the certificates are in X509 format.
 
-In order to program the warp7 OTP, the srktool is used to generate 2 files:
 
-- SRK_1_2_3_4_table.bin e.g. SRK_1_2_3_4_table.bin. This file contains a table of the SRK public keys found in the specified input SRKx_sha256_2048_65537_v3_ca_crt.pem files.
-- SRK_1_2_3_4_fuse.bin e.g. SRK_1_2_3_4_fuse.bin. This file contains a hash of the SRK public keys found in the specified input SRKx_sha256_2048_65537_v3_ca_crt.pem files. xxx_fuse.bin can be used to program the OTP fuses.
+# Step 3: Generate the Fuse and Table Binaries
+
+In order to facilitate programming the warp7 OTP fuses, the CST srktool is used to generate 2 files:
+
+- SRK_1_2_3_4_2048_table.bin. This file contains a table of the SRK public keys found in the specified input SRKx_sha256_2048_65537_v3_ca_crt.pem files.
+- SRK_1_2_3_4_2048_fuse.bin. This file contains a hash of the SRK public keys found in the specified input SRKx_sha256_2048_65537_v3_ca_crt.pem files. 
+  SRK_1_2_3_4_2048_fuse.bin is used to program the OTP fuses.
 
 For example, the following line shows how these files are generated:
 
-    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/000000-0000-000000-0000/keys/$ pushd ../crts
-    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/000000-0000-000000-0000/crts/$ ../linux64/srktool -h 4 -t SRK_1_2_3_4_2048_table.bin -e SRK_1_2_3_4_2048_fuse.bin -d sha256 -c ./SRK1_sha256_2048_65537_v3_ca_crt.pem,./SRK2_sha256_2048_65537_v3_ca_crt.pem,./SRK3_sha256_2048_65537_v3_ca_crt.pem,./SRK4_sha256_2048_65537_v3_ca_crt.pem -f 1
+    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/000000-0000-000000-0000/keys/$ cd ../crts
+    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/000000-0000-000000-0000/crts/$ ../linux64/bin/srktool -h 4 -t SRK_1_2_3_4_2048_table.bin -e SRK_1_2_3_4_2048_fuse.bin -d sha256 -c ./SRK1_sha256_2048_65537_v3_ca_crt.pem,./SRK2_sha256_2048_65537_v3_ca_crt.pem,./SRK3_sha256_2048_65537_v3_ca_crt.pem,./SRK4_sha256_2048_65537_v3_ca_crt.pem -f 1
 
 where:
 
     -h (--hab-ver) <version> specifies the version of the HAB, which we set to 4 for HAB4.
-    -t (--table) <table_file_name> specifies the name of the output table file, which we set to SRK_1_2_3_4_table.bin because its generated from 4 certificated files containing the SRK public keys (specified later).
-    -e (–efuses) <fuse_file_name> specifies the name of the output fuse file, which we set to SRK_1_2_3_4_fuse.bin because its generated from 4 certificated files containing the SRK public keys (specified later).
-    -c (--certs) <cert1,cert2,...,certN> specifies a comma separated list of certificate file names which contain the SRK public keys.
-    -f (--fuse-format) <format> specifies the data format of the SRK efuse binary file. We specify 1 for the default format of 32 fuses (bits) per word.
+    -t (--table) <table_file_name> specifies the name of the output table file, which 
+       is set to SRK_1_2_3_4_2048_table.bin because its generated from 4 certificate files 
+       containing the SRK public keys.
+    -e (–efuses) <fuse_file_name> specifies the name of the output fuse file, 
+       which we set to SRK_1_2_3_4_2048_fuse.bin because its generated from 4 certificate 
+       files containing the SRK public keys.
+    -c (--certs) <cert1,cert2,...,certN> specifies a comma separated list of certificate 
+       file names which contain the SRK public keys.
+    -d, --digest <digestalg>: Message Digest algorithm. Either sha1 or sha256    
+    -f (--fuse-format) <format> specifies the data format of the SRK efuse binary file. 
+       We specify 1 for the default format of 32 fuses (bits) per word.
 
-The full use of srktool is documented in REF4.
-
-Return to the TOPDIR directory by doing the following:
-
-    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/000000-0000-000000-0000/certs/$ popd 
-    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/000000-0000-000000-0000/keys/$ popd
-    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/$ popd 
-    computer:TOP_DIR/$  
-
-
-## Warp7: Step 4: Program OTP fuses with SRK hashes using fuse_util.py
-
-TODO: describe how to do this.
+The full use of srktool is documented in [4].
 
 
-## Warp7: Step 5: Build image mbl-console-image(-test)
+# Step 4: Build Unsigned mbl-console-image-test Image
 
-See the instructions at the following links for details on how to build images:
+Please use the MBL [Instruction for Building Images](https://github.com/ARMmbed/meta-mbl/blob/master/docs/walkthrough.md)
+following instructions to build and image. The test image is created by using the mbl-console-image-test bitbake target, 
+as shown in the following command:
 
-    meta-mbl README
-    meta-mbl-private walkthrough
-
-
-## Warp7: Step 6. Manually Sign image
+    computer:TOP_DIR/build-mbl/$ bitbake mbl-console-image-test 
 
 
-Do the following:
+# Step 6. Manually Sign the Image
 
-    computer:TOP_DIR/$ pushd TOP_DIR/layers/meta-mbl/pki/nxp/sign
-    computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/$ make
+After a build, use the following command to sign the image:
 
-
-This is a sample of the output generated:
-
-    mkdir -p `pwd`/temp
-    mkdir -p `pwd`/signed-binaries
-    cp `pwd`/../../../../build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.gz .
-    cp `pwd`/../boards/000000-0000-000000-0000/keys/* `pwd`/temp
-    cp `pwd`/../boards/000000-0000-000000-0000/crts/* `pwd`/temp
-    cp `pwd`/temp/SRK_1_2_3_4_2048_fuse.bin `pwd`/signed-binaries
-    cp -f /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign//csf-templates/* `pwd`/temp
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/fetch_uboot.sh git `pwd`/temp/u-boot https://git.linaro.org/landing-teams/working/mbl/u-boot.git 224318f95f9e41f916579a20f3275ff3773f9c94
-    Cloning into '/data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/temp/u-boot'...
-    warning: remote HEAD refers to nonexistent ref, unable to checkout.
+    computer:TOP_DIR/layers/meta-mbl/pki/nxp/sign/$ make IMAGE_NAME=<image-name> CST_BOARD_ID=<board-id>
     
-    Switched to a new branch 'mbl-uboot'
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/build_uboot_tools.sh `pwd`/temp/u-boot warp7_secure_config
-    make[1]: Entering directory '/data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/temp/u-boot'
-    make[1]: Leaving directory '/data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/temp/u-boot'
-    make[1]: Entering directory '/data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/temp/u-boot'
-      HOSTCC  scripts/basic/fixdep
-      HOSTCC  scripts/kconfig/conf.o
-      
-      ... much output deleted.
-      
-      HOSTCC  tools/gpimage-common.o
-      HOSTCC  tools/dumpimage.o
-      HOSTLD  tools/dumpimage
-      HOSTCC  tools/mkimage.o
-      HOSTLD  tools/mkimage
-      HOSTCC  tools/proftool
-      HOSTCC  tools/fdtgrep.o
-      HOSTLD  tools/fdtgrep
-    make[1]: Leaving directory '/data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/temp/u-boot'
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/mkimage_ver_check.sh `pwd`/temp/u-boot/tools/mkimage
-    sudo /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/extract-unsigned-images.sh -i mbl-console-image-imx7s-warp-mbl.wic.gz
-    mount /dev/mapper/loop6p1 /tmp/tmp.hg5Mo0WcKS
-    # Append IVT header to u-boot bin
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/image_sign.sh image_sign_mbl_generate_ivt u-boot.bin u-boot.imx CONFIG_SYS_TEXT_BASE u-boot.cfg imximage.cfg.cfgtmp `pwd`/temp `pwd`/temp/u-boot/tools/mkimage
-    # u-boot appends an IVT header so we can sign the .imx binary directly
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/image_sign.sh image_sign_mbl_binary `pwd`/temp 2048-u-boot_sign.csf u-boot.imx `pwd`/../boards/000000-0000-000000-0000/linux64/cst
-    Blocks = 0x877ff400 0x00000000 0x00061c00  "IMAGE_IMX_HAB_NAME_REPLACE"
-    Blocks = 0x877ff400 0x00000000 0x00061c00  "u-boot.imx"
+where:
+
+    image-name      The name of the image in the 
+                    TOP_DIR/build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl 
+                    directory to sign. This can be: 
+                      - mbl-console-image-imx7s-warp-mbl.wic.gz
+                       -mbl-console-image-test-imx7s-warp-mbl.wic.gz
+                    image-name defaults to mbl-console-image-imx7s-warp-mbl.wic.gz.
+    board-id        The subdirectory in the TOP_DIR/layers/meta-mbl/pki/nxp/boards
+                    containing the keying material for the board. The board-id 
+                    defaults to 000000-0000-000000-0000.
+       
+
+To sign the test image with the keying material stored in boards/000000-0000-000000-0000 use the following command:
+
+
+    computer:TOP_DIR/$ cd TOP_DIR/layers/meta-mbl/pki/nxp/sign
+    computer:TOP_DIR/layers/meta-mbl/pki/nxp/sign/$ make IMAGE_NAME=mbl-console-image-test-imx7s-warp-mbl.wic.gz
+
+Excerpts for the generated sample output are shown in the following console output listing:
+
+    mkdir -p `pwd`/temp
+    mkdir -p `pwd`/signed-binaries
+    cp `pwd`/../../../../build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.gz .
+    cp `pwd`/../boards/000000-0000-000000-0000/keys/* `pwd`/temp
+    <<<... much output deleted >>>
     CSF Processed successfully and signed data available in 2048-u-boot_sign.csf-csf-header
-    # Copy to output directory
-    cp `pwd`/temp/u-boot.imx-signed `pwd`/signed-binaries
-    cp `pwd`/temp/u-boot.imx `pwd`/temp/u-boot-recover.imx
-    cp `pwd`/temp/u-boot.imx.log `pwd`/temp/u-boot-recover.imx.log
-    # u-boot appends an IVT header so we can sign the .imx binary directly
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/image_sign.sh image_sign_mbl_binary `pwd`/temp 2048-u-boot-recover_sign.csf u-boot-recover.imx `pwd`/../boards/000000-0000-000000-0000/linux64/cst
-    Blocks = 0x877ff400 0x00000000 0x00061c00  "IMAGE_IMX_HAB_NAME_REPLACE"
-    Blocks = 0x877ff400 0x00000000 0x00061c00  "u-boot-recover.imx"
-    Blocks = 0x00910000 0x0000002c 0x000001d4  "IMAGE_IMX_DCD_NAME_REPLACE"
-    Blocks = 0x877ff400 0x00000000 0x00061c00  "u-boot-recover.imx"
-    Blocks = 0x00910000 0x0000002c 0x000001d4  "u-boot-recover.imx"
-    Blocks = 0x00910000 0x0000002c 0x000001d4  "u-boot-recover.imx"
-    4+0 records in
-    4+0 records out
-    4 bytes copied, 0.00012209 s, 32.8 kB/s
-    4+0 records in
-    4+0 records out
-    4 bytes copied, 0.00014394 s, 27.8 kB/s
-    4+0 records in
-    4+0 records out
-    4 bytes copied, 0.000103629 s, 38.6 kB/s
+    <<<... much output deleted >>>
     CSF Processed successfully and signed data available in 2048-u-boot-recover_sign.csf-csf-header
-    4+0 records in
-    4+0 records out
-    4 bytes copied, 0.000107826 s, 37.1 kB/s
-    # Copy to output directory
-    cp `pwd`/temp/u-boot-recover.imx-signed `pwd`/signed-binaries
-    # Append IVT header to boot script
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/image_sign.sh image_sign_mbl_generate_ivt boot.scr boot.scr.imx CONFIG_LOADADDR u-boot.cfg imximage.cfg.cfgtmp `pwd`/temp `pwd`/temp/u-boot/tools/mkimage
-    # Sign boot script
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/image_sign.sh image_sign_mbl_binary `pwd`/temp 2048-boot_scr_sign.csf boot.scr.imx `pwd`/../boards/000000-0000-000000-0000/linux64/cst
-    Blocks = 0x807ff400 0x00000000 0x00001c00  "IMAGE_IMX_HAB_NAME_REPLACE"
-    Blocks = 0x807ff400 0x00000000 0x00001c00  "boot.scr.imx"
+    <<<... much output deleted >>>
     CSF Processed successfully and signed data available in 2048-boot_scr_sign.csf-csf-header
-    # Copy to output dir
-    cp `pwd`/temp/boot.scr.imx-signed `pwd`/signed-binaries
-    # Append IVT header to boot script
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/image_sign.sh image_sign_mbl_generate_ivt zImage zImage.imx CONFIG_LOADADDR u-boot.cfg imximage.cfg.cfgtmp `pwd`/temp `pwd`/temp/u-boot/tools/mkimage
-    # Sign boot script
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/image_sign.sh image_sign_mbl_binary `pwd`/temp 2048-zimage_sign.csf zImage.imx `pwd`/../boards/000000-0000-000000-0000/linux64/cst
-    Blocks = 0x807ff400 0x00000000 0x008bbc00  "IMAGE_IMX_HAB_NAME_REPLACE"
-    Blocks = 0x807ff400 0x00000000 0x008bbc00  "zImage.imx"
+    <<<... much output deleted >>>
     CSF Processed successfully and signed data available in 2048-zimage_sign.csf-csf-header
-    # Copy to output dir
-    cp `pwd`/temp/zImage.imx-signed `pwd`/signed-binaries
-    # Append IVT header to boot script
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/image_sign.sh image_sign_mbl_generate_ivt imx7s-warp.dtb imx7s-warp.dtb.imx CONFIG_SYS_FDT_ADDR u-boot.cfg imximage.cfg.cfgtmp `pwd`/temp `pwd`/temp/u-boot/tools/mkimage
-    # Sign boot script
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/image_sign.sh image_sign_mbl_binary `pwd`/temp 2048-dtb_sign.csf imx7s-warp.dtb.imx `pwd`/../boards/000000-0000-000000-0000/linux64/cst
-    Blocks = 0x82fff400 0x00000000 0x00007c00  "IMAGE_IMX_HAB_NAME_REPLACE"
-    Blocks = 0x82fff400 0x00000000 0x00007c00  "imx7s-warp.dtb.imx"
+    <<<... much output deleted >>>
     CSF Processed successfully and signed data available in 2048-dtb_sign.csf-csf-header
-    # Copy to output dir
-    cp `pwd`/temp/imx7s-warp.dtb.imx-signed `pwd`/signed-binaries
-    make -f /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign//Makefile optee OPTEE_ROOTFS=rootfs3
-    make[1]: Entering directory '/data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign'
-    mkdir -p `pwd`/temp
-    mkdir -p `pwd`/signed-binaries
-    cp `pwd`/../../../../build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.gz .
-    cp `pwd`/../boards/000000-0000-000000-0000/keys/* `pwd`/temp
-    cp `pwd`/../boards/000000-0000-000000-0000/crts/* `pwd`/temp
-    cp `pwd`/temp/SRK_1_2_3_4_2048_fuse.bin `pwd`/signed-binaries
-    cp -f /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign//csf-templates/* `pwd`/temp
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/fetch_uboot.sh git `pwd`/temp/u-boot https://git.linaro.org/landing-teams/working/mbl/u-boot.git 224318f95f9e41f916579a20f3275ff3773f9c94
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/build_uboot_tools.sh `pwd`/temp/u-boot warp7_secure_config
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/mkimage_ver_check.sh `pwd`/temp/u-boot/tools/mkimage
-    # Append IVT header to boot script
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/image_sign.sh image_sign_mbl_generate_ivt rootfs3/uTee.optee rootfs3/uTee.optee.imx CONFIG_OPTEE_LOAD_ADDR u-boot.cfg imximage.cfg.cfgtmp `pwd`/temp `pwd`/temp/u-boot/tools/mkimage
-    # Sign boot script
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/image_sign.sh image_sign_mbl_binary `pwd`/temp 2048-optee_sign.csf rootfs3/uTee.optee.imx `pwd`/../boards/000000-0000-000000-0000/linux64/cst
-    Blocks = 0x83fff400 0x00000000 0x0003ec00  "IMAGE_IMX_HAB_NAME_REPLACE"
-    Blocks = 0x83fff400 0x00000000 0x0003ec00  "rootfs3/uTee.optee.imx"
+    <<<... much output deleted >>>
     CSF Processed successfully and signed data available in 2048-optee_sign.csf-csf-header
-    # Copy to output dir
-    mkdir -p `pwd`/signed-binaries/rootfs3
-    cp `pwd`/temp/rootfs3/uTee.optee.imx-signed `pwd`/signed-binaries/rootfs3
-    make[1]: Leaving directory '/data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign'
-    make -f /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign//Makefile optee OPTEE_ROOTFS=rootfs5
-    make[1]: Entering directory '/data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign'
-    mkdir -p `pwd`/temp
-    mkdir -p `pwd`/signed-binaries
-    cp `pwd`/../../../../build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.gz .
-    cp `pwd`/../boards/000000-0000-000000-0000/keys/* `pwd`/temp
-    cp `pwd`/../boards/000000-0000-000000-0000/crts/* `pwd`/temp
-    cp `pwd`/temp/SRK_1_2_3_4_2048_fuse.bin `pwd`/signed-binaries
-    cp -f /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign//csf-templates/* `pwd`/temp
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/fetch_uboot.sh git `pwd`/temp/u-boot https://git.linaro.org/landing-teams/working/mbl/u-boot.git 224318f95f9e41f916579a20f3275ff3773f9c94
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/build_uboot_tools.sh `pwd`/temp/u-boot warp7_secure_config
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/mkimage_ver_check.sh `pwd`/temp/u-boot/tools/mkimage
-    # Append IVT header to boot script
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/image_sign.sh image_sign_mbl_generate_ivt rootfs5/uTee.optee rootfs5/uTee.optee.imx CONFIG_OPTEE_LOAD_ADDR u-boot.cfg imximage.cfg.cfgtmp `pwd`/temp `pwd`/temp/u-boot/tools/mkimage
-    # Sign boot script
-    /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/image_sign.sh image_sign_mbl_binary `pwd`/temp 2048-optee_sign.csf rootfs5/uTee.optee.imx `pwd`/../boards/000000-0000-000000-0000/linux64/cst
-    Blocks = 0x83fff400 0x00000000 0x0003ec00  "IMAGE_IMX_HAB_NAME_REPLACE"
-    Blocks = 0x83fff400 0x00000000 0x0003ec00  "rootfs5/uTee.optee.imx"
+    <<<... much output deleted >>>
     CSF Processed successfully and signed data available in 2048-optee_sign.csf-csf-header
-    # Copy to output dir
-    mkdir -p `pwd`/signed-binaries/rootfs5
-    cp `pwd`/temp/rootfs5/uTee.optee.imx-signed `pwd`/signed-binaries/rootfs5
-    make[1]: Leaving directory '/data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign'
-    make -f /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign//Makefile combine-image
-    make[1]: Entering directory '/data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign'
+    <<<... much output deleted >>>
     sudo /data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign/./scripts/add-signed-images.sh -i mbl-console-image-imx7s-warp-mbl.wic.gz
     make[1]: Leaving directory '/data/2284/test/to_delete/20180313/layers/meta-mbl/pki/sign'
 
+Part of the make file operations need to be run with sudo privileges (in order to mount the loop back device used for 
+creating the signed image). Enter your account password when prompted.
 
-If everything is successful then a signed image signed-mbl-console-image-imx7s-warp-mbl.wic.gz will be seen in the current directory:
+On success, a signed image (signed-mbl-console-image-imx7s-warp-mbl.wic.gz) file will have been created in the current directory:
 
     drwxrwxr-x 2 simhug01 simhug01      4096 Mar 13 16:07 csf-templates
     -rw-rw-r-- 1 simhug01 simhug01      8041 Mar 13 17:21 Makefile
-    -rw-r--r-- 1 simhug01 simhug01 135265804 Mar 13 17:24 mbl-console-image-imx7s-warp-mbl.wic.gz
+    -rw-r--r-- 1 simhug01 simhug01 135265804 Mar 13 17:24 mbl-console-image-test-imx7s-warp-mbl.wic.gz
     drwxrwxr-x 2 simhug01 simhug01      4096 Mar 13 17:23 scripts
     drwxrwxr-x 4 simhug01 simhug01      4096 Mar 13 17:24 signed-binaries
-    -rw-r--r-- 1 simhug01 simhug01 144713770 Mar 13 17:25 signed-mbl-console-image-imx7s-warp-mbl.wic.gz
+    -rw-r--r-- 1 simhug01 simhug01 144713770 Mar 13 17:25 signed-mbl-console-image-test-imx7s-warp-mbl.wic.gz
     drwxrwxr-x 5 simhug01 simhug01     12288 Mar 13 17:24 temp
 
-Flash the board with the signed-mbl-console-image-imx7s-warp-mbl.wic.gz image.
+
+To clean the working directory then the following command can be used:
+
+    computer:TOP_DIR/layers/meta-mbl/pki/nxp/sign/$ make clean
 
 
-## Step X boot after flashing
 
-This is what you get from hab_status when you boot an unsigned image when the OTP fuses have not been programmed:
+# Step 6: Flash/Boot the Signed Image
+
+Please use the following instructions in the [Write the disk image to your device and boot Mbed Linux](https://github.com/ARMmbed/meta-mbl/blob/master/docs/walkthrough.md#-8-write-the-disk-image-to-your-device-and-boot-mbed-linux)
+section of the MBL [Instructions for Building Images](https://github.com/ARMmbed/meta-mbl/blob/master/docs/walkthrough.md).
+
+When the board is booted press a key at the u-boot prompt. 
+Type hab_status to see if any events have been generated, as illustrated in the console output below: 
 
 
     U-Boot 2018.03-rc2+fslc+g224318f (Feb 26 2018 - 18:04:12 +0000)
@@ -549,21 +552,73 @@ This is what you get from hab_status when you boot an unsigned image when the OT
     ENG = HAB_ENG_ANY (0x00)
     =>
 
+As the board currently has the OTP fuse settings that were programmed in the factory (0x00000000 for each fuse)
+then the HAB events are indeterminate (the NXP documentation is silent on the system behaviour in this case).
 
-Warp7: Step 7: Flash and boot signed image.
 
-See the instructions at the following links for details on how to flash and reboot the board:
+# Step 7: Program the OTP Fuses
 
-    meta-mbl README
-    meta-mbl-private walkthrough
+At the present time, the OTP fuse programming tool imx7-efuse-util.py is not included in the mbl-console-image-test distribution
+and therefore has to be copied to the board. The imx7-efuse-util.py script is available at the following location:
 
-Warp7: Step 8: OPTIONAL: Close and lock device.
+    computer:TOP_DIR/layers/meta-mbl/pki/nxp/sign/scripts/$ ls -al 
 
-TODO
+    total 72
+    drwxrwxr-x 2 simhug01 simhug01  4096 Mar 15 11:54 ./
+    drwxrwxr-x 6 simhug01 simhug01  4096 Mar 15 12:01 ../
+    -rwxrwxr-x 1 simhug01 simhug01  8836 Mar 13 16:07 add-signed-images.sh*
+    -rwxrwxr-x 1 simhug01 simhug01   322 Mar 13 16:07 build_uboot_tools.sh*
+    -rwxrwxr-x 1 simhug01 simhug01  8217 Mar 13 16:07 extract-unsigned-images.sh*
+    -rwxrwxr-x 1 simhug01 simhug01   396 Mar 13 16:07 fetch_uboot.sh*
+    -rwxrwxr-x 1 simhug01 simhug01  8746 Mar 13 17:23 image_sign.sh*
+    -rwxrwxr-x 1 simhug01 simhug01 14626 Mar 15 11:54 imx7-efuse-util.py*
+    -rwxrwxr-x 1 simhug01 simhug01   448 Mar 13 16:07 mkimage_ver_check.sh*
 
-Step 3.4: Verify authentication failure events in log
 
-After rebooting the board and logging in, you can run the following script to check on the OTP fuse settings and the boot_mode (SEC_CONFIG) setting. See below for an example.
+Follow the [instructions for configuring wifi]( https://github.com/ARMmbed/meta-mbl/blob/master/docs/wifi.md) and then 
+scp the imx7-efuse-util.py script onto your board, e.g. into /home/root.
+
+Move to the /boot directory on the target board and check that the SRK_1_2_3_4_2048_fuse.bin file is present:
+
+    root@imx7s-warp-mbl:~# cd /boot
+    root@imx7s-warp-mbl:/boot# ls -al 
+    total 17985
+    drwxr-xr-x    2 root     root         16384 Jan  1  1970 .
+    drwxr-xr-x   19 root     root          1024 Mar 13 03:57 ..
+    -rwxr-xr-x    1 root     root            32 Mar  6 17:13 SRK_1_2_3_4_2048_fuse.bin
+    -rwxr-xr-x    1 root     root          1452 Feb 26 18:22 boot.scr
+    -rwxr-xr-x    1 root     root         11072 Mar  6 17:13 boot.scr.imx-signed
+    -rwxr-xr-x    1 root     root         27470 Feb 26 18:22 imx7s-warp.dtb
+    -rwxr-xr-x    1 root     root         35648 Mar  6 17:13 imx7s-warp.dtb.imx-signed
+    -rwxr-xr-x    1 root     root       9153752 Feb 26 18:22 zImage
+    -rwxr-xr-x    1 root     root       9161536 Mar  6 17:13 zImage.imx-signed
+    root@imx7s-warp-mbl:/boot# 
+
+The SRK_1_2_3_4_2048_fuse.bin contains the hashes of the public keys that will be
+programmed into the OTP fuses. The boot chain components have been 
+signed with the corresponding private keys.   
+
+On the board, the script can be run in the following way to get the usage message:
+
+    root@imx7s-warp-mbl:~# python3 ~/imx7-efuse-util.py -h
+
+    usage: imx7-efuse-util.py [-h] [-k KEYFILE] [-p KEYFILE_PATH] [-l] [-y] [-s]
+                              [-d]
+    
+    optional arguments:
+      -h, --help       show this help message and exit
+      -k KEYFILE       keyfile containing data to write to fuses
+      -p KEYFILE_PATH  path to write keyfile to
+      -l               Lock part to secure mode - irrevocable
+      -y               Yes to all prompts
+      -s               Print fuse status
+      -d               Dump entire fuse contents
+    root@imx7s-warp-mbl:/boot# 
+
+
+Before programming the OTP fuses, use the imx7-efuse-util.py -s option to inspect 
+the status of the fuses. The output of the script should look similar to the 
+output below: 
 
     root@imx7s-warp:~# python3 imx7-efuse-util.py -s
     Path : /sys/bus/nvmem/devices/imx-ocotp0/nvmem
@@ -586,49 +641,177 @@ After rebooting the board and logging in, you can run the following script to ch
             0x00000000
             0x00000000
 
-todo: add here how to review HAV event log showing authentication failures
-Warp7 Solution 3: Step 4: Program OTP Fuses
 
-TODO:
+Observe the following details about the output:
+- The FORCE_COLD_BOOT setting is 0. 
+- The BT_FUSE_SEL setting is 1.
+- The DIR_BT_DIS setting is 0.
+- The SEC_CONFIG setting is 0.
+- The Boot Mode setting is MMC/eMMC. 
+- See [2] Chapter 6 for the definition of the above settings.
+- The Warp7 has 2 banks of 4 x 32bit OTP fuses, denoted Bank 6 and Bank 7 in the output.
+  Hence there are 8 x 32 bit OTP fuse bits in total. This suggests the SRK public key hashes are each 64bits in size. 
+- Notice that all the OTP fuses are reported as 0x00000000 as this board has been received from the factory
+  and not programmed before.
 
-    the imx7s-efuse-util.py is not on the board by default. Hence, need to build mbl-console-image-test (as has ssh to scp the script onto the board, and has python so can run script)
-    would be better if imx7-efuse-util.py was in the w7 test image so it could be used to program the .bin file.
-    the program the otp fuses with the following command (written below)
-    then remove the fuse.bin and the script, as they'll never be used again (may need to close the device).
+The OTP fuses can then be programmed in the following way:
 
-On the board:
-
-    imx7-efuse-util.py -k /etc/cst/warp7/crts/SRK_1_2_3_4_fuse.bin
-
-
-TODO: Actually the fuse.bin is now present in the /boot directory, so the above command should be changed
-Warp7 Solution 3: Step 5: Reboot Board
-Warp7 Solution 3: Step 6: Verify No Authentication Failure Events
-
-
-References
-
-REF1: https://boundarydevices.com/high-assurance-boot-hab-dummies/ (see attachment  https___boundarydevices.pdf to this page)
-
-REF2: Security Reference Manual for i.MX, 7Dual and 7Solo Applications Processors, IMX7DSSRM-security.pdf (file attached to this page).
-
-REF3: Secure Boot on i.MX50, i.MX53, and i.MX 6 Series using HABv4, AN4581_HAB_USB_appnote.pdf (file attached to this page).
-
-REF4: HAB Code-Signing Tool, User’s Guide, HABCST_UG.pdf (file attached to this page).
-
-REF5: mbed Linux storage partition specification, https://github.com/ARMmbed/mbl-specs/blob/jh-partitions/PARTITIONS.md
-
-REF6: Trusted Board Boot Requirements Client (TBBR-Client), 
-
-http://teamsites.arm.com/sites/atg/ATGArchitecture/System%20Architecture/PDD/Security/DEN0006_Trusted_Board_Boot_Requirements_CLIENT.pdf
-
-REF7: Trusted Base System Architecture Client (TBSA-Client), 
-
-http://teamsites.arm.com/sites/atg/ATGArchitecture/System%20Architecture/PDD/Security/ARM-DEN-0021C%20Trusted_Base_System_Architecture_Client.pdf
-
-REF8: How to setup your own CA with OpenSSL, https://gist.github.com/Soarez/9688998
+    root@imx7s-warp-mbl:/boot# python3 ~/imx7-efuse-util.py -k SRK_1_2_3_4_2048_fuse.bin 
+    Write key values in SRK_1_2_3_4_2048_fuse.bin to SRK fuses => /sys/bus/nvmem/devices/imx-ocotp0/nvmem y/n y
+    Key 0 0xbfeddd04
+    Key 1 0xbb0a8ec7
+    Key 2 0xd4d51226
+    Key 3 0xba3980c2
+    Key 4 0x9e99ae87
+    Key 5 0x0eb3b21c
+    Key 6 0x475c08e3
+    Key 7 0xa55adc2c
+    root@imx7s-warp-mbl:/boot# 
 
 
+After the OTP fuses have been programmed, this is the sample output of the imx7-efuse-util.py script:
+
+    root@imx7s-warp-mbl:/boot# python3 ~/imx7-efuse-util.py -s
+    Path: /sys/bus/nvmem/devices/imx-ocotp0/nvmem
+    Boot Fuse settings
+    OCOTP_BOOT_CFG0 = 0x10002820
+            FORCE_COLD_BOOT = 0
+            BT_FUSE_SEL     = 1
+            DIR_BT_DIS      = 0
+            SEC_CONFIG      = 0
+            Boot Mode       = MMC/eMMC
+    Secure fuse keys
+    Bank 6
+            0xbfeddd04
+            0xbb0a8ec7
+            0xd4d51226
+            0xba3980c2
+    Bank 7
+            0x9e99ae87
+            0x0eb3b21c
+            0x475c08e3
+            0xa55adc2c
+
+Observe the following details about the output:
+- The Bank 6 and 7 OTP fuses now have non-zero settings as they've been programmed with the hashes of 
+  SRKs.        
+
+
+# Step 8: Reboot and Verify Successful Secure Boot 
+
+
+Having programmed the OTP fuses with the correct hashes, the board can be rebooted and the 
+hab_status event log inspected. The following is the console log of the u-boot initialisation
+and the output of the hab_status command:
+
+
+    - U-Boot 2018.03-rc2+fslc+g224318f (Feb 26 2018 - 18:04:12 +0000)
+    
+    CPU:   Freescale i.MX7S rev1.2 800 MHz (running at 792 MHz)
+    CPU:   Extended Commercial temperature grade (-20C to 105C) at 44C
+    Reset cause: POR
+    Board: WARP7 in secure mode OPTEE DRAM 0x9d000000-0xa0000000
+    I2C:   ready
+    DRAM:  464 MiB
+    PMIC: PFUZE3000 DEV_ID=0x30 REV_ID=0x11
+    MMC:   FSL_SDHC: 0
+    Loading Environment from MMC... *** Warning - bad CRC, using default environment
+    
+    Failed (-5)
+    In:    serial
+    Out:   serial
+    Err:   serial
+    SEC0: RNG instantiated
+    Net:   usb_ether
+    Error: usb_ether address not set.
+    
+    Hit any key to stop autoboot:  0 
+    => hab_status
+    
+    Secure boot disabled
+    
+    HAB Configuration: 0xf0, HAB State: 0x66
+    No HAB Events Found!
+    
+    => 
+    
+Observe the following from the above output:
+- The hab_status command reports "No HAB Events Found!" which indicates u-boot has 
+  successfully authenticated all of the components in the boot chain. If  you do not see 
+  this message then something has gone wrong with the signing and/or authentication 
+  process. Ensure that this message is reported before locking the device.
+
+
+# Step 9: OPTIONAL: Close and lock device.
+
+Use the following command to lock the device:
+
+    root@imx7s-warp:~# python3 imx7-efuse-util.py -l
+
+
+WARNING: this is a one time irrevocable operation so ENSURE SUCCESSFUL AUTHENTICATION has been reported by the hab_status command
+before locking the device.
+
+
+ An example of the outpur from imx7-efuse-util.py when locking the board into secure boot mode is shown below:
+    
+    root@imx7s-warp:~# python3 imx7-efuse-util.py -l
+    Secure fuse keys
+    Bank 6
+            0xbfeddd04
+            0xbb0a8ec7
+            0xd4d51226
+            0xba3980c2
+    Bank 7
+            0x9e99ae87
+            0x0eb3b21c
+            0x475c08e3
+            0xa55adc2c
+    Lock part into secure-boot mode with above keys ?  y/n y
+    Are you REALLY sure ? y/n y
+    Key 0 0xbfeddd04
+    Key 1 0xbb0a8ec7
+    Key 2 0xd4d51226
+    Key 3 0xba3980c2
+    Key 4 0x9e99ae87
+    Key 5 0x0eb3b21c
+    Key 6 0x475c08e3
+    Key 7 0xa55adc2c
+    Boot Fuse settings
+    OCOTP_BOOT_CFG0 = 0x12002820
+            FORCE_COLD_BOOT = 0
+            BT_FUSE_SEL     = 1
+            DIR_BT_DIS      = 0
+            SEC_CONFIG      = 1
+            Boot Mode       = MMC/eMMC
+
+ 
+
+# References
+
+1. [Boundary Devices NXP HAB for Dummies ][hab-for-dummies]
+
+2. Security Reference Manual for i.MX, 7Dual and 7Solo Applications Processors, IMX7DSSRM-security.pdf.
+
+3. Secure Boot on i.MX50, i.MX53, and i.MX 6 Series using HABv4, AN4581_HAB_USB_appnote.pdf.
+
+4. HAB Code-Signing Tool, User’s Guide, HABCST_UG.pdf.
+
+5. [mbed Linux storage partition specification][mbed-Linux-storage-partition-specification]
+
+6. Trusted Board Boot Requirements Client (TBBR-Client), ARM Confidential document. 
+
+7. Trusted Base System Architecture Client (TBSA-Client), ARM Confidential document.
+
+8. [How to setup your own CA with OpenSSL][How-to-setup-your-own-CA-with-OpenSSL]
+
+9. [NXP Webpage for accepting CST Licence agreement and downloading the tool][NXP-Webpage-for-accepting-CST-Licence-agreement-and-downloading-the-tool]
+
+10. [Variwiki Page on NXP High Assurance Boot](http://www.variwiki.com/index.php?title=High_Assurance_Boot)
 
 
 
+[hab-for-dummies]: https://boundarydevices.com/high-assurance-boot-hab-dummies/ (see attachment  https___boundarydevices.pdf to this page)
+[mbed-Linux-storage-partition-specification]: https://github.com/ARMmbed/meta-mbl/blob/master/docs/partitions.md
+[How-to-setup-your-own-CA-with-OpenSSL]: https://gist.github.com/Soarez/9688998
+[NXP-Webpage-for-accepting-CST-Licence-agreement-and-downloading-the-tool]: https://www.nxp.com/webapp/sps/download/license.jsp?colCode=IMX_CST_TOOL

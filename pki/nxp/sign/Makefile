@@ -1,6 +1,6 @@
 #
 # Makefile for rebuilding signed i.MX7 MBL image binaries
-# SPDX-License-Identifier:      GPL-2.0
+# SPDX-License-Identifier: Apache-2.0
 #
 
 
@@ -16,18 +16,17 @@ UBOOT_BOARD_CFG = imximage.cfg.cfgtmp
 MAKEDIR=$(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 SIGNED_BINARIES ?= `pwd`/signed-binaries
 IMAGE_NAME ?= mbl-console-image-imx7s-warp-mbl.wic.gz
-IMAGE_DIR ?= `pwd`/../../../../build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl
+IMAGE_NAME_TEST ?= mbl-console-image-test-imx7s-warp-mbl.wic.gz
+IMAGE_DIR ?= `pwd`/../../../../../build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl
 IMAGE_FILENAME ?= ${IMAGE_DIR}/${IMAGE_NAME}
 
 
 # CST
-#CST_TOOLS_DIR = `pwd`/../../../../mbl-nxp-private/tools
 CST_TOOLS_DIR = ${CST_BOARD_DIR}
 CST_BOARD_DIR = `pwd`/../boards
 CST_BOARD_ID ?= 000000-0000-000000-0000
 CST_PATH = ${CST_BOARD_DIR}/${CST_BOARD_ID}
-CST_BIN ?= ${CST_PATH}/linux64/cst
-CST_TARBALL = cst-2.3.2.tar.gz
+CST_BIN ?= ${CST_PATH}/linux64/bin/cst
 CSF_KEYS ?= ${CST_PATH}/keys
 CRTS_DATA ?= ${CST_PATH}/crts
 SRK_FUSE ?= SRK_1_2_3_4_2048_fuse.bin
@@ -252,6 +251,9 @@ clean: dirs-clean image_clean
 	rm -f ${TEMP}/*
 	rm -f ${SIGNED_BINARIES}/*
 	rm -f signed-${IMAGE_NAME}
+	rm -f signed-${IMAGE_NAME_TEST}
+	rm -f ${IMAGE_NAME}
+	rm -f ${IMAGE_NAME_TEST}
 
 
 test:

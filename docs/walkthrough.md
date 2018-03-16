@@ -6,7 +6,7 @@ Warp7 and Raspberry Pi 3 boards are currently supported.
 
 ## Disclaimer
 
-The Mbed Linux project is in its early stages and information found in this document may become stale very quickly. The `jh-unstable` branches of repositories used in these instructions contain hacks and unreviewed code.
+The Mbed Linux project is in its early stages and information found in this document may become stale very quickly.
 
 ## Overview
 
@@ -98,8 +98,8 @@ This will generate a file `update_default_resources.c` that will be required dur
 ## <a name="get-meta-layers"></a> 5. Download the required Yocto/OpenEmbedded "meta" layers
 ```
 cd ~/mbl
-mkdir mbl-unstable && cd mbl-unstable
-repo init -u ssh://git@github.com/armmbed/mbl-manifest.git -b jh-unstable -m internal.xml
+mkdir mbl-alpha && cd mbl-alpha
+repo init -u ssh://git@github.com/armmbed/mbl-manifest.git -b alpha -m restricted.xml
 repo sync
 ```
 
@@ -117,7 +117,7 @@ The following table lists the {MACHINE, DISTRO} values for the Mbed Linux suppor
 | Warp7          | `imx7s-warp-mbl` | `mbl` |
 | Raspberry Pi 3 | `raspberrypi3`   | `mbl`      |
 
-This command should change your working directory to the "build directory" `~/mbl/mbl-unstable/build-mbl`. It also sets some environment variables that will affect how `bitbake` behaves, so ensure that you are using this shell instance when running any `bitbake` commands later.
+This command should change your working directory to the "build directory" `~/mbl/mbl-alpha/build-mbl`. It also sets some environment variables that will affect how `bitbake` behaves, so ensure that you are using this shell instance when running any `bitbake` commands later.
 
 
 Copy the Mbed Cloud dev credentials file and the Update resources file to the build directory:
@@ -157,8 +157,8 @@ be replaced with the MACHINE value for your device from the table in [section
 
 | Image type               | Path |
 |--------------------------|------|
-| Full disk image          | `~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.wic.gz` |
-| Root file system archive | `~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.tar.xz` |
+| Full disk image          | `~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.wic.gz` |
+| Root file system archive | `~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.tar.xz` |
 
 
 ## <a name="write-image-and-boot"></a> 8. Write the disk image to your device and boot Mbed Linux
@@ -182,7 +182,7 @@ to expose the Warp7's flash device to Linux as USB mass storage. You should now 
 
 From a Linux prompt Write the disk image to the Warp7's flash device with
 ```
-gunzip -c ~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.gz | sudo dd status=progress conv=fsync bs=4M of=/dev/sdX
+gunzip -c ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.gz | sudo dd status=progress conv=fsync bs=4M of=/dev/sdX
 ```
 replacing `/dev/sdX` with the correct device file for the Warp7's flash device. This may take some time.
 
@@ -204,7 +204,7 @@ Connect a micro SD card to your PC. You should see the SD card device file in `/
 
 Write the disk image to the SD card with
 ```
-gunzip -c ~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3/mbl-console-image-raspberrypi3.wic.gz | sudo dd status=progress conv=fsync bs=4M of=/dev/sdX
+gunzip -c ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3/mbl-console-image-raspberrypi3.wic.gz | sudo dd status=progress conv=fsync bs=4M of=/dev/sdX
 ```
 replacing `/dev/sdX` with the correct device file for the SD card. This may take some time.
 
@@ -271,7 +271,7 @@ replacing `<api-key>` with the key obtained earlier.
 
 The firmware "payload" used for updates is the "root filesystem archive" generated during the Mbed Linux build process. I've noticed that `manifest-tool` sometimes barks if the path to the firmware image is too long, so link this file into the manifests directory with
 ```
-ln -s ~/mbl/mbl-unstable/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.tar.xz test-image
+ln -s ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.tar.xz test-image
 ```
 where `<MACHINE>` is the MACHINE value for your device from the table in [section 6](#set-up-build-env).
 

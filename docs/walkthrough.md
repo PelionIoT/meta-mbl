@@ -52,17 +52,19 @@ Contact Nadya.Sandler@arm.com or Jyri.Ryymin@arm.com to get an Mbed Cloud accoun
 
 ### <a name="install-software-dependencies"></a> 1.2. Installing software dependencies
 
-The following packages are required by `repo` and/or `bitbake`:
+The following packages are required by software used later in this document:
 * chrpath.
 * curl.
+* gawk.
 * git.
 * python-dev.
 * texinfo.
+* whiptail.
 
 The command to install them will look something like this:
 
 ```
-sudo apt-get install chrpath curl git python-dev texinfo
+sudo apt-get install chrpath curl gawk git python-dev texinfo whiptail
 ```
 
 ### <a name="install-google-repo"></a> 1.3. Installing Google's repo tool
@@ -118,7 +120,7 @@ repo sync
 You need to configure your build environment for your device, including setting your working directory to the build directory (in this case `~/mbl/mbl-alpha/build-mbl`). To set up your build environment, use the following command:
 
 ```
-MACHINE=<machine> DISTRO=<distro> . setup_environment
+MACHINE=<machine> DISTRO=<distro> . setup-environment
 ```
 Select the {MACHINE, DISTRO} values for your Mbed Linux device from the table below:
 
@@ -129,10 +131,12 @@ Select the {MACHINE, DISTRO} values for your Mbed Linux device from the table be
 
 So, for example, to set up the build environment for a Warp7 board, your command would look like this:
 ```
-MACHINE=imx7s-warp-mbl DISTRO=mbl . setup_environment
+MACHINE=imx7s-warp-mbl DISTRO=mbl . setup-environment
 ```
 
 <span class="notes">**Note:** During the build process, make sure you are using this shell instance when running `bitbake` commands, as the set-up script changes bitbake settings by setting environment variables of the shell process.</span>
+
+**Warning:**: Do not source the setup-environment script more that once in a terminal session. Invoking the script a second time can corrupt environment variables and cause `bitbake` commands to fail in unexpected places.
 
 Copy your Mbed Cloud dev credentials file and Update resources file to the build directory, as follows:
 ```
@@ -152,6 +156,8 @@ To generate these files, use the following command:
 ```
 bitbake mbl-console-image
 ```
+You will see several "WARNING" messages in the `bitbake` output - these are safe to ignore.
+
 **File locations**
 
 The paths of these files are given in the table below, where `<MACHINE>` should be replaced with the MACHINE value for your device from the table in [section 6](#set-up-build-env).
@@ -188,12 +194,29 @@ To transfer your disk image to the Warp7's flash device, you must first access t
     ```
     ums 0 mmc 0
     ```
-    You should now see the Warp7's flash device in `/dev`, probably as `/dev/sdX` for some letter `X`. The output of `lsblk` can be useful to identify the name of the device.
+    You should now see device files with `WaRP7` in their names in `/dev/disk/by-id` for the Warp7's flash device and its partitions. For example you might see something like:
+    ```
+    $ find /dev/disk/by-id -name '*WaRP7*'
+    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0-part7
+    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0-part5
+    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0-part3
+    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0-part2
+    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0-part6
+    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0-part1
+    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0-part4
+    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0
+    $
+    ```
+    `mbl-console-image-imx7s-warp-mbl.wic.gz` is a full disk image so should be written to the whole flash device, not a partition. The device file for the whole flash device is the one without `-part` in the name (`/dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0` in this example).
+1. Ensure that none of the Warp7's flash partitions are mounted by running:
+    ```
+    sudo umount /dev/disk/by-id/*WaRP7*-part*
+    ```
 1. From a Linux prompt, write the disk image to the Warp7's flash device using the following command:
     ```
-    gunzip -c ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.gz | sudo dd status=progress conv=fsync bs=4M of=/dev/sdX
+    gunzip -c ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.gz | sudo dd status=progress conv=fsync bs=512 of=/dev/disk/by-id/<device-file-name>
     ```
-    replacing `/dev/sdX` with the correct device file for the Warp7's flash device. This may take some time.
+    replacing `<device-file-name>` with the correct device file for the Warp7's flash device. This command can take about 20 minutes to complete and may appear to freeze while it is running.
 1. When `dd` has finished eject the device:
     ```
     sudo eject /dev/sdX
@@ -207,7 +230,12 @@ To transfer your disk image to the Warp7's flash device, you must first access t
 
 ### 8.2. Write the full disk image to a Raspberry Pi 3 device
 
-1. Connect a micro SD card to your PC. You should see the SD card device file in `/dev`, probably as `/dev/sdX` for some letter `X`. The output of `lsblk` can be useful to identify the name of the device.
+1. Connect a micro SD card to your PC. You should see the SD card device file in `/dev`, probably as `/dev/sdX` for some letter `X` as well as device files for its partitions `/dev/sdXN` for some numbers `N`. The output of `lsblk` can be useful to identify the name of the device.
+1. Ensure that none of the micro SD card's partitions are mounted by running:
+    ```
+    sudo umount /dev/sdX*
+    ```
+    replacing `/dev/sdX` with the correct device file name prefix for the SD card partitions.
 1. Write the disk image to the SD card using the following command:
     ```
     gunzip -c ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3/mbl-console-image-raspberrypi3.wic.gz | sudo dd status=progress conv=fsync bs=4M of=/dev/sdX

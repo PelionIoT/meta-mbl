@@ -45,10 +45,9 @@ To build and run Mbed Linux using this guide you will need:
 
 ### <a name="get-cloud-account"></a> 1.1. Getting an Mbed Cloud account
 
-Contact Nadya.Sandler@arm.com or Jyri.Ryymin@arm.com to get an Mbed Cloud account.  You will need to let them know:
-- Which team account to use, for example, arm-mbed-linux.
-- That you are using Linux.
-- That you need an account with a high firmware storage limit, as Mbed Linux firmware packages can be 40-50MiB.
+Request an account using the form at https://cloud.mbed.com/contact. You will need include the following information in the request:
+* That you are using Mbed Linux.
+* That you need an account with a high firmware storage limit, as Mbed Linux firmware packages can be 40-50MiB.
 
 ### <a name="install-software-dependencies"></a> 1.2. Installing software dependencies
 

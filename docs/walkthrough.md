@@ -294,7 +294,7 @@ The device has two banks of software:
 - The running bank. A device partition storing the rootfs for the running system.
 - The non-running bank. A device partition that will receive the firmware update.
 
-You can use `lsblk` to check which partition is mounted at `/`.
+You can run `lsblk` on the device to check which partition is mounted at `/`.
 
 During a firmware update, the update software:
 

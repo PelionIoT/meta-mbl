@@ -159,7 +159,7 @@ You will see several "WARNING" messages in the `bitbake` output - these are safe
 
 **File locations**
 
-The paths of these files are given in the table below, where `<MACHINE>` should be replaced with the MACHINE value for your device from the table in [section 6](#set-up-build-env).
+The paths of these files are given in the table below, where `<MACHINE>` should be replaced with the MACHINE value for your device from the table in [Section 6](#set-up-build-env).
 
 | Image type               | Path |
 |--------------------------|------|
@@ -317,7 +317,7 @@ To upload your firmware update image to the Cloud:
 
 - Log into the [Mbed Cloud Portal](https://portal.mbedcloud.com/login).
 - On the **Firmware Update** tab, select **Images>Upload new images**.
-- Select the update image on your local hard disk that contains the root file system image for upgrading. For a Warp7 device, for example, the update image will have a filename like this: `mbl-console-image-imx7s-warp-mbl-<date>.rootfs.tar.xz`.
+- Select the update image on your local hard disk that contains the root file system image for upgrading. For a Warp7 device, for example, the update image will have a filename like this: `mbl-console-image-imx7s-warp-mbl.tar.xz`.
 - Provide a name for the firmware image, such as, "test\_image\_20180125\_1", and if required, a description.
 - Press the **Upload firmware image** button.
 - Copy the firmware image URL. You will need this URL to create the manifest (described in the next section).
@@ -327,14 +327,18 @@ To upload your firmware update image to the Cloud:
 To use the manifest-tool to create a manifest for the firmware image:
 
 - Make sure the current working directory is where `manifest-tool init` was performed.
+- Create a symbolic link to the firmware image that was uploaded in [Update Step 2](#update2-2):
+  ```
+  ln -s ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.tar.xz test-image
+  ```
+  where `<MACHINE>` should be replaced with the MACHINE value for your device from the table in [Section 6](#set-up-build-env). This step is required because sometimes `manifest-tool` doesn't cope well with long file names.
 - Create a manifest called "test-manifest" by using the following command:
     ```
-    manifest-tool create -p test-image -u http://firmware-catalog-media-8a31.s3.dualstack.eu-west-1.amazonaws.com/test-image -o test-manifest
+    manifest-tool create -p test-image -u URL -o test-manifest
     ```
     Where:
-    - The **test-image** is a symlink to the full name of the image file to be used, such as, `mbl-console-image-imx7s-warp-mbl-20180124161247.rootfs.tar.xz`. The tool sometimes doesn't cope
-  very well with long filenames.
-    - The **-u URL** is the firmware image URL copied to the clipboard in the previous section.
+    - The **test-image** is the symlink to the firmware image uploaded in [Update Step 2](#update2-2).
+    - The **URL** is the firmware image URL copied to the clipboard in the previous section.
     - The **test-manifest** is the name of the output manifest file.
 
 ### <a name="update2-4"></a> 12.4. Update Step 4: Upload the manifest to the Mbed Cloud
@@ -380,6 +384,7 @@ To run your update campaign:
     - The firmware update process may take a while to complete.
     - On the device, you can monitor the device console to see the update occurring using `tail -f /var/log/mbl-cloud-client.log` .
     - On the Mbed Cloud Portal, as the campaign progresses, it reports the **Publishing** state.
+    - When the firmware update has completed, the Mbed Cloud Portal will report that the campaign is in the **Deployed** state.
 - Once the firmware update is complete, the device reboots.
 - When the device comes up, login and verify that the running bank (partition) has changed from that noted in update step 1.
 

@@ -1,4 +1,4 @@
-# Warp 7: How to Sign Images
+# Warp 7: How to sign images
 
 This document describes how to sign Warp7 images, program One-Time Programmable fuses and check whether
 the secure boot authentication has been completed successfully. The board can then (optionally) be locked.
@@ -28,7 +28,7 @@ This section defines the terminology used throughout the document:
     TPM: Trusted Platform Module
 
 
-## Known Issues
+## Known issues
 
 The known issues with signing a Warp7 image include:
 
@@ -43,7 +43,7 @@ The developer work-flow steps for booting a signed image includes the following 
 
 - Step 1: Prerequisites.
     - Acquire the NXP CST and install required packages.
-- Step 2: Generate Signing Keys.
+- Step 2: Generate signing keys.
     - Use the CST tool `hab4_pki_tree.sh` to generate signing keys and certificates.
 - Step 3: Generate the Fuse and Table Binaries.
     - Use the CST srktool to generate the fuse and table binary files for programming OTP fuses.
@@ -51,7 +51,7 @@ The developer work-flow steps for booting a signed image includes the following 
     - The test image is used first as it contains Python3 which is required to run the OTP programming tool.
 - Step 5. Sign the image.
     - Sign the mbl-console-image-test image using the signing makefile tool.
-- Step 6: Flash/Boot the signed image.
+- Step 6: Flash/boot the signed image.
     - Inspect the `hab_status` report.
 - Step 7: Program the OTP fuses.
     - Use the imx7-efuse-util.py tool to program the OTP fuses.
@@ -59,12 +59,14 @@ The developer work-flow steps for booting a signed image includes the following 
     - Reboot and check the `hab_status` reports secure boot successful authentication.
 - Step 9: OPTIONAL: Close and lock device.
 
+Each step is described in more detail below.
+
 # Step 1: Prerequisites
 
 This section describes the preparatory steps necessary for creating a signed image.
 
 
-## Install Required packages for signing
+## Install required packages for signing
 
 Please consult the [Prerequisites](https://github.com/ARMmbed/meta-mbl/blob/master/docs/walkthrough.md#-1-prerequisites) section of the
 MBL [Instructions for Building Images](https://github.com/ARMmbed/meta-mbl/blob/master/docs/walkthrough.md) to ensure these packages are installed
@@ -90,7 +92,7 @@ Having downloaded the CST (e.g. cst-2.3.3.tar.gz), copy the tarball to the follo
 Throughout this document the top level workspace directory is referred to as `TOP_DIR`.
 
 
-# Step 2: Generate Signing Keys
+# Step 2: Generate signing keys
 
 This section describes how to create the public/private keys and certificates used to sign boot chain component(s).
 The secure boot process checks that each boot chain component(s) has been signed by the party trusted to issue valid software images (the signing authority). The secure boot process does not currently implement confidentiality (encryption of images).  
@@ -126,19 +128,19 @@ To generate the keying material, perform the following steps:
 ```
     computer:TOP_DIR/$ cd TOP_DIR/layers/meta-mbl/pki/nxp/boards
 ```
-1. Create a sub-directory with the ID of a board (which can be determined from the QR code sticker attached to the board). In this example the board ID 000000-0000-000000-0000 is used, but the actual board ID should be used:
+2. Create a sub-directory with the ID of a board (which can be determined from the QR code sticker attached to the board). In this example the board ID 000000-0000-000000-0000 is used, but the actual board ID should be used:
 ```
     computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/$ mkdir 000000-0000-000000-0000
 ```
-1. Unroll the CST tarball into the board sub-directory stripping off the top level directory from the tarball paths.
+3. Unroll the CST tarball into the board sub-directory stripping off the top level directory from the tarball paths.
 ```
     computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/$ tar -C 000000-0000-000000-0000 -xvzf cst-2.3.3.tar.gz --strip 1
 ```
-1. Copy the serial file into the 000000-0000-000000-0000/keys directory. This file contains the base serial index number to enumerate (some) HAB tool generated files.
+4. Copy the serial file into the 000000-0000-000000-0000/keys directory. This file contains the base serial index number to enumerate (some) HAB tool generated files.
 ```
     computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/$ cp serial 000000-0000-000000-0000/keys
 ```
-1. Create the (private) key pass phrase file key_pass.txt in the 000000-0000-000000-0000/keys directory. The private key files are protected using the pass phrase (repeated twice) in this file.
+5. Create the (private) key pass phrase file key_pass.txt in the 000000-0000-000000-0000/keys directory. The private key files are protected using the pass phrase (repeated twice) in this file.
 ```
     computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards$ cat key_pass.txt
     Replace-this-text-with-your-private-pass-phrase
@@ -146,11 +148,11 @@ To generate the keying material, perform the following steps:
     computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards$
 ```
 This file should be stored securely with the other private keying material.
-1. Make the current working directory the 000000-0000-000000-0000/keys directory.
+6. Make the current working directory the 000000-0000-000000-0000/keys directory.
 ```
     computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/$ cd 000000-0000-000000-0000/keys
 ```
-1. Run the HAB4 tool to generate the keying material:
+7. Run the HAB4 tool to generate the keying material:
 ```
     computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/000000-0000-000000-0000/keys/$ ./hab4_pki_tree.sh
 ```
@@ -314,7 +316,7 @@ The following provides information as to the purpose of these files:
 - All the certificates are in X509 format.
 
 
-# Step 3: Generate the Fuse and Table Binaries
+# Step 3: Generate the fuse and table binaries
 
 To programme the warp7 OTP fuses, use the CST srktool to generate 2 files:
 
@@ -347,7 +349,7 @@ To build an image, use the MBL [Instructions for Building Images](https://github
     computer:TOP_DIR/build-mbl/$ bitbake mbl-console-image-test
 ```
 
-# Step 6. Manually Sign the Image
+# Step 6. Manually sign the image
 
 After a build, use the following command to sign the image:
 ```
@@ -410,7 +412,7 @@ To clean the working directory, use the following command:
 ```
 
 
-# Step 6: Flash/Boot the signed image
+# Step 6: Flash/boot the signed image
 
 Follow the instructions in the [Write the disk image to your device and boot Mbed Linux](https://github.com/ARMmbed/meta-mbl/blob/master/docs/walkthrough.md#-8-write-the-disk-image-to-your-device-and-boot-mbed-linux)
 section of the MBL [Instructions for Building Images](https://github.com/ARMmbed/meta-mbl/blob/master/docs/walkthrough.md).

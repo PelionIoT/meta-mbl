@@ -57,32 +57,33 @@ The following packages are required by software used later in this document:
 * gawk.
 * git.
 * python-dev.
+* python-pip.
 * texinfo.
 * whiptail.
 
 The command to install them will look something like this:
 
 ```
-sudo apt-get install chrpath curl gawk git python-dev texinfo whiptail
+sudo apt-get install chrpath curl gawk git python-dev python-pip texinfo whiptail
 ```
 
 ### <a name="install-google-repo"></a> 1.3. Installing Google's repo tool
 
-Install Google's [`repo` tool](https://gerrit.googlesource.com/git-repo) with the following commands:
+Download Google's [`repo` tool](https://gerrit.googlesource.com/git-repo) with the following command:
 ```
-mkdir ~/bin
-PATH=~/bin:$PATH
-
-curl http://commondatastorage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-chmod a+x ~/bin/repo
+curl http://commondatastorage.googleapis.com/git-repo-downloads/repo > /tmp/google-repo-tool
+```
+Then install it to your preferred location. To install `repo` to `/usr/local/bin` for example, run the following command:
+```
+sudo install -m 0755 /tmp/google-repo-tool /usr/local/bin/repo
 ```
 
 ### <a name="install-manifest-tool"></a> 1.4. Installing the manifest tool
 
 Install the Mbed Cloud manifest tool and Cloud SDK with the following commands:
 ```
-pip install -U "git+https://github.com/ARMmbed/manifest-tool-restricted.git"
-pip install mbed-cloud-sdk
+sudo pip install -U "git+https://github.com/ARMmbed/manifest-tool-restricted.git"
+sudo pip install mbed-cloud-sdk
 ```
 See <https://github.com/ARMmbed/manifest-tool-restricted> for more information about the manifest tool.
 
@@ -150,8 +151,7 @@ You will need the following files created during the build process:
 * **A full disk image** This is a compressed image of the entire flash, created by the build process using the Wic tool from OpenEmbedded.  Once decompressed, this image can be directly written to storage media. See [this section](https://www.yoctoproject.org/docs/latest/mega-manual/mega-manual.html#creating-partitioned-images-using-wic) of the Yocto Mega Manual for more information about Wic. You will need this for [Step 8 Write the disk image to your device and boot Mbed Linux](#write-image-and-boot). You use the full disk image to initialize the device's storage with a full set of disk partitions and an initial version of firmware.
 * **A root filesystem archive** This is a compressed tar archive, that you will need for a firmware update; see [Step 12 Performing a firmware update](#do-update). Once the device storage has been initialized, you can use the root file system archive to update the firmware, as this only requires a single root partition to be updated.
 
-To generate these files, use the following command:
-
+To generate these files, run the following `bitbake` command while still in the build directory (`~/mbl/mbl-alpha/build-mbl`):
 ```
 bitbake mbl-console-image
 ```
@@ -182,7 +182,7 @@ To transfer your disk image to the Warp7's flash device, you must first access t
 1. Connect the Warp7's I/O USB socket (on the I/O board) to your PC and the Warp7's power USB socket (on the CPU board) to a USB power supply. From your PC you should then be able to see a USB TTY device, such as, `/dev/ttyUSB0`.
 1. Connect to the Warp7's console using a command such as:
     ```
-    minicom -D /dev/ttyUSB0
+    sudo minicom -D /dev/ttyUSB0
     ```
     Use the following settings:
     * A baud rate of 115200.
@@ -218,8 +218,9 @@ To transfer your disk image to the Warp7's flash device, you must first access t
     replacing `<device-file-name>` with the correct device file for the Warp7's flash device. This command can take about 20 minutes to complete and may appear to freeze while it is running.
 1. When `dd` has finished eject the device:
     ```
-    sudo eject /dev/sdX
+    sudo eject /dev/disk/by-id/<device-file-name>
     ```
+    replacing `<device-file-name>` with the correct device file for the Warp7's flash device.
 1. On the Warp7's U-Boot prompt, press Ctrl-C to exit USB mass storage mode.
 1. Reboot the Warp7 using the following command:
     ```
@@ -229,17 +230,17 @@ To transfer your disk image to the Warp7's flash device, you must first access t
 
 ### 8.2. Write the full disk image to a Raspberry Pi 3 device
 
-1. Connect a micro SD card to your PC. You should see the SD card device file in `/dev`, probably as `/dev/sdX` for some letter `X` as well as device files for its partitions `/dev/sdXN` for some numbers `N`. The output of `lsblk` can be useful to identify the name of the device.
+1. Connect a micro SD card to your PC. You should see the SD card device file in `/dev`, probably as `/dev/sdX` for some letter `X` (e.g. `/dev/sdd`) as well as device files for its partitions `/dev/sdXN` for the same letter `X` and some numbers `N` (e.g. `/dev/sdd1`, `/dev/sdd2`, etc.). In the commands below, `/dev/sdX` should be replaced with the device file name for the SD card _without_ a number at the end. The output of `lsblk` can be useful to identify the name of the SD card device.
 1. Ensure that none of the micro SD card's partitions are mounted by running:
     ```
     sudo umount /dev/sdX*
     ```
-    replacing `/dev/sdX` with the correct device file name prefix for the SD card partitions.
-1. Write the disk image to the SD card using the following command:
+    replacing `/dev/sdX` as mentioned above.
+1. Write the disk image to the SD card device (not a partition on it) using the following command:
     ```
     gunzip -c ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3/mbl-console-image-raspberrypi3.wic.gz | sudo dd status=progress conv=fsync bs=4M of=/dev/sdX
     ```
-    replacing `/dev/sdX` with the correct device file for the SD card. This may take some time.
+    replacing `/dev/sdX` as mentioned above. This may take some time.
 1. When `dd` has finished, eject the device:
     ```
     sudo eject /dev/sdX
@@ -248,7 +249,7 @@ To transfer your disk image to the Warp7's flash device, you must first access t
 1. Before powering on the Raspberry Pi 3, connect it to your PC so that you can access its console. You can do this, for example, by connecting it using a [C232HD-DDHSP-0](http://www.ftdichip.com/Support/Documents/DataSheets/Cables/DS_C232HD_UART_CABLE.pdf) cable. Refer to our instructions on [how to connect that cable to your device](https://github.com/ARMmbed/raas-daemon/blob/master/doc/resources/ftdi-d2xx/HARDWARE.md).
 1. Connect to the Raspberry Pi 3's console with something like:
     ```
-    minicom -D /dev/ttyUSB0
+    sudo minicom -D /dev/ttyUSB0
     ```
     Use the following settings:
     * A baud rate of 115200.

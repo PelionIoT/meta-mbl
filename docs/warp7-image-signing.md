@@ -148,6 +148,7 @@ To generate the keying material, perform the following steps:
     computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards$
 ```
 This file should be stored securely with the other private keying material.
+
 6. Make the current working directory the 000000-0000-000000-0000/keys directory.
 ```
     computer:TOP_DIR/layers/meta-mbl/pki/nxp/boards/$ cd 000000-0000-000000-0000/keys
@@ -673,7 +674,7 @@ Having programmed the OTP fuses with the correct hashes, the board can be reboot
 Observe the following from the above output:
 - The `hab_status` command reports `No HAB Events Found!` which indicates u-boot has successfully authenticated all of the components in the boot chain. If  you do not see this message then something has gone wrong with the signing and/or authentication process. Ensure that this message is reported before locking the device.
 
-# Step 9: OPTIONAL: Close and lock device.
+# Step 9: OPTIONAL: Close and lock device
 
 <span class="warning"> **WARNING**: Before locking the device, make sure the `hab_status` command reports successful authentication, otherwise, once it is locked, you will not be able to access this device again.</span>
 

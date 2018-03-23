@@ -57,7 +57,6 @@ Please feel free to ask any questions or provide feedback about this release via
 [mbl-manifest]: https://github.com/ARMmbed/mbl-manifest/tree/alpha
 [mbl-config]: https://github.com/ARMmbed/mbl-config/tree/alpha
 [meta-mbl-restricted-extras]: https://github.com/ARMmbed/meta-mbl-restricted-extras/tree/alpha
-[mbl-cloud-client-restricted]: https://github.com/ARMmbed/mbl-cloud-client-restricted
 
 [mbl-team-email]: mailto:mbed-linux-team@arm.com
 [mbed-cloud]: https://cloud.mbed.com/docs/v1.2/introduction/update.html

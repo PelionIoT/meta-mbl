@@ -9,4 +9,8 @@ Metadata files under the MIT license contain in-line copies of their licenses.
 Source code included in-tree for individual recipes is under the LICENSE stated
 in the associated recipe (.bb file) unless otherwise stated.
 
+The [CSF files][nxp-dir] are subject to the [NXP Semiconductors License][nxp-license]
+
 [apache-2-0-license]: LICENSE.Apache-2.0
+[nxp-license]: LICENSE.nxp
+[nxp-dir]: ./pki/nxp/sign/csf-templates

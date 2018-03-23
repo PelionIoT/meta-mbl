@@ -1,3 +1,5 @@
+# Copyright (C) 2017 NXP Semiconductors
+# This code is licensed under the NXP Licensed Software defined in LICENSE.nxp.
 [Header]
 Version = 4.1
 Security Configuration = Open

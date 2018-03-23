@@ -21,6 +21,7 @@ Please see:
 * The [mbl-app-qrcode README][mbl-app-qrcode-readme] for instructions on building and running an example application on mbl.
 * The [Wi-Fi instructions][mbl-wifi] for setting up Wi-Fi on the IoT device.
 * The [troubleshooting document][mbl-troubleshooting] for troubleshooting tips.
+* The [Logs][mbl-logs] document for information about Mbed Linux OS's log files.
 
 
 ## License
@@ -41,6 +42,7 @@ Please see the [Contributing][mbl-contributing] document for more information.
 [mbl-wifi]: docs/wifi.md
 [mbl-troubleshooting]: docs/troubleshooting.md
 [mbl-release-note]: docs/release_note.md
+[mbl-logs]: docs/logs.md
 
 [optee-homepage]: https://github.com/op-tee/optee_os
 [docker-homepage]: https://www.docker.com

@@ -156,6 +156,7 @@ The following sections provide example network blocks for connection to:
 * Named open networks.
 * WPA-PSK networks.
 * WPA2-Enterprise networks.
+* WEP networks.
 
 For more examples, refer to the `wpa_supplicant` [man page][ws_man_page].
 
@@ -207,7 +208,7 @@ network={
 ```
 <span class="notes">**Note** Although this network block does not contain the original passphrase in plain text, knowing the hash of the passphrase is enough to gain access to the network.</span>
 
-### Connecting to a WPA2-Enterprise network
+#### Connecting to a WPA2-Enterprise network
 
 There are many different configurations for WPA2-Enterprise networks. The following network block is an example for connecting to a PEAP/EAP-MSCHAPv2 authenticated WPA2-Enterprise network called `my-ssid`, as the user `my-username` with password `my-password`. See the `wpa_supplicant` [man page][ws_man_page] for more examples.
 
@@ -276,6 +277,19 @@ network_id="$1"
     wpa_cli set_network "$network_id" password "\"$password\""
 }
 ```
+#### Connecting to a WEP network
+
+To specify a WEP network with SSID `my-ssid` and hex key `123456789a`, add the following block to `wpa_supplicant.conf`:
+
+```
+network={
+    ssid="my-ssid"
+    key_mgmt=NONE
+    wep_key0=123456789a
+    wep_tx_keyidx=0
+}
+```
+
 [ws_home_page]: https://w1.fi/wpa_supplicant/
 [ws_man_page]: https://linux.die.net/man/5/wpa_supplicant.conf
 [ws_reference_config]: https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf

@@ -407,7 +407,7 @@ On success, a signed image (`signed-mbl-console-image-imx7s-warp-mbl.wic.gz`) fi
     drwxrwxr-x 5 simhug01 simhug01     12288 Mar 13 17:24 temp
 ```
 
-To clean the working directory, use the following command:
+You can clean the working directory after you have flashed the board with the following command:
 ```
     computer:TOP_DIR/layers/meta-mbl/pki/nxp/sign/$ make clean
 ```

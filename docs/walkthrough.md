@@ -54,17 +54,19 @@ Request an account using the form at https://cloud.mbed.com/contact. You will ne
 The following packages are required by software used later in this document:
 * chrpath.
 * curl.
+* diffstat.
 * gawk.
 * git.
 * python-dev.
 * python-pip.
 * texinfo.
+* wget.
 * whiptail.
 
 The command to install them will look something like this:
 
 ```
-sudo apt-get install chrpath curl gawk git python-dev python-pip texinfo whiptail
+sudo apt-get install chrpath curl diffstat gawk git python-dev python-pip texinfo wget whiptail
 ```
 
 ### <a name="install-google-repo"></a> 1.3. Installing Google's repo tool
@@ -193,7 +195,7 @@ To transfer your disk image to the Warp7's flash device, you must first access t
     ```
     ums 0 mmc 0
     ```
-    You should now see device files with `WaRP7` in their names in `/dev/disk/by-id` for the Warp7's flash device and its partitions. For example you might see something like:
+    On the Warp7 you should now see an ASCII-art "spinner" and on your PC you should see device files with `WaRP7` in their names in `/dev/disk/by-id` for the Warp7's flash device and its partitions. For example you might see something like:
     ```
     $ find /dev/disk/by-id -name '*WaRP7*'
     /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0-part7
@@ -246,8 +248,7 @@ To transfer your disk image to the Warp7's flash device, you must first access t
     sudo eject /dev/sdX
     ```
 1. Detach the micro SD card from your PC and plug it into the Raspberry Pi 3.
-1. Before powering on the Raspberry Pi 3, connect it to your PC so that you can access its console. You can do this, for example, by connecting it using a [C232HD-DDHSP-0](http://www.ftdichip.com/Support/Documents/DataSheets/Cables/DS_C232HD_UART_CABLE.pdf) cable. Refer to our instructions on [how to connect that cable to your device](https://github.com/ARMmbed/raas-daemon/blob/master/doc/resources/ftdi-d2xx/HARDWARE.md).
-1. Connect to the Raspberry Pi 3's console with something like:
+1. Before powering on the Raspberry Pi 3, you'll need to either connect it to a monitor and keyboard (using its HDMI and USB sockets) or connect it to your PC so that you can access its console. To access the console from your PC you can, for example, use a [C232HD-DDHSP-0](http://www.ftdichip.com/Support/Documents/DataSheets/Cables/DS_C232HD_UART_CABLE.pdf) cable. Refer to our instructions on [how to connect that cable to your device](https://github.com/ARMmbed/raas-daemon/blob/master/doc/resources/ftdi-d2xx/HARDWARE.md) then, from your PC run a command like:
     ```
     sudo minicom -D /dev/ttyUSB0
     ```
@@ -327,7 +328,7 @@ To upload your firmware update image to the Cloud:
 
 To use the manifest-tool to create a manifest for the firmware image:
 
-- Make sure the current working directory is where `manifest-tool init` was performed.
+- Make sure the current working directory is where `manifest-tool init` was performed (`~/mbl/manifests`).
 - Create a symbolic link to the firmware image that was uploaded in [Update Step 2](#update2-2):
   ```
   ln -s ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.tar.xz test-image
@@ -351,7 +352,7 @@ To upload the test-manifest to the Mbed Cloud:
 
 ### <a name="update2-5"></a> 12.5. Update Step 5: Create a filter for your device
 
-<span class= "notes"> **Note:** the device ID changes each time you load a new image onto the device.</span>
+<span class= "notes"> **Note:** the device ID changes each time you flash the device with a new full disk image. The normal firmware update mechanism does not change the device ID.</span>
 
 Before you can configure an update campaign, you need to create a device filter, as follows:
 

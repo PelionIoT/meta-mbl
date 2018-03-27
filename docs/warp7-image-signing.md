@@ -68,19 +68,21 @@ This section describes the preparatory steps necessary for creating a signed ima
 
 ## Install required packages for signing
 
-Please consult the [Prerequisites](https://github.com/ARMmbed/meta-mbl/blob/master/docs/walkthrough.md#-1-prerequisites) section of the
+Please consult the [Prerequisites](https://github.com/ARMmbed/meta-mbl/blob/master/docs/walkthrough.md#-1-prepare-your-development-environment) section of the
 MBL [Instructions for Building Images](https://github.com/ARMmbed/meta-mbl/blob/master/docs/walkthrough.md) to ensure these packages are installed
 on your development host.
 
 In addition, the following packages should be installed for signing:
 ```
-    computer:TOP_DIR/$ sudo apt-get install make bash kpartx mktemp
+    computer:$ sudo apt-get install make bash kpartx mktemp
 ```
 
 ## Create a workspace for building images
 
 Create an Mbed Linux workspace by following the instructions in the
 [Instructions for Building Images](https://github.com/ARMmbed/meta-mbl/blob/master/docs/walkthrough.md) document.
+
+Throughout this document the `mbl-alpha` directory created in the [Instructions for Building Images](https://github.com/ARMmbed/meta-mbl/blob/master/docs/walkthrough.md) guide is referred to as TOP_DIR.
 
 ## Acquire the NXP Code Signing Tool (CST)
 To sign Warp7 images, download the NXP Code Signing Tool (CST) from the NXP site. This will require you to accept the NXP Software License Agreement (See the [NXP License Page][NXP-Webpage-for-accepting-CST-Licence-agreement-and-downloading-the-tool] for details).
@@ -89,8 +91,6 @@ Having downloaded the CST (e.g. cst-2.3.3.tar.gz), copy the tarball to the follo
 ```
     TOP_DIR/layers/meta-mbl/pki/nxp/boards
 ```
-Throughout this document the top level workspace directory is referred to as `TOP_DIR`.
-
 
 # Step 2: Generate signing keys
 

@@ -367,7 +367,7 @@ where:
 For example, to sign the test image with the keying material stored in boards/000000-0000-000000-0000 use the following command:
 ```
     computer:TOP_DIR/$ cd TOP_DIR/layers/meta-mbl/pki/nxp/sign
-    computer:TOP_DIR/layers/meta-mbl/pki/nxp/sign/$ make IMAGE_NAME=mbl-console-image-test-imx7s-warp-mbl.wic.gz
+    computer:TOP_DIR/layers/meta-mbl/pki/nxp/sign/$ make IMAGE_NAME=mbl-console-image-test-imx7s-warp-mbl.wic.gz CST_BOARD_ID=000000-0000-000000-0000
 ```
 Excerpts from the generated sample output are shown in the following console output listing:
 ```

@@ -33,7 +33,7 @@ To build and run Mbed Linux using this guide you will need:
 
 * A PC running Ubuntu 16.04.
 * A development board, such as:
-    * A **Warp7 board** with two micro USB cables - one to provide power to the Warp7 and one to connect the Warp7 to a PC.
+    * A **Warp7 board** with two micro USB cables.
     * A **Raspberry Pi 3 board** with a micro SD card and a C232HD-DDHSP-0 cable to connect it to a PC.
 * An Mbed Cloud account (see [Getting an Mbed Cloud account](#get-cloud-account)).
 * A Github account with access to private ARMmbed repositories.
@@ -181,7 +181,7 @@ This section contains instructions for writing the full disk image to a:
 
 To transfer your disk image to the Warp7's flash device, you must first access the Warp7's serial console. To do this:
 
-1. Connect the Warp7's I/O USB socket (on the I/O board) to your PC and the Warp7's power USB socket (on the CPU board) to a USB power supply. From your PC you should then be able to see a USB TTY device, such as, `/dev/ttyUSB0`.
+1. Connect both the Warp7's I/O USB socket (on the I/O board) and the Warp7's mass storage USB socket (on the CPU board) to your PC. From your PC you should then be able to see a USB TTY device, such as, `/dev/ttyUSB0`.
 1. Connect to the Warp7's console using a command such as:
     ```
     sudo minicom -D /dev/ttyUSB0

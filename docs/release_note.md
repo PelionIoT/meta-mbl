@@ -45,12 +45,12 @@ The following list of known issues apply to this release:
 
 ### Using the release
 
-Please refer to the [documentation][mbl-documentation].
+Please refer to the [meta-mbl readme][mbl-readme] for links to the documentation.
 
 Please feel free to ask any questions or provide feedback about this release via [mbed-linux-team@arm.com][mbl-team-email].
 
 
-[mbl-documentation]: https://github.com/ARMmbed/meta-mbl/tree/alpha/docs
+[mbl-readme]: https://github.com/ARMmbed/meta-mbl/blob/alpha/README.md
 [mbl-linux-release]: https://github.com/ARMmbed/meta-mbl/releases/tag/alpha
 [meta-mbl]: https://github.com/ARMmbed/meta-mbl/tree/alpha
 [mbl-app-qrcode]: https://github.com/ARMmbed/mbl-app-qrcode/tree/alpha

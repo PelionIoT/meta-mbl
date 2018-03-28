@@ -191,27 +191,64 @@ To transfer your disk image to the Warp7's flash device, you must first access t
     * [8N1](https://en.wikipedia.org/wiki/8-N-1) encoding.
     * No hardware flow control.
 1. Depending on the previous contents of the device's storage, you may get a U-boot prompt or you may see an operating system (e.g. Android) boot. If an operating system boots, reboot the device and then press a key when U-Boot starts, to prevent it booting the operating system.
+1. First take note of the current storage devices on your PC:
+    ```
+    ls -l /dev/disk/by-id/
+    ```
+
+    You'll see a list of devices similar to the following:
+
+    ```
+    total 0
+    lrwxrwxrwx 1 root root  9 Mar 19 10:38 ata-Crucial_CT240M500SSD1_140709691C39 -> ../../sda
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-Crucial_CT240M500SSD1_140709691C39-part1 -> ../../sda1
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-Crucial_CT240M500SSD1_140709691C39-part2 -> ../../sda2
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-Crucial_CT240M500SSD1_140709691C39-part3 -> ../../sda3
+    lrwxrwxrwx 1 root root  9 Mar 19 10:38 ata-HL-DT-ST_DVD+_-RW_GHB0N_K8RD9II5408 -> ../../sr0
+    lrwxrwxrwx 1 root root  9 Mar 19 10:38 ata-ST1000DM003-1CH162_W1D2QL7A -> ../../sdb
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-ST1000DM003-1CH162_W1D2QL7A-part1 -> ../../sdb1
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-ST1000DM003-1CH162_W1D2QL7A-part2 -> ../../sdb2
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-ST1000DM003-1CH162_W1D2QL7A-part3 -> ../../sdb3
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-ST1000DM003-1CH162_W1D2QL7A-part4 -> ../../sdb4
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-ST1000DM003-1CH162_W1D2QL7A-part5 -> ../../sdb5
+    ```
+
+    We'll need to compare this output in the next step, so save it for reference.
+
 1. To expose the Warp7's flash device to Linux as USB mass storage, when you get a U-Boot prompt, type:
     ```
     ums 0 mmc 0
     ```
-    On the Warp7 you should now see an ASCII-art "spinner" and on your PC you should see device files with `WaRP7` in their names in `/dev/disk/by-id` for the Warp7's flash device and its partitions. For example you might see something like:
+    On the Warp7 you should now see an ASCII-art "spinner" and on your PC you should see some new storage devices appear:
     ```
-    $ find /dev/disk/by-id -name '*WaRP7*'
-    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0-part7
-    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0-part5
-    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0-part3
-    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0-part2
-    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0-part6
-    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0-part1
-    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0-part4
-    /dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0
-    $
+    ls -l /dev/disk/by-id/
     ```
-    `mbl-console-image-imx7s-warp-mbl.wic.gz` is a full disk image so should be written to the whole flash device, not a partition. The device file for the whole flash device is the one without `-part` in the name (`/dev/disk/by-id/usb-Linux_UMS_disk_0_WaRP7-0xcc2400d300000054-0:0` in this example).
-1. Ensure that none of the Warp7's flash partitions are mounted by running:
+
+    In this case, the Warp7 appeared as "usb-Linux_UMS_disk_0" (the partitions on the device are also shown):
+
     ```
-    sudo umount /dev/disk/by-id/*WaRP7*-part*
+    total 0
+    lrwxrwxrwx 1 root root  9 Mar 19 10:38 ata-Crucial_CT240M500SSD1_140709691C39 -> ../../sda
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-Crucial_CT240M500SSD1_140709691C39-part1 -> ../../sda1
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-Crucial_CT240M500SSD1_140709691C39-part2 -> ../../sda2
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-Crucial_CT240M500SSD1_140709691C39-part3 -> ../../sda3
+    lrwxrwxrwx 1 root root  9 Mar 19 10:38 ata-HL-DT-ST_DVD+_-RW_GHB0N_K8RD9II5408 -> ../../sr0
+    lrwxrwxrwx 1 root root  9 Mar 19 10:38 ata-ST1000DM003-1CH162_W1D2QL7A -> ../../sdb
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-ST1000DM003-1CH162_W1D2QL7A-part1 -> ../../sdb1
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-ST1000DM003-1CH162_W1D2QL7A-part2 -> ../../sdb2
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-ST1000DM003-1CH162_W1D2QL7A-part3 -> ../../sdb3
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-ST1000DM003-1CH162_W1D2QL7A-part4 -> ../../sdb4
+    lrwxrwxrwx 1 root root 10 Mar 19 10:38 ata-ST1000DM003-1CH162_W1D2QL7A-part5 -> ../../sdb5
+    lrwxrwxrwx 1 root root  9 Mar 26 14:00 usb-Linux_UMS_disk_0-0:0 -> ../../sdc
+    lrwxrwxrwx 1 root root 10 Mar 26 14:00 usb-Linux_UMS_disk_0-0:0-part1 -> ../../sdc1
+    lrwxrwxrwx 1 root root 10 Mar 26 14:00 usb-Linux_UMS_disk_0-0:0-part2 -> ../../sdc2
+    lrwxrwxrwx 1 root root 10 Mar 26 14:00 usb-Linux_UMS_disk_0-0:0-part3 -> ../../sdc3
+    ```
+
+    `mbl-console-image-imx7s-warp-mbl.wic.gz` is a full disk image so should be written to the whole flash device, not a partition. The device file for the whole flash device is the one without `-part` in the name (`/dev/disk/by-id/usb-Linux_UMS_disk_0-0:0` in this example).
+1. Ensure that none of the Warp7's flash partitions are mounted by running the following command (you may have to adjust the path depending on the name of the storage device):
+    ```
+    sudo umount /dev/disk/by-id/usb-Linux_UMS_disk_0-0:0-part*
     ```
 1. From a Linux prompt, write the disk image to the Warp7's flash device using the following command:
     ```

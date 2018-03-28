@@ -97,7 +97,7 @@ mkdir ~/mbl
 ```
 
 ## <a name="get-cloud-credentials"></a> 3. Download Mbed Cloud dev credentials file
-During the build process, you will need a file that contains the credentials to connect your device to with Mbed Cloud. To create a **credentials C file** (`mbed_cloud_dev_credentials.c`) and download it to your working directory `~/mbl/cloud-credentials`, follow the instructions for [creating and downloading a developer certificate](https://cloud.mbed.com/docs/v1.2/provisioning-process/provisioning-development.html#creating-and-downloading-a-developer-certificate).
+During the build process, you will need a file that contains the credentials to connect your device to with Mbed Cloud. First create the directory `~/mbl/cloud-credentials`. To create a **credentials C file** (`mbed_cloud_dev_credentials.c`) and download it to your working directory `~/mbl/cloud-credentials`, follow the instructions for [creating and downloading a developer certificate](https://cloud.mbed.com/docs/v1.2/provisioning-process/provisioning-development.html#creating-and-downloading-a-developer-certificate).
 
 ## <a name="create-update-resources"></a> 4. Create an Update resources file
 Initialize `manifest-tool` settings and generate Update resources by running the following commands:
@@ -142,13 +142,13 @@ MACHINE=imx7s-warp-mbl DISTRO=mbl . setup-environment
 
 Copy your Mbed Cloud dev credentials file and Update resources file to the build directory, as follows:
 ```
-cp ~/mbl/cloud-credentials/mbed_cloud_dev_credentials.c .
-cp ~/mbl/manifests/update_default_resources.c .
+cp ~/mbl/cloud-credentials/mbed_cloud_dev_credentials.c ~/mbl/mbl-alpha/build-mbl
+cp ~/mbl/manifests/update_default_resources.c ~/mbl/mbl-alpha/build-mbl
 ```
 
 ## <a name="build-mbl"></a> 7. Build Mbed Linux
 
-You will need the following files created during the build process:
+The build process will create the following files which you will need to use later:
 
 * **A full disk image** This is a compressed image of the entire flash, created by the build process using the Wic tool from OpenEmbedded.  Once decompressed, this image can be directly written to storage media. See [this section](https://www.yoctoproject.org/docs/latest/mega-manual/mega-manual.html#creating-partitioned-images-using-wic) of the Yocto Mega Manual for more information about Wic. You will need this for [Step 8 Write the disk image to your device and boot Mbed Linux](#write-image-and-boot). You use the full disk image to initialize the device's storage with a full set of disk partitions and an initial version of firmware.
 * **A root filesystem archive** This is a compressed tar archive, that you will need for a firmware update; see [Step 12 Performing a firmware update](#do-update). Once the device storage has been initialized, you can use the root file system archive to update the firmware, as this only requires a single root partition to be updated.

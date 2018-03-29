@@ -40,6 +40,7 @@ else
 fi
 
 # Set UUID mmcpart will be used to pass root id to kernel
+setenv rootpart ${mmcpart}
 run finduuid;
 run mmcargs;
 

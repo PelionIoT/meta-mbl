@@ -1,10 +1,10 @@
-# Arm Mbed Linux OS Alpha Release
+# Arm Mbed Linux OS 0.3.0 Release
 
-## Mbed Linux OS Alpha
+## Mbed Linux OS 0.3.0
 We are pleased to announce that [Mbed Linux OS][mbl-linux-release] is now available for alpha testing.
 
 ### Content of Release
-This initial Alpha release is intended for limited distribution to enable partners to validate the initial foundations of the Mbed Linux operating system. This release is built upon the OpenEmbedded build automation framework and uses versions of OpenEmbedded that are tagged for the Rocko release of the Yocto reference distribution.
+This initial 0.3.0 release is intended for limited distribution to enable partners to validate the initial foundations of the Mbed Linux operating system. This release is built upon the OpenEmbedded build automation framework and uses versions of OpenEmbedded that are tagged for the Rocko release of the Yocto reference distribution.
 
 1. Secure boot using a signed bootloader and firmware image on [NXP WaRP7][nxp-warp7]
 2. Remote firmware and application updates when used in conjunction with [Mbed Cloud][mbed-cloud]
@@ -51,7 +51,7 @@ Please feel free to ask any questions or provide feedback about this release via
 
 
 [mbl-readme]: https://github.com/ARMmbed/meta-mbl/blob/alpha/README.md
-[mbl-linux-release]: https://github.com/ARMmbed/meta-mbl/releases/tag/alpha
+[mbl-linux-release]: https://github.com/ARMmbed/meta-mbl/releases/tag/0.3.0
 [meta-mbl]: https://github.com/ARMmbed/meta-mbl/tree/alpha
 [mbl-app-qrcode]: https://github.com/ARMmbed/mbl-app-qrcode/tree/alpha
 [mbl-manifest]: https://github.com/ARMmbed/mbl-manifest/tree/alpha

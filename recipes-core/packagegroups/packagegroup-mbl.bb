@@ -4,12 +4,14 @@ inherit packagegroup
 
 ###############################################################################
 # Packages added irrespective of the MACHINE
+#     - ca-certificates. Required by docker when performing pull from dockerhub
 #     - docker. Containerised environment for secure application execution.
 #     - iptables. Required by docker for building iptables DOCKER-ISOLATION 
 #       and DOCKER chains for the FORWARD table.
 #     - kernel-modules. Required by iptables related modules (e.g. netfilter
 #       connection tracking.
 ###############################################################################
+PACKAGEGROUP_MBL_PKGS_append = " ca-certificates"
 PACKAGEGROUP_MBL_PKGS_append = " docker"
 PACKAGEGROUP_MBL_PKGS_append = " iptables"
 PACKAGEGROUP_MBL_PKGS_append = " kernel-modules"

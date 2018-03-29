@@ -23,5 +23,5 @@ EXTRA_OEMAKE = "PLATFORM=${OPTEEMACHINE} \
 OPTEE_ARCH_imx7s-warp-mbl = "arm32"
 
 do_install_append() {
-    uboot-mkimage -A arm -T optee -C none -d ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.bin ${D}/lib/firmware/uTee.optee
+    uboot-mkimage -A arm -T kernel -O tee -C none -d ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.bin ${D}/lib/firmware/uTee.optee
 }

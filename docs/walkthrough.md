@@ -52,6 +52,7 @@ Request an account using the form at https://cloud.mbed.com/contact. You will ne
 ### <a name="install-software-dependencies"></a> 1.2. Installing software dependencies
 
 The following packages are required by software used later in this document:
+* bmap-tools
 * chrpath.
 * curl.
 * diffstat.
@@ -66,7 +67,7 @@ The following packages are required by software used later in this document:
 The command to install them will look something like this:
 
 ```
-sudo apt-get install chrpath curl diffstat gawk git python-dev python-pip texinfo wget whiptail
+sudo apt-get install bmap-tools chrpath curl diffstat gawk git python-dev python-pip texinfo wget whiptail
 ```
 
 ### <a name="install-google-repo"></a> 1.3. Installing Google's repo tool
@@ -151,6 +152,7 @@ cp ~/mbl/manifests/update_default_resources.c ~/mbl/mbl-alpha/build-mbl
 The build process will create the following files which you will need to use later:
 
 * **A full disk image** This is a compressed image of the entire flash, created by the build process using the Wic tool from OpenEmbedded.  Once decompressed, this image can be directly written to storage media. See [this section](https://www.yoctoproject.org/docs/latest/mega-manual/mega-manual.html#creating-partitioned-images-using-wic) of the Yocto Mega Manual for more information about Wic. You will need this for [Step 8 Write the disk image to your device and boot Mbed Linux](#write-image-and-boot). You use the full disk image to initialize the device's storage with a full set of disk partitions and an initial version of firmware.
+* **A block map of the full disk image** This is a file containing information about which blocks of the uncompressed full disk image actually need to be written to the IoT device. Some blocks of the image represent unused storage space that does not actually need to be written.
 * **A root filesystem archive** This is a compressed tar archive, that you will need for a firmware update; see [Step 12 Performing a firmware update](#do-update). Once the device storage has been initialized, you can use the root file system archive to update the firmware, as this only requires a single root partition to be updated.
 
 To generate these files, run the following `bitbake` command while still in the build directory (`~/mbl/mbl-alpha/build-mbl`):
@@ -163,10 +165,11 @@ You will see several "WARNING" messages in the `bitbake` output - these are safe
 
 The paths of these files are given in the table below, where `<MACHINE>` should be replaced with the MACHINE value for your device from the table in [Section 6](#set-up-build-env).
 
-| Image type               | Path |
-|--------------------------|------|
-| Full disk image          | `~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.wic.gz` |
-| Root file system archive | `~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.tar.xz` |
+| Image type                | Path |
+|---------------------------|------|
+| Full disk image           | `~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.wic.gz`   |
+| Full disk image block map | `~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.wic.bmap` |
+| Root file system archive  | `~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.tar.xz`   |
 
 ## <a name="write-image-and-boot"></a> 8. Write the disk image to your device and boot Mbed Linux
 
@@ -252,10 +255,10 @@ To transfer your disk image to the Warp7's flash device, you must first access t
     ```
 1. From a Linux prompt, write the disk image to the Warp7's flash device using the following command:
     ```
-    gunzip -c ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.gz | sudo dd status=progress conv=fsync bs=512 of=/dev/disk/by-id/<device-file-name>
+    sudo bmaptool copy --bmap ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.bmap ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.gz /dev/disk/by-id/<device-file-name>
     ```
-    replacing `<device-file-name>` with the correct device file for the Warp7's flash device. This command can take about 20 minutes to complete and may appear to freeze while it is running.
-1. When `dd` has finished eject the device:
+    replacing `<device-file-name>` with the correct device file for the Warp7's flash device. This may take some time.
+1. When `bmaptool` has finished eject the device:
     ```
     sudo eject /dev/disk/by-id/<device-file-name>
     ```
@@ -277,10 +280,10 @@ To transfer your disk image to the Warp7's flash device, you must first access t
     replacing `/dev/sdX` as mentioned above.
 1. Write the disk image to the SD card device (not a partition on it) using the following command:
     ```
-    gunzip -c ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3/mbl-console-image-raspberrypi3.wic.gz | sudo dd status=progress conv=fsync bs=4M of=/dev/sdX
+    bmaptool copy --bmap ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3/mbl-console-image-raspberrypi3.wic.bmap ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3/mbl-console-image-raspberrypi3.wic.gz /dev/sdX
     ```
     replacing `/dev/sdX` as mentioned above. This may take some time.
-1. When `dd` has finished, eject the device:
+1. When `bmaptool` has finished, eject the device:
     ```
     sudo eject /dev/sdX
     ```

@@ -20,6 +20,7 @@ Please see:
 * The [WaRP7 image signing instructions][mbl-image-signing-w7] for instructions on signing mbl images for WaRP7 devices and setting up WaRP7 devices to verify image signatures.
 * The [mbl-app-qrcode README][mbl-app-qrcode-readme] for instructions on building and running an example application on mbl.
 * The [Wi-Fi instructions][mbl-wifi] for setting up Wi-Fi on the IoT device.
+* The [USB networking instructions][mbl-usb-networking] about using Mbed Linux OS's USB networking features.
 * The [troubleshooting document][mbl-troubleshooting] for troubleshooting tips.
 * The [Logs][mbl-logs] document for information about Mbed Linux OS's log files.
 
@@ -40,6 +41,7 @@ Please see the [Contributing][mbl-contributing] document for more information.
 [mbl-image-signing-w7]: docs/warp7-image-signing.md
 [mbl-app-qrcode-readme]: https://github.com/ARMmbed/mbl-app-qrcode
 [mbl-wifi]: docs/wifi.md
+[mbl-usb-networking]: docs/usb-networking.md
 [mbl-troubleshooting]: docs/troubleshooting.md
 [mbl-release-note]: docs/release_note.md
 [mbl-logs]: docs/logs.md

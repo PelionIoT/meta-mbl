@@ -44,3 +44,24 @@ FILES_${PN}-bcm43430_imx7s-warp-mbl += " \
 	${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.bin \
 	${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.txt \
 "
+
+
+
+FILESEXTRAPATHS_prepend_bananapi-zero := "${THISDIR}/brcm_ap6212:"
+
+SRC_URI_append_bananapi-zero = " \
+	file://brcmfmac43430-sdio.bin \
+	file://brcmfmac43430-sdio.txt \
+	"
+
+do_install_append_bananapi-zero() {
+	_firmware="${WORKDIR}/brcmfmac43430-sdio.bin"
+
+	mkdir -p ${D}/${nonarch_base_libdir}/firmware/brcm
+	install -m 0644 $_firmware ${WORKDIR}/brcmfmac43430-sdio.txt ${D}${nonarch_base_libdir}/firmware/brcm
+}
+
+FILES_${PN}-bcm43430_bananapi-zero += " \
+	${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.bin \
+	${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.txt \
+"

@@ -26,6 +26,8 @@ KBUILD_DEFCONFIG_imx7s-warp-mbl ?= "warp7_mbl_defconfig"
 
 SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/linux.git;protocol=https;nobranch=1"
 
+inherit mbl_kernel_config
+
 do_preconfigure() {
 	mkdir -p ${B}
 	echo "" > ${B}/.config

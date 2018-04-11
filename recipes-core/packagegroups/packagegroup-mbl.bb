@@ -11,6 +11,7 @@ inherit packagegroup
 #     - kernel-modules. Required by iptables related modules (e.g. netfilter
 #       connection tracking.
 ###############################################################################
+PACKAGEGROUP_MBL_PKGS_append = " avahi-autoipd"
 PACKAGEGROUP_MBL_PKGS_append = " ca-certificates"
 PACKAGEGROUP_MBL_PKGS_append = " docker"
 PACKAGEGROUP_MBL_PKGS_append = " iptables"

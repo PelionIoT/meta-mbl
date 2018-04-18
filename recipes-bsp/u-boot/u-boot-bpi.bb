@@ -49,7 +49,13 @@ UBOOT_MAKE_TARGET="u-boot.bin u-boot.dtb u-boot-signed.itb spl/sunxi-spl.bin"
 UBOOT_DTB="sun8i-h2-plus-bananapi-m2-zero.dtb"
 
 do_install_append() {
+	UBOOT_SIZE=$(stat -c %s ${B}/u-boot-signed.itb)
+	dd if=/dev/zero of=${B}/u-boot-packed.bin count=$(expr 32 \* 1024 \+ ${UBOOT_SIZE}) bs=1
+	dd if=${B}/spl/sunxi-spl.bin of=${B}/u-boot-packed.bin
+	dd if=${B}/u-boot-signed.itb of=${B}/u-boot-packed.bin bs=1024 seek=32
+
 	install -d ${D}/boot
+	install -m 0644 ${B}/u-boot-packed.bin ${DEPLOY_DIR_IMAGE}
 	install -m 0644 ${B}/spl/sunxi-spl.bin ${D}/boot
 	install -m 0644 ${B}/spl/sunxi-spl.bin ${DEPLOY_DIR_IMAGE}
 	install -m 0644 ${B}/u-boot-signed.itb ${D}/boot

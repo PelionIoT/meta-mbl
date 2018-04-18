@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-SRC_URI_append_imx7s-warp-mbl = " \
+SRC_URI_append_bcm43430a1 = " \
 	git://github.com/murata-wireless/cyw-fmac-fw.git;protocol=https;branch=master;name=fw;destsuffix=git/fw \
 	git://github.com/murata-wireless/cyw-fmac-nvram.git;protocol=https;branch=master;name=nvram;destsuffix=git/nvram \
 	"
@@ -30,39 +30,18 @@ SRCREV_nvram = "ae2c8b2bd93f9a51cca984dbc7dd0659b0babe92"
 
 S = "${WORKDIR}/git"
 
-LIC_FILES_CHKSUM_append_imx7s-warp-mbl = " \
+LIC_FILES_CHKSUM_append_bcm43430a1 = " \
     file://LICENCE.cypress;md5=cbc5f665d04f741f1e006d2096236ba7 \
 "
 
-do_install_append_imx7s-warp-mbl() {
+do_install_append_bcm43430a1() {
 	mkdir -p ${D}/${nonarch_base_libdir}/firmware/brcm
 	install -m 0644 ${S}/fw/LICENCE.cypress ${D}${nonarch_base_libdir}/firmware
 	install -m 0644 ${S}/fw/brcmfmac43430-sdio.bin ${S}/nvram/brcmfmac43430-sdio.txt ${D}${nonarch_base_libdir}/firmware/brcm
 }
 
-FILES_${PN}-bcm43430_imx7s-warp-mbl += " \
+FILES_${PN}-bcm43430_bcm43430a1 += " \
 	${nonarch_base_libdir}/firmware/LICENCE.cypress \
-	${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.bin \
-	${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.txt \
-"
-
-
-
-FILESEXTRAPATHS_prepend_bananapi-zero := "${THISDIR}/brcm_ap6212:"
-
-SRC_URI_append_bananapi-zero = " \
-	file://brcmfmac43430-sdio.bin \
-	file://brcmfmac43430-sdio.txt \
-	"
-
-do_install_append_bananapi-zero() {
-	_firmware="${WORKDIR}/brcmfmac43430-sdio.bin"
-
-	mkdir -p ${D}/${nonarch_base_libdir}/firmware/brcm
-	install -m 0644 $_firmware ${WORKDIR}/brcmfmac43430-sdio.txt ${D}${nonarch_base_libdir}/firmware/brcm
-}
-
-FILES_${PN}-bcm43430_bananapi-zero += " \
 	${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.bin \
 	${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.txt \
 "

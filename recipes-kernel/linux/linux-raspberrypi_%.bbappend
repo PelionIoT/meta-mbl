@@ -1,1 +1,0 @@
-inherit mbl_kernel_config

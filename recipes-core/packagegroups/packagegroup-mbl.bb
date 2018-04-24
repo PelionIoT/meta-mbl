@@ -18,6 +18,11 @@ PACKAGEGROUP_MBL_PKGS_append = " iptables"
 PACKAGEGROUP_MBL_PKGS_append = " kernel-modules"
 PACKAGEGROUP_MBL_PKGS_append = " rng-tools"
 
+###############################################################################
+# Packages added when the MACHINE and DISTRO have specific features
+#     - usbinit - bring up the usb0 network interface during boot
+###############################################################################
+PACKAGEGROUP_MBL_PKGS_append = " ${@bb.utils.contains('COMBINED_FEATURES', 'usbgadget', 'usbinit', '', d)}"
 
 ###############################################################################
 # Packages added for MACHINE=imx7s-warp

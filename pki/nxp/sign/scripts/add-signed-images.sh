@@ -197,7 +197,7 @@ done
 strip_files=(
     "u-boot.bin"
     "u-boot.cfg"
-    "imximage.cfg.cfgtmp"
+    "u-boot.cfgout"
 )
 
 # unzip disk image

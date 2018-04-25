@@ -206,6 +206,7 @@ image_sign_mbl_restore_dcd() {
 #   $2 = CSF file - which needs to be populated with "HAB" entries
 #   $3 = Output image name "-signed will be appended to this name"
 #   $4 = Name of the board (required to resolve CSF path)
+#   $5 = Name of the SRK table file
 # Outputs
 #   A cryptographically signed file in the format "$2-signed"
 image_sign_mbl_binary () {
@@ -214,9 +215,13 @@ image_sign_mbl_binary () {
     local csf=$2
     local output_image=$3
     local cst_bin=$4
+    local srk_table=$5
 
     #flag to indicate if DCD processing is required
     local skip_dcd=1
+
+    # Replace SRK Table name placeholder
+    sed -i "s/SRK_TABLENAME/$srk_table/g" "$temp"/"$csf"
 
     # Populate with HAB addresses prior to passing to CST
     image_sign_mbl_populate_csf_hab "$temp" "$csf" "$output_image"

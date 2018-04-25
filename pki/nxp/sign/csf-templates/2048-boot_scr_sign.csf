@@ -10,7 +10,7 @@ Signature Format = CMS
 Engine = CAAM
 
 [Install SRK]
-File = "SRK_1_2_3_4_2048_table.bin"
+File = "SRK_TABLENAME"
 Source index = 0
 
 [Install CSFK]

@@ -30,6 +30,7 @@ CST_BIN ?= ${CST_PATH}/linux64/cst
 CSF_KEYS ?= ${CST_PATH}/keys
 CRTS_DATA ?= ${CST_PATH}/crts
 SRK_FUSE ?= SRK_1_2_3_4_fuse.bin
+SRK_TABLE ?= SRK_1_2_3_4_table.bin
 CST_KEY_PASS_FILENAME=key_pass.txt
 
 # Commands
@@ -182,7 +183,7 @@ u-boot: depends
 	${SIGN} image_sign_mbl_generate_ivt ${UBOOT_BIN} ${UBOOT_IMX} ${UBOOT_ADDR} ${UBOOT_CFG} ${UBOOT_BOARD_CFG} ${TEMP} ${UBOOT_MKIMAGE}
 
 	# u-boot appends an IVT header so we can sign the .imx binary directly
-	${SIGN} image_sign_mbl_binary ${TEMP} ${UBOOT_CSF} ${UBOOT_IMX} ${CST_BIN}
+	${SIGN} image_sign_mbl_binary ${TEMP} ${UBOOT_CSF} ${UBOOT_IMX} ${CST_BIN} ${SRK_TABLE}
 
 	# Copy to output directory
 	cp ${TEMP}/${UBOOT_IMX}-signed ${SIGNED_BINARIES}
@@ -193,7 +194,7 @@ u-boot-recovery: depends
 	cp ${TEMP}/${UBOOT_IMX}.log ${TEMP}/${UBOOT_RECOVER_IMX}.log
 
 	# u-boot appends an IVT header so we can sign the .imx binary directly
-	${SIGN} image_sign_mbl_binary ${TEMP} ${UBOOT_RECOVER_CSF} ${UBOOT_RECOVER_IMX} ${CST_BIN}
+	${SIGN} image_sign_mbl_binary ${TEMP} ${UBOOT_RECOVER_CSF} ${UBOOT_RECOVER_IMX} ${CST_BIN} ${SRK_TABLE}
 
 	# Copy to output directory
 	cp ${TEMP}/${UBOOT_RECOVER_IMX}-signed ${SIGNED_BINARIES}
@@ -204,7 +205,7 @@ u-boot-scr: depends
 	${SIGN} image_sign_mbl_generate_ivt ${BOOT_SCR} ${BOOT_IMX} ${BOOT_ADDR} ${UBOOT_CFG} ${UBOOT_BOARD_CFG} ${TEMP} ${UBOOT_MKIMAGE}
 
 	# Sign boot script
-	${SIGN} image_sign_mbl_binary ${TEMP} ${BOOT_CSF} ${BOOT_IMX} ${CST_BIN}
+	${SIGN} image_sign_mbl_binary ${TEMP} ${BOOT_CSF} ${BOOT_IMX} ${CST_BIN} ${SRK_TABLE}
 
 	# Copy to output dir
 	cp ${TEMP}/${BOOT_IMX}-signed ${SIGNED_BINARIES}
@@ -215,7 +216,7 @@ zImage: depends
 	${SIGN} image_sign_mbl_generate_ivt ${ZIMAGE_BIN} ${ZIMAGE_IMX} ${ZIMAGE_ADDR} ${UBOOT_CFG} ${UBOOT_BOARD_CFG} ${TEMP} ${UBOOT_MKIMAGE}
 
 	# Sign boot script
-	${SIGN} image_sign_mbl_binary ${TEMP} ${ZIMAGE_CSF} ${ZIMAGE_IMX} ${CST_BIN}
+	${SIGN} image_sign_mbl_binary ${TEMP} ${ZIMAGE_CSF} ${ZIMAGE_IMX} ${CST_BIN} ${SRK_TABLE}
 
 	# Copy to output dir
 	cp ${TEMP}/${ZIMAGE_IMX}-signed ${SIGNED_BINARIES}
@@ -226,7 +227,7 @@ fdt: depends
 	${SIGN} image_sign_mbl_generate_ivt ${FDT_BIN} ${FDT_IMX} ${FDT_ADDR} ${UBOOT_CFG} ${UBOOT_BOARD_CFG} ${TEMP} ${UBOOT_MKIMAGE}
 
 	# Sign boot script
-	${SIGN} image_sign_mbl_binary ${TEMP} ${FDT_CSF} ${FDT_IMX} ${CST_BIN}
+	${SIGN} image_sign_mbl_binary ${TEMP} ${FDT_CSF} ${FDT_IMX} ${CST_BIN} ${SRK_TABLE}
 
 	# Copy to output dir
 	cp ${TEMP}/${FDT_IMX}-signed ${SIGNED_BINARIES}
@@ -237,7 +238,7 @@ optee: optee_check depends
 	${SIGN} image_sign_mbl_generate_ivt ${OPTEE_ROOTFS}/${OPTEE_BIN} ${OPTEE_ROOTFS}/${OPTEE_IMX} ${OPTEE_ADDR} ${UBOOT_CFG} ${UBOOT_BOARD_CFG} ${TEMP} ${UBOOT_MKIMAGE}
 
 	# Sign boot script
-	${SIGN} image_sign_mbl_binary ${TEMP} ${OPTEE_CSF} ${OPTEE_ROOTFS}/${OPTEE_IMX} ${CST_BIN}
+	${SIGN} image_sign_mbl_binary ${TEMP} ${OPTEE_CSF} ${OPTEE_ROOTFS}/${OPTEE_IMX} ${CST_BIN} ${SRK_TABLE}
 
 	# Copy to output dir
 	mkdir -p ${SIGNED_BINARIES}/${OPTEE_ROOTFS}

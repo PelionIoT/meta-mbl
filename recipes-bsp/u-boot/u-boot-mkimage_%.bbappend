@@ -1,2 +1,2 @@
-SRCREV = "e9f595924a34c75eb3cc571fbc604911460e0fd0"
-SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1"
+SRCREV = "b25f8e2112b1582ce6386e846800a31bab688e50"
+SRC_URI = "git://git.denx.de/u-boot.git;protocol=https;branch=master"

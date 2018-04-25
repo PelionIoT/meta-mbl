@@ -158,11 +158,8 @@ csf_templates: csf-deps
 image_clean:
 	rm -f ${IMAGE_NAME}
 
-cp_image:
-	cp ${IMAGE_FILENAME} .
-
 # This target copies keying material into the top level of the temp directory.
-${CRTS_DATA}/${SRK_FUSE}: cp_image
+${CRTS_DATA}/${SRK_FUSE}:
 	cp ${CSF_KEYS}/* ${TEMP}
 	cp ${CRTS_DATA}/* ${TEMP}
 	cp ${TEMP}/${SRK_FUSE} ${SIGNED_BINARIES}

@@ -29,7 +29,7 @@ CST_PATH ?= ${CST_BOARD_DIR}/${CST_BOARD_ID}
 CST_BIN ?= ${CST_PATH}/linux64/bin/cst
 CSF_KEYS ?= ${CST_PATH}/keys
 CRTS_DATA ?= ${CST_PATH}/crts
-SRK_FUSE ?= SRK_1_2_3_4_2048_fuse.bin
+SRK_FUSE ?= SRK_1_2_3_4_fuse.bin
 CST_KEY_PASS_FILENAME=key_pass.txt
 
 # Commands

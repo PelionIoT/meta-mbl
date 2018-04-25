@@ -10,6 +10,6 @@ do_deploy_append_imx7s-warp-mbl() {
 
 	install -d ${DEPLOYDIR}
 	install -m 0644 ${B}/warp7_defconfig/u-boot.cfg ${DEPLOYDIR}
-	install -m 0644 ${B}/warp7_defconfig/board/warp7/imximage.cfg.cfgtmp ${DEPLOYDIR}
+	install -m 0644 ${B}/warp7_defconfig/u-boot.cfgout ${DEPLOYDIR}
 	install -m 0644 ${B}/warp7_defconfig/u-boot.bin ${DEPLOYDIR}
 }

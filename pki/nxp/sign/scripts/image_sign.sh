@@ -85,7 +85,7 @@ image_sign_mbl_populate_csf_hab () {
     rm -f "$temp"/"$output_image".hab.txt
     for word in $words
     do
-        printf "0x%s\ " "$word" >> "$temp/$output_image.hab.txt"
+        printf "%s\ " "$word" >> "$temp/$output_image.hab.txt"
     done
 
     # read in string
@@ -134,7 +134,7 @@ image_sign_mbl_populate_csf_dcd () {
     rm -f "$temp"/"$output_image".hab.txt
     for word in $words
     do
-        printf "0x%s\ " "$word" >> "$temp/$output_image.hab.txt"
+        printf "%s\ " "$word" >> "$temp/$output_image.hab.txt"
     done
 
     # read in string

@@ -160,14 +160,14 @@ image_clean:
 	rm -f ${IMAGE_NAME}
 
 # This target copies keying material into the top level of the temp directory.
-${CRTS_DATA}/${SRK_FUSE}:
+cst_data:
 	cp ${CSF_KEYS}/* ${TEMP}
 	cp ${CRTS_DATA}/* ${TEMP}
 	cp ${TEMP}/${SRK_FUSE} ${SIGNED_BINARIES}
 
 
 # List of dependencies
-depends: dirs env_depend ${CRTS_DATA}/${SRK_FUSE} csf_templates u-boot-fetch-checkout u-boot-build-tools mkimage_depend
+depends: dirs env_depend cst_data csf_templates u-boot-fetch-checkout u-boot-build-tools mkimage_depend
 
 # Extract the specified image @ ${IMAGE_NAME}
 extract-image: env_depend

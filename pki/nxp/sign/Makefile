@@ -184,7 +184,7 @@ combine-image: env_depend
 	sudo ${ADD_SIGNED} -i ${IMAGE_NAME}
 
 # Sign u-boot
-u-boot: depends 
+u-boot: depends
 	# Append IVT header to u-boot bin
 	${SIGN} image_sign_mbl_generate_ivt ${UBOOT_BIN} ${UBOOT_IMX} ${UBOOT_ADDR} ${UBOOT_CFG} ${UBOOT_BOARD_CFG} ${TEMP} ${UBOOT_MKIMAGE}
 
@@ -239,7 +239,7 @@ fdt: depends
 	cp ${TEMP}/${FDT_IMX}-signed ${SIGNED_BINARIES}
 
 # Sign OPTEE
-optee: optee_check depends 
+optee: optee_check depends
 	# Append IVT header to boot script
 	${SIGN} image_sign_mbl_generate_ivt ${OPTEE_ROOTFS}/${OPTEE_BIN} ${OPTEE_ROOTFS}/${OPTEE_IMX} ${OPTEE_ADDR} ${UBOOT_CFG} ${UBOOT_BOARD_CFG} ${TEMP} ${UBOOT_MKIMAGE}
 

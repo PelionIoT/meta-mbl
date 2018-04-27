@@ -9,6 +9,7 @@ inherit packagegroup
 #     - dropbear. To support ssh during development and test,
 ###############################################################################
 PACKAGEGROUP_MBL_TEST_PKGS_append = " dropbear"
+PACKAGEGROUP_MBL_TEST_PKGS_append = " dropbear-ssh-dns-sd"
 PACKAGEGROUP_MBL_TEST_PKGS_append = " bash"
 PACKAGEGROUP_MBL_TEST_PKGS_append = " python python-pip"
 PACKAGEGROUP_MBL_TEST_PKGS_append = " python3 python3-pip"

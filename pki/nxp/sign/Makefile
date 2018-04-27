@@ -159,8 +159,14 @@ csf_templates: csf-deps
 image_clean:
 	rm -f ${IMAGE_NAME}
 
+# Ensure the fuse.bin is in the source directory
+${CRTS_DATA}/${SRK_FUSE}:
+ifeq ("$(wildcard ${CRTS_DATA}/${SRK_FUSE})","")
+	exit 1
+endif
+
 # This target copies keying material into the top level of the temp directory.
-cst_data:
+cst_data: ${CRTS_DATA}/${SRK_FUSE}
 	cp ${CSF_KEYS}/* ${TEMP}
 	cp ${CRTS_DATA}/* ${TEMP}
 	cp ${TEMP}/${SRK_FUSE} ${SIGNED_BINARIES}

@@ -181,7 +181,7 @@ extract-image: env_depend
 
 # Combine signed image collateral into new signed- prefixed image
 combine-image: env_depend
-	sudo ${ADD_SIGNED} -i ${IMAGE_NAME}
+	sudo ${ADD_SIGNED} -i ${IMAGE_NAME} -f ${SRK_FUSE}
 
 # Sign u-boot
 u-boot: depends

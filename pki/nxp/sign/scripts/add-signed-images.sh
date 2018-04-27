@@ -24,7 +24,7 @@ default_signed_bootscr="boot.scr.imx-signed"
 default_signed_kernel="zImage.imx-signed"
 default_signed_dtb="imx7s-warp.dtb.imx-signed"
 default_signed_optee="uTee.optee.imx-signed"
-default_srk_fuse="SRK_1_2_3_4_2048_fuse.bin"
+default_srk_fuse="SRK_1_2_3_4_fuse.bin"
 default_signed_binaries_dir="signed-binaries"
 
 boot_part_num=$default_boot_part_num

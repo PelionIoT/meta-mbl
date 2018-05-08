@@ -27,5 +27,7 @@ PACKAGEGROUP_MBL_PKGS_append = " rng-tools"
 PACKAGEGROUP_MBL_PKGS_append_imx7s-warp = " optee-os"
 PACKAGEGROUP_MBL_PKGS_append_imx7s-warp = " optee-client"
 
+PACKAGEGROUP_MBL_PKGS_append_bananapi-zero = " optee-os"
+PACKAGEGROUP_MBL_PKGS_append_bananapi-zero = " optee-client"
 
 RDEPENDS_packagegroup-mbl += "${PACKAGEGROUP_MBL_PKGS}"

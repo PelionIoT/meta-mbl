@@ -1,4 +1,4 @@
-DEPENDS += "u-boot-mkimage-native dtc-native u-boot "
+DEPENDS += "u-boot-mkimage-native dtc-native u-boot optee-os "
 
 S = "${WORKDIR}/linux-${PV}"
 
@@ -50,6 +50,10 @@ _generate_signed_kernel_image() {
 	if [ ! -e ${KERNEL_DTB} ]
 	then
 		ln -s ${B}/arch/$ARCH/boot/dts/${KERNEL_DTB} ${KERNEL_DTB}
+	fi
+	if [ ! -e tee.bin ]
+	then
+		ln -s ${DEPLOY_DIR_IMAGE}/tee.bin tee.bin
 	fi
 	uboot-mkimage -f kernel.its -K ${KERNEL_DTB} -r kernel.itb;
 }

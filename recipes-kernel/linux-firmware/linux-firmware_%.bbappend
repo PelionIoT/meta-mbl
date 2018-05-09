@@ -50,3 +50,5 @@ FILES_${PN}-bcm43430_bcm43430a1 += " \
 	${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.bin \
 	${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.txt \
 "
+
+RDEPENDS_${PN} += "perl"

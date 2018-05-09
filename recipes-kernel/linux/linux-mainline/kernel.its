@@ -35,6 +35,20 @@
 				algo = "sha1";
 			};
 		};
+
+		optee@1 {
+			description = "optee";
+			data = /incbin/("tee.bin");
+			arch = "arm";
+			type = "kernel";
+			os = "linux";
+			compression = "none";
+			load = <0x5bffffe4>;
+			entry = <0x5c000000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
 	};
 
 	configurations {
@@ -42,12 +56,13 @@
 
 		config@1 {
 			description = "sun8i-h2-plus-bananapi-m2-zero";
-			kernel = "kernel@1";
+			kernel = "optee@1";
 			fdt = "fdt@1";
+			loadables = "kernel@1";
 			signature@1 {
 				algo = "sha1,rsa2048";
 				key-name-hint = "dev";
-				sign-images = "fdt", "kernel";
+				sign-images = "fdt", "kernel", "optee", "loadables";
 			};
 		};
 	};

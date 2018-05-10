@@ -53,7 +53,7 @@ _generate_signed_kernel_image() {
 	fi
 	if [ ! -e tee.bin ]
 	then
-		ln -s ${DEPLOY_DIR_IMAGE}/tee.bin tee.bin
+		ln -sf ${DEPLOY_DIR_IMAGE}/tee.bin tee.bin
 	fi
 	uboot-mkimage -f kernel.its -K ${KERNEL_DTB} -r kernel.itb;
 }

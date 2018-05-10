@@ -74,3 +74,9 @@ do_install_append() {
 }
 
 ALLOW_EMPTY_kernel-devicetree = "1"
+
+FILES_${PN}_append = " \
+    boot/kernel.itb \
+    boot/kernel.its \
+    boot/zImage \
+"

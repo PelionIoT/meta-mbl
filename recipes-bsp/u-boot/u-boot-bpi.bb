@@ -69,3 +69,12 @@ do_install_append() {
 	install -m 0644 ${B}/u-boot.its ${D}/boot
 	install -m 0644 ${B}/u-boot.its ${DEPLOY_DIR_IMAGE}
 }
+
+FILES_${PN}_append = " \
+	boot/sunxi-spl.bin \
+	boot/u-boot-signed.itb \
+	boot/u-boot-nodtb.bin \
+	boot/u-boot.dtb \
+	boot/${UBOOT_DTB} \
+	boot/u-boot.its \
+"

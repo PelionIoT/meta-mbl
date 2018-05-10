@@ -41,15 +41,15 @@ _generate_signed_kernel_image() {
 	echo "Generating kernel FIT image.."
 	if [ ! -e kernel.its ]
 	then
-		ln -s ${WORKDIR}/kernel.its kernel.its
+		ln -sf ${WORKDIR}/kernel.its kernel.its
 	fi
 	if [ ! -e zImage ]
 	then
-		ln -s ${B}/arch/$ARCH/boot/zImage zImage
+		ln -sf ${B}/arch/$ARCH/boot/zImage zImage
 	fi
 	if [ ! -e ${KERNEL_DTB} ]
 	then
-		ln -s ${B}/arch/$ARCH/boot/dts/${KERNEL_DTB} ${KERNEL_DTB}
+		ln -sf ${B}/arch/$ARCH/boot/dts/${KERNEL_DTB} ${KERNEL_DTB}
 	fi
 	if [ ! -e tee.bin ]
 	then

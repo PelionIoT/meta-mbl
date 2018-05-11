@@ -43,4 +43,6 @@ OPTEE_ARCH_bananapi-zero = "arm32"
 
 do_install_append() {
     uboot-mkimage -A arm -T kernel -O tee -C none -d ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.bin ${D}/lib/firmware/uTee.optee
+    install -m 0644 ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.bin ${D}/boot
+    install -m 0644 ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.bin ${DEPLOY_DIR_IMAGE}
 }

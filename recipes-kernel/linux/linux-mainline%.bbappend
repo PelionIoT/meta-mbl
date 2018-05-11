@@ -63,20 +63,10 @@ do_install_append() {
 
 	_generate_signed_kernel_image
 
-	install -m 0644 ${B}/${KERNEL_BPI} ${D}/boot
 	install -m 0644 ${B}/${KERNEL_BPI} ${DEPLOY_DIR_IMAGE}
-	install -m 0644 ${B}/zImage ${D}/boot
 	install -m 0644 ${B}/zImage ${DEPLOY_DIR_IMAGE}
-	install -m 0644 ${B}/${KERNEL_DTB} ${D}/boot
 	install -m 0644 ${B}/${KERNEL_DTB} ${DEPLOY_DIR_IMAGE}
-	install -m 0644 ${WORKDIR}/kernel.its ${D}/boot
 	install -m 0644 ${WORKDIR}/kernel.its ${DEPLOY_DIR_IMAGE}
 }
 
 ALLOW_EMPTY_kernel-devicetree = "1"
-
-FILES_${PN}_append = " \
-    boot/kernel.itb \
-    boot/kernel.its \
-    boot/zImage \
-"

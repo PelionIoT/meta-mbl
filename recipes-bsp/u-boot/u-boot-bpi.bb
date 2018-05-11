@@ -56,25 +56,10 @@ do_install_append() {
 
 	install -d ${D}/boot
 	install -m 0644 ${B}/u-boot-packed.bin ${DEPLOY_DIR_IMAGE}
-	install -m 0644 ${B}/spl/sunxi-spl.bin ${D}/boot
 	install -m 0644 ${B}/spl/sunxi-spl.bin ${DEPLOY_DIR_IMAGE}
-	install -m 0644 ${B}/u-boot-signed.itb ${D}/boot
 	install -m 0644 ${B}/u-boot-signed.itb ${DEPLOY_DIR_IMAGE}
-	install -m 0644 ${B}/u-boot-nodtb.bin ${D}/boot
 	install -m 0644 ${B}/u-boot-nodtb.bin ${DEPLOY_DIR_IMAGE}
-	install -m 0644 ${B}/u-boot.dtb ${D}/boot
 	install -m 0644 ${B}/u-boot.dtb ${DEPLOY_DIR_IMAGE}
-	install -m 0644 ${B}/arch/arm/dts/${UBOOT_DTB} ${D}/boot
 	install -m 0644 ${B}/arch/arm/dts/${UBOOT_DTB} ${DEPLOY_DIR_IMAGE}
-	install -m 0644 ${B}/u-boot.its ${D}/boot
 	install -m 0644 ${B}/u-boot.its ${DEPLOY_DIR_IMAGE}
 }
-
-FILES_${PN}_append = " \
-	boot/sunxi-spl.bin \
-	boot/u-boot-signed.itb \
-	boot/u-boot-nodtb.bin \
-	boot/u-boot.dtb \
-	boot/${UBOOT_DTB} \
-	boot/u-boot.its \
-"

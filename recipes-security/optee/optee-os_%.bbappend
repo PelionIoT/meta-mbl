@@ -46,3 +46,7 @@ do_install_append() {
     install -m 0644 ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.bin ${D}/boot
     install -m 0644 ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.bin ${DEPLOY_DIR_IMAGE}
 }
+
+FILES_${PN}_append = " \
+    boot/tee.bin
+"

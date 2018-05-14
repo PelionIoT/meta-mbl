@@ -9,7 +9,7 @@ SRC_URI = " \
 	   file://kernel.its \
           "
 PV = "4.14.2+git${SRCPV}"
-SRCREV = "9b5bf7cef83e7d9621b9bc12d7a0dbfd68218cf1"
+SRCREV = "7b1e65dc7e64b20d8d953f467b8936e60a98d4c6"
 
 KBUILD_DEFCONFIG_bananapi-zero ?= "bananapi-zero_defconfig"
 

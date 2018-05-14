@@ -35,7 +35,7 @@ EXTRA_OEMAKE_bananapi-zero = "PLATFORM=${OPTEEMACHINE} \
                 NOWERROR=1 \
                 LDFLAGS= \
                 LIBGCC_LOCATE_CFLAGS=--sysroot=${STAGING_DIR_HOST} \
-                CFG_DT=y CFG_TEE_CORE_LOG_LEVEL=4 \
+                CFG_DT=y CFG_TEE_CORE_LOG_LEVEL=1 \
         "
 
 OPTEE_ARCH_imx7s-warp-mbl = "arm32"

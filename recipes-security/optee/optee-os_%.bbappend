@@ -1,14 +1,23 @@
 
 DEPENDS += " u-boot-mkimage-native "
 
-SRCREV="9ca3cfe13c6dd322015ceee19ece97a228ac854a"
-SRC_URI="git://github.com/OP-TEE/optee_os.git;nobranch=1 \
+SRCREV_imx7s-warp-mbl="9ca3cfe13c6dd322015ceee19ece97a228ac854a"
+SRCREV_bananapi-zero="f6fe6bb55ae9ad1b56f03051c1b1db23c64d3177"
+SRC_URI_imx7s-warp-mbl="git://github.com/OP-TEE/optee_os.git;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "
-OPTEEMACHINE="imx-mx7swarp7"
-OPTEEOUTPUTMACHINE="imx"
+SRC_URI_bananapi-zero="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=https;nobranch=1 \
+file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
+"
 
-EXTRA_OEMAKE = "PLATFORM=${OPTEEMACHINE} \
+BB_STRICT_CHECKSUM = "0"
+
+OPTEEMACHINE_imx7s-warp-mbl="imx-mx7swarp7"
+OPTEEOUTPUTMACHINE_imx7s-warp-mbl="imx"
+OPTEEMACHINE_bananapi-zero="sunxi-sun8i_h2_plus_bananapi_m2_zero"
+OPTEEOUTPUTMACHINE_bananapi-zero="sunxi"
+
+EXTRA_OEMAKE_imx7s-warp-mbl = "PLATFORM=${OPTEEMACHINE} \
                 CROSS_COMPILE_core=${HOST_PREFIX} \
                 CROSS_COMPILE_ta_arm32=${HOST_PREFIX} \
                 NOWERROR=1 \
@@ -20,7 +29,17 @@ EXTRA_OEMAKE = "PLATFORM=${OPTEEMACHINE} \
                 CFG_DT=y CFG_TEE_CORE_LOG_LEVEL=1 \
         "
 
+EXTRA_OEMAKE_bananapi-zero = "PLATFORM=${OPTEEMACHINE} \
+                CROSS_COMPILE_core=${HOST_PREFIX} \
+                CROSS_COMPILE_ta_arm32=${HOST_PREFIX} \
+                NOWERROR=1 \
+                LDFLAGS= \
+                LIBGCC_LOCATE_CFLAGS=--sysroot=${STAGING_DIR_HOST} \
+                CFG_DT=y CFG_TEE_CORE_LOG_LEVEL=1 \
+        "
+
 OPTEE_ARCH_imx7s-warp-mbl = "arm32"
+OPTEE_ARCH_bananapi-zero = "arm32"
 
 do_install_append() {
     uboot-mkimage -A arm -T kernel -O tee -C none -d ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.bin ${D}/lib/firmware/uTee.optee

@@ -59,6 +59,7 @@ FILES_${PN}-bcm43430 = " \
   ${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.bin \
   ${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.1DX.txt \
   ${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.1LN.txt \
+  ${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.AP6212.txt \
 "
 FILES_${PN}-bcm43455 = " \
   ${nonarch_base_libdir}/firmware/brcm/brcmfmac43455-sdio.bin \
@@ -127,7 +128,7 @@ RDEPENDS_${PN}-cyw4350c0 += "${PN}-cypress-license"
 RDEPENDS_${PN}-cyw4354a2 += "${PN}-cypress-license"
 
 # Stuff that is specific to this bbappend, not upstream
-SRCREV = "4e970548dc5ba11bdf4eb53a2ea4bb0c6f97e503"
+SRCREV = "210e5127e833180c994990851b83d9e2ea518ace"
 
 SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/linux-firmware.git;protocol=https;nobranch=1"
 
@@ -138,6 +139,10 @@ do_install_append_cyw43430a1() {
 
 do_install_append_imx7s-warp-mbl() {
     (cd ${D}${nonarch_base_libdir}/firmware/brcm/ ; ln -sf brcmfmac43430-sdio.1DX.txt brcmfmac43430-sdio.txt)
+}
+
+do_install_append_bananapi-zero() {
+    (cd ${D}${nonarch_base_libdir}/firmware/brcm/ ; ln -sf brcmfmac43430-sdio.AP6212.txt brcmfmac43430-sdio.txt)
 }
 
 FILES_${PN}-bcm43430_append = " \

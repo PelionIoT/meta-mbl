@@ -1,4 +1,5 @@
 SRCREV="45218eb59b006ad20cc7610904f291dd85157a43"
+SRCREV_bananapi-zero="294ffbd5263cf4304a1c6564d09857062ed87243"
 FILESEXTRAPATHS_prepend := "${THISDIR}/optee-test:"
 SRC_URI += "file://0001-IOTMBL-438-Fix-optee_test-adbg_run.c-strncpy-Werror-.patch"
 SRC_URI += "file://0001-IOTMBL-438-Fix-optee_test-error-memmove-Werror-array.patch"

@@ -1,7 +1,8 @@
 
 DEPENDS += " u-boot-mkimage-native "
 
-SRCREV="0ab9388c0d553a6bb5ae04e41b38ba40cf0474bf"
+SRCREV_imx7s-warp-mbl="0ab9388c0d553a6bb5ae04e41b38ba40cf0474bf"
+SRCREV_bananapi-zero="f6fe6bb55ae9ad1b56f03051c1b1db23c64d3177"
 SRCREV_raspberrypi3="79418b516aa1bedc042f633a9fec9ec9b9bd4f03"
 SRC_URI="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
@@ -19,6 +20,8 @@ BB_STRICT_CHECKSUM = "0"
 
 OPTEEMACHINE_imx7s-warp-mbl="imx-mx7swarp7"
 OPTEEOUTPUTMACHINE_imx7s-warp-mbl="imx"
+OPTEEMACHINE_bananapi-zero="sunxi-sun8i_h2_plus_bananapi_m2_zero"
+OPTEEOUTPUTMACHINE_bananapi-zero="sunxi"
 OPTEEMACHINE_raspberrypi3="rpi3"
 OPTEEOUTPUTMACHINE_raspberrypi3="rpi3"
 
@@ -34,6 +37,15 @@ EXTRA_OEMAKE_imx7s-warp-mbl = "PLATFORM=${OPTEEMACHINE} \
                 CFG_DT=y CFG_TEE_CORE_LOG_LEVEL=1 \
         "
 
+EXTRA_OEMAKE_bananapi-zero = "PLATFORM=${OPTEEMACHINE} \
+                CROSS_COMPILE_core=${HOST_PREFIX} \
+                CROSS_COMPILE_ta_arm32=${HOST_PREFIX} \
+                NOWERROR=1 \
+                LDFLAGS= \
+                LIBGCC_LOCATE_CFLAGS=--sysroot=${STAGING_DIR_HOST} \
+                CFG_DT=y CFG_TEE_CORE_LOG_LEVEL=1 \
+        "
+
 EXTRA_OEMAKE_raspberrypi3 = "PLATFORM=${OPTEEMACHINE} \
 		CROSS_PREFIX=aarch64-linux-gnu- \
                 CROSS_COMPILE_ta_arm32=${HOST_PREFIX} \
@@ -46,6 +58,7 @@ EXTRA_OEMAKE_raspberrypi3 = "PLATFORM=${OPTEEMACHINE} \
         "
 
 OPTEE_ARCH_imx7s-warp-mbl = "arm32"
+OPTEE_ARCH_bananapi-zero = "arm32"
 OPTEE_ARCH_raspberrypi3 = "arm32"
 
 do_compile_prepend() {

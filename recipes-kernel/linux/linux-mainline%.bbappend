@@ -39,22 +39,10 @@ KERNEL_DTB="sun8i-h2-plus-bananapi-m2-zero.dtb"
 #TODO: find a path to hold all kernel stuff and optee
 _generate_signed_kernel_image() {
 	echo "Generating kernel FIT image.."
-	if [ ! -e kernel.its ]
-	then
-		ln -sf ${WORKDIR}/kernel.its kernel.its
-	fi
-	if [ ! -e zImage ]
-	then
-		ln -sf ${B}/arch/$ARCH/boot/zImage zImage
-	fi
-	if [ ! -e ${KERNEL_DTB} ]
-	then
-		ln -sf ${B}/arch/$ARCH/boot/dts/${KERNEL_DTB} ${KERNEL_DTB}
-	fi
-	if [ ! -e tee.bin ]
-	then
-		ln -sf ${DEPLOY_DIR_IMAGE}/tee.bin tee.bin
-	fi
+	ln -sf ${WORKDIR}/kernel.its kernel.its
+	ln -sf ${B}/arch/$ARCH/boot/zImage zImage
+	ln -sf ${B}/arch/$ARCH/boot/dts/${KERNEL_DTB} ${KERNEL_DTB}
+	ln -sf ${DEPLOY_DIR_IMAGE}/optee/tee.bin tee.bin
 	uboot-mkimage -f kernel.its -K ${KERNEL_DTB} -r kernel.itb;
 }
 

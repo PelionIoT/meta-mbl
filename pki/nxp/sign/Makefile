@@ -3,10 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-
 # Common
+MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+SIGN_DIR ?= $(dir $(MKFILE_PATH))
 UBOOT_REPO = u-boot
-TEMP = `pwd`/temp
+TEMP = ${SIGN_DIR}/temp
 UBOOT_DIR ?= ${TEMP}/${UBOOT_REPO}
 UBOOT_SHA ?= 224318f95f9e41f916579a20f3275ff3773f9c94
 UBOOT_URL ?= https://git.linaro.org/landing-teams/working/mbl/${UBOOT_REPO}.git
@@ -14,19 +15,19 @@ BOARDCONFIG ?= warp7_secure_config
 UBOOT_CFG = u-boot.cfg
 UBOOT_BOARD_CFG = imximage.cfg.cfgtmp
 MAKEDIR=$(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-SIGNED_BINARIES ?= `pwd`/signed-binaries
+SIGNED_BINARIES ?= ${SIGN_DIR}/signed-binaries
 IMAGE_NAME ?= mbl-console-image-imx7s-warp-mbl.wic.gz
 IMAGE_NAME_TEST ?= mbl-console-image-test-imx7s-warp-mbl.wic.gz
-IMAGE_DIR ?= `pwd`/../../../../../build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl
+IMAGE_DIR ?= ${SIGN_DIR}/../../../../../build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl
 IMAGE_FILENAME ?= ${IMAGE_DIR}/${IMAGE_NAME}
 
 
 # CST
 CST_TOOLS_DIR = ${CST_BOARD_DIR}
-CST_BOARD_DIR = `pwd`/../boards
+CST_BOARD_DIR = ${SIGN_DIR}/../boards
 CST_BOARD_ID ?= 000000-0000-000000-0000
 CST_PATH ?= ${CST_BOARD_DIR}/${CST_BOARD_ID}
-CST_BIN ?= ${CST_PATH}/linux64/cst
+CST_BIN ?= ${CST_PATH}/linux64/bin/cst
 CSF_KEYS ?= ${CST_PATH}/keys
 CRTS_DATA ?= ${CST_PATH}/crts
 SRK_FUSE ?= SRK_1_2_3_4_fuse.bin
@@ -259,7 +260,3 @@ clean: dirs-clean image_clean
 	rm -f ${IMAGE_NAME}
 	rm -f ${IMAGE_NAME_TEST}
 
-
-test:
-	echo ${FILE}
-	#echo ${MAKEDIR}

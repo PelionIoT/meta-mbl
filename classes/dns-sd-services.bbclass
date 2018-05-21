@@ -116,10 +116,10 @@ python() {
 
         # Add RDEPENDS for the service
         rdepends = d.getVarFlag('DNS_SD_SERVICE_RDEPENDS', service)
-        if src is not None:
+        if rdepends is not None:
             d.appendVar(
                 "RDEPENDS-{}-{}-dns-sd".format(d.getVar('PN'), service),
-                d.getVarFlag('DNS_SD_SERVICE_RDEPENDS', service))
+                rdepends)
 }
 
 # Run the "install" commands whose sources and destinations were determined

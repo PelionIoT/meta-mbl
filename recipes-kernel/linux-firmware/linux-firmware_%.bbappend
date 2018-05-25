@@ -19,16 +19,8 @@ LIC_FILES_CHKSUM_append = "\
 
 NO_GENERIC_LICENSE[Firmware-cypress] = "LICENCE.cypress"
 
-# The meta-raspberrypi layer may have already added ${PN}-cypress-license to
-# PACKAGES, and if that's happened we don't want to add it again (BitBake
-# doesn't like duplicates in PACKAGES).
-#
-# To check whether ${PN}-cypress-license has already been added to PACKAGES we
-# need to force a copy of PACKAGES to be expanded now. (Note that getVar()'s
-# default behaviour is to expand).
-EXPANDED_PACKAGES := "${@d.getVar('PACKAGES')}"
-PACKAGES_prepend = " \
-             ${@bb.utils.contains('EXPANDED_PACKAGES', '${PN}-cypress-license', '', '${PN}-cypress-license', d)} \
+PACKAGES =+ " \
+             ${PN}-cypress-license \
              ${PN}-cyw43430a1 \
              "
 
@@ -145,19 +137,8 @@ do_install_append_cyw43430a1() {
     (cd ${D}${nonarch_base_libdir}/firmware/brcm/ ; ln -sf ../cyw_bt/CYW43430A1.1DX.hcd BCM43430A1.hcd)
 }
 
-select_bcm43430_1dx_nvram() {
-    # Note the "-f" in the ln command - if e.g. meta-raspberrypi's
-    # linux-firmware bbappend already installed an NVRAM file we'll replace it
-    # here 
-    (cd ${D}${nonarch_base_libdir}/firmware/brcm/ ; ln -sf brcmfmac43430-sdio.1DX.txt brcmfmac43430-sdio.txt)
-}
-
 do_install_append_imx7s-warp-mbl() {
-    select_bcm43430_1dx_nvram
-}
-
-do_install_append_raspberrypi3() {
-    select_bcm43430_1dx_nvram
+    (cd ${D}${nonarch_base_libdir}/firmware/brcm/ ; ln -sf brcmfmac43430-sdio.1DX.txt brcmfmac43430-sdio.txt)
 }
 
 FILES_${PN}-bcm43430_append = " \

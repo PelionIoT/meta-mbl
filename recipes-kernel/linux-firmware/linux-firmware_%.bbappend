@@ -135,17 +135,10 @@ SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/linux-firmware.git;pro
 
 # Changes that are specific to our distro/board/chip and will not go into upstream linux-firmware recipe
 # but may need a better upstream home
-do_install_append_cyw43430a1() {
-    (cd ${D}${nonarch_base_libdir}/firmware/brcm/ ; ln -sf ../cyw_bt/CYW43430A1.1DX.hcd BCM43430A1.hcd)
-}
-
 do_install_append_imx7s-warp-mbl() {
     (cd ${D}${nonarch_base_libdir}/firmware/brcm/ ; ln -sf brcmfmac43430-sdio.1DX.txt brcmfmac43430-sdio.txt)
 }
 
 FILES_${PN}-bcm43430_append = " \
   ${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.txt \
-"
-FILES_${PN}-cyw43430a1_append = " \
-  ${nonarch_base_libdir}/firmware/brcm/BCM43430A1.hcd \
 "

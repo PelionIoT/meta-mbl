@@ -9,7 +9,7 @@ LICENSE_append = "\
 "
 
 LIC_FILES_CHKSUM_remove = "\
-    file://WHENCE;md5=038edbc9e744171d8b6235e0224028ba \
+    file://WHENCE;md5=ec6f70c8a1104ff87f6aa144d926f0dd \
     file://LICENCE.Netronome;md5=cd2a3e6effe3cdf42731575b8e9477ed \
 "
 

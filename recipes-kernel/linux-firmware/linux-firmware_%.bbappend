@@ -10,13 +10,11 @@ LICENSE_append = "\
 
 LIC_FILES_CHKSUM_remove = "\
     file://WHENCE;md5=6f46986f4e913ef16b765c2319cc5141 \
-    file://LICENCE.Netronome;md5=cd2a3e6effe3cdf42731575b8e9477ed \
 "
 
 LIC_FILES_CHKSUM_append = "\
     file://LICENCE.cypress;md5=cbc5f665d04f741f1e006d2096236ba7 \
     file://WHENCE;md5=4ced610de73544e4a36e07400566a5f1 \
-    file://LICENCE.Netronome;md5=4add08f2577086d44447996503cddf5f \
 "
 
 NO_GENERIC_LICENSE[Firmware-cypress] = "LICENCE.cypress"

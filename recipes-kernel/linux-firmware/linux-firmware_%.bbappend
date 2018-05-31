@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+# NOTE: this bbappend is BBMASKed (not parsed) on raspberrypi and the
+# meta-raspberrypi linux-firmware is BBMASKed on imx7s-warp-mbl
+
 # Changes that will to go upstream when the firmware is submitted to linux-firmware.git
 LICENSE_append = "\
     & Firmware-cypress \
@@ -19,16 +22,8 @@ LIC_FILES_CHKSUM_append = "\
 
 NO_GENERIC_LICENSE[Firmware-cypress] = "LICENCE.cypress"
 
-# The meta-raspberrypi layer may have already added ${PN}-cypress-license to
-# PACKAGES, and if that's happened we don't want to add it again (BitBake
-# doesn't like duplicates in PACKAGES).
-#
-# To check whether ${PN}-cypress-license has already been added to PACKAGES we
-# need to force a copy of PACKAGES to be expanded now. (Note that getVar()'s
-# default behaviour is to expand).
-EXPANDED_PACKAGES := "${@d.getVar('PACKAGES')}"
 PACKAGES_prepend = " \
-             ${@bb.utils.contains('EXPANDED_PACKAGES', '${PN}-cypress-license', '', '${PN}-cypress-license', d)} \
+             ${PN}-cypress-license \
              ${PN}-cyw43430a1 \
              "
 
@@ -84,14 +79,16 @@ FILES_${PN}-bcm4356 = " \
   ${nonarch_base_libdir}/firmware/brcm/brcmfmac4356-pcie.1CX.txt \
 "
 
-RDEPENDS_${PN}-bcm43012 += "${PN}-cypress-license"
-RDEPENDS_${PN}-bcm43340 += "${PN}-cypress-license"
-RDEPENDS_${PN}-bcm43362 += "${PN}-cypress-license"
-RDEPENDS_${PN}-bcm4339 += "${PN}-cypress-license"
-RDEPENDS_${PN}-bcm43430 += "${PN}-cypress-license"
-RDEPENDS_${PN}-bcm43455 += "${PN}-cypress-license"
-RDEPENDS_${PN}-bcm4354 += "${PN}-cypress-license"
-RDEPENDS_${PN}-bcm4356 += "${PN}-cypress-license"
+# Use "=" rather than "+=" here to get rid of any dependency on the Broadcom
+# license that openembedded-core's linux-firmware recipe added.
+RDEPENDS_${PN}-bcm43012 = "${PN}-cypress-license"
+RDEPENDS_${PN}-bcm43340 = "${PN}-cypress-license"
+RDEPENDS_${PN}-bcm43362 = "${PN}-cypress-license"
+RDEPENDS_${PN}-bcm4339 = "${PN}-cypress-license"
+RDEPENDS_${PN}-bcm43430 = "${PN}-cypress-license"
+RDEPENDS_${PN}-bcm43455 = "${PN}-cypress-license"
+RDEPENDS_${PN}-bcm4354 = "${PN}-cypress-license"
+RDEPENDS_${PN}-bcm4356 = "${PN}-cypress-license"
 
 # Cypress Bluetooth patch files
 LICENSE_${PN}-cyw43012c0 = "Firmware-cypress"

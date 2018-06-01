@@ -127,10 +127,10 @@ MACHINE=<machine> DISTRO=<distro> . setup-environment
 ```
 Select the {MACHINE, DISTRO} values for your Mbed Linux device from the table below:
 
-| Device         | MACHINE          | DISTRO     |
-| :---           | ---              | ---        |
-| Warp7          | `imx7s-warp-mbl` | `mbl`      |
-| Raspberry Pi 3 | `raspberrypi3`   | `mbl`      |
+| Device         | MACHINE            | DISTRO     |
+| :---           | ---                | ---        |
+| Warp7          | `imx7s-warp-mbl`   | `mbl`      |
+| Raspberry Pi 3 | `raspberrypi3-mbl` | `mbl`      |
 
 So, for example, to set up the build environment for a Warp7 board, your command would look like this:
 ```
@@ -280,7 +280,7 @@ To transfer your disk image to the Warp7's flash device, you must first access t
     replacing `/dev/sdX` as mentioned above.
 1. Write the disk image to the SD card device (not a partition on it) using the following command:
     ```
-    bmaptool copy --bmap ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3/mbl-console-image-raspberrypi3.wic.bmap ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3/mbl-console-image-raspberrypi3.wic.gz /dev/sdX
+    bmaptool copy --bmap ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3-mbl/mbl-console-image-raspberrypi3-mbl.wic.bmap ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3-mbl/mbl-console-image-raspberrypi3-mbl.wic.gz /dev/sdX
     ```
     replacing `/dev/sdX` as mentioned above. This may take some time.
 1. When `bmaptool` has finished, eject the device:

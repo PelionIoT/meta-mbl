@@ -1,5 +1,5 @@
-# Specification of partitioning of raspberrypi3 SD card to support mbed Update
-# See docs/partitions.md
+# Specification of partitioning of raspberrypi3-mbl SD card to support mbed
+# Update See docs/partitions.md
 
 # Note 1: don't specify mount points and "on-device" options - if we do that then
 # WIC will try to add the devices to fstab, but it will only add them to fstab

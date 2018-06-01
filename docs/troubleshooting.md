@@ -41,7 +41,7 @@ It is possible to create multiple build directories (default `build-mbl`) in
 the meta-mbl workspace at the same level as the .repo subdirectory by
 specifying a directory to the setup-environment script:
 ```
-MACHINE=raspberrypi3 DISTRO=mbl . setup-environment mybuild-dir1
+MACHINE=raspberrypi3-mbl DISTRO=mbl . setup-environment mybuild-dir1
 ```
 
 The `*.conf` files must then be modified to store the sstate-cache directory in

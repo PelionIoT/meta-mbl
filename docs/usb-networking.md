@@ -74,7 +74,7 @@ interface with the `link-local` IPv4 addressing method using the NetworkManager'
     Wired connection 1  99cf6de7-2297-3607-923a-4286fdbf357a  802-3-ethernet  --          
     ```     
      
-    If DHCP is in operation, the interface will show an allocated IP address:
+    The interface should now have been allocated an IPv4 link-local (169.254.x.y) address:
 
     ```
     $ sudo ifconfig enp0s20u5u4u4

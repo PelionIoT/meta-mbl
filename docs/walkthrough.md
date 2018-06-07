@@ -496,3 +496,5 @@ Figure 14: Firmware update/Campaign status screen.
 <a name="fig15"></a>
 ![fig15](pics/16.png "Figure 15")
 Figure 15: Test campaign details screen.
+
+[mbl-alpha-walkthrough]: https://github.com/ARMmbed/meta-mbl/blob/alpha/docs/walkthrough.md

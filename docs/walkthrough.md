@@ -1,8 +1,12 @@
 ## Introduction
 
-This document provides instructions for building Mbed Linux with the meta-mbl-internal-extras layer (which provides Mbed Cloud Client) and explains how to do a firmware update over the air. It describes the end-to-end process from preparing your environment to updating your device's firmware.
+This document provides instructions for building Mbed Linux with the meta-mbl-restricted-extras layer (which provides Mbed Cloud Client) and explains how to do a firmware update over the air. It describes the end-to-end process from preparing your environment to updating your device's firmware.
 
 Warp7 and Raspberry Pi 3 boards are currently supported.
+
+## Document versions
+
+This document contains instructions for building the `master` branch of Mbed Linux OS. Instructions for building other branches are on those branches themselves. To build the latest stable branch of Mbed Linux OS, see the [the `alpha` branch walkthrough][mbl-alpha-walkthrough].
 
 ## Disclaimer
 
@@ -113,14 +117,14 @@ This data contains the rules for downloading and building code for Mbed Linux.  
 
 ```
 cd ~/mbl
-mkdir mbl-alpha && cd mbl-alpha
-repo init -u ssh://git@github.com/armmbed/mbl-manifest.git -b alpha -m restricted.xml
+mkdir mbl-master && cd mbl-master
+repo init -u ssh://git@github.com/armmbed/mbl-manifest.git -b master -m restricted.xml
 repo sync
 ```
 
 ## <a name="set-up-build-env"></a> 6. Set up the build environment
 
-You need to configure your build environment for your device, including setting your working directory to the build directory (in this case `~/mbl/mbl-alpha/build-mbl`). To set up your build environment, use the following command:
+You need to configure your build environment for your device, including setting your working directory to the build directory (in this case `~/mbl/mbl-master/build-mbl`). To set up your build environment, use the following command:
 
 ```
 MACHINE=<machine> DISTRO=<distro> . setup-environment
@@ -143,8 +147,8 @@ MACHINE=imx7s-warp-mbl DISTRO=mbl . setup-environment
 
 Copy your Mbed Cloud dev credentials file and Update resources file to the build directory, as follows:
 ```
-cp ~/mbl/cloud-credentials/mbed_cloud_dev_credentials.c ~/mbl/mbl-alpha/build-mbl
-cp ~/mbl/manifests/update_default_resources.c ~/mbl/mbl-alpha/build-mbl
+cp ~/mbl/cloud-credentials/mbed_cloud_dev_credentials.c ~/mbl/mbl-master/build-mbl
+cp ~/mbl/manifests/update_default_resources.c ~/mbl/mbl-master/build-mbl
 ```
 
 ## <a name="build-mbl"></a> 7. Build Mbed Linux
@@ -155,7 +159,7 @@ The build process will create the following files which you will need to use lat
 * **A block map of the full disk image** This is a file containing information about which blocks of the uncompressed full disk image actually need to be written to the IoT device. Some blocks of the image represent unused storage space that does not actually need to be written.
 * **A root filesystem archive** This is a compressed tar archive, that you will need for a firmware update; see [Step 12 Performing a firmware update](#do-update). Once the device storage has been initialized, you can use the root file system archive to update the firmware, as this only requires a single root partition to be updated.
 
-To generate these files, run the following `bitbake` command while still in the build directory (`~/mbl/mbl-alpha/build-mbl`):
+To generate these files, run the following `bitbake` command while still in the build directory (`~/mbl/mbl-master/build-mbl`):
 ```
 bitbake mbl-console-image
 ```
@@ -167,9 +171,9 @@ The paths of these files are given in the table below, where `<MACHINE>` should 
 
 | Image type                | Path |
 |---------------------------|------|
-| Full disk image           | `~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.wic.gz`   |
-| Full disk image block map | `~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.wic.bmap` |
-| Root file system archive  | `~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.tar.xz`   |
+| Full disk image           | `~/mbl/mbl-master/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.wic.gz`   |
+| Full disk image block map | `~/mbl/mbl-master/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.wic.bmap` |
+| Root file system archive  | `~/mbl/mbl-master/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.tar.xz`   |
 
 ## <a name="write-image-and-boot"></a> 8. Write the disk image to your device and boot Mbed Linux
 
@@ -255,7 +259,7 @@ To transfer your disk image to the Warp7's flash device, you must first access t
     ```
 1. From a Linux prompt, write the disk image to the Warp7's flash device using the following command:
     ```
-    sudo bmaptool copy --bmap ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.bmap ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.gz /dev/disk/by-id/<device-file-name>
+    sudo bmaptool copy --bmap ~/mbl/mbl-master/build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.bmap ~/mbl/mbl-master/build-mbl/tmp-mbl-glibc/deploy/images/imx7s-warp-mbl/mbl-console-image-imx7s-warp-mbl.wic.gz /dev/disk/by-id/<device-file-name>
     ```
     replacing `<device-file-name>` with the correct device file for the Warp7's flash device. This may take some time.
 1. When `bmaptool` has finished eject the device:
@@ -280,7 +284,7 @@ To transfer your disk image to the Warp7's flash device, you must first access t
     replacing `/dev/sdX` as mentioned above.
 1. Write the disk image to the SD card device (not a partition on it) using the following command:
     ```
-    bmaptool copy --bmap ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3-mbl/mbl-console-image-raspberrypi3-mbl.wic.bmap ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3-mbl/mbl-console-image-raspberrypi3-mbl.wic.gz /dev/sdX
+    bmaptool copy --bmap ~/mbl/mbl-master/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3-mbl/mbl-console-image-raspberrypi3-mbl.wic.bmap ~/mbl/mbl-master/build-mbl/tmp-mbl-glibc/deploy/images/raspberrypi3-mbl/mbl-console-image-raspberrypi3-mbl.wic.gz /dev/sdX
     ```
     replacing `/dev/sdX` as mentioned above. This may take some time.
 1. When `bmaptool` has finished, eject the device:
@@ -371,7 +375,7 @@ To use the manifest-tool to create a manifest for the firmware image:
 - Make sure the current working directory is where `manifest-tool init` was performed (`~/mbl/manifests`).
 - Create a symbolic link to the firmware image that was uploaded in [Update Step 2](#update2-2):
   ```
-  ln -s ~/mbl/mbl-alpha/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.tar.xz test-image
+  ln -s ~/mbl/mbl-master/build-mbl/tmp-mbl-glibc/deploy/images/<MACHINE>/mbl-console-image-<MACHINE>.tar.xz test-image
   ```
   where `<MACHINE>` should be replaced with the MACHINE value for your device from the table in [Section 6](#set-up-build-env). This step is required because sometimes `manifest-tool` doesn't cope well with long file names.
 - Create a manifest called "test-manifest" by using the following command:

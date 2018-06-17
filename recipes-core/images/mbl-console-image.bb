@@ -49,6 +49,7 @@ IMAGE_LINGUAS = " "
 IMAGE_FEATURES += "debug-tweaks"
 
 LICENSE = "MIT"
+HOMEPAGE = "https://github.com/ARMmbed/meta-mbl"
 
 inherit core-image extrausers
 

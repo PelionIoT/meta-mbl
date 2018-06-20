@@ -127,18 +127,18 @@ repo sync
 You need to configure your build environment for your device, including setting your working directory to the build directory (in this case `~/mbl/mbl-master/build-mbl`). To set up your build environment, use the following command:
 
 ```
-MACHINE=<machine> DISTRO=<distro> . setup-environment
+MACHINE=<machine> . setup-environment
 ```
-Select the {MACHINE, DISTRO} values for your Mbed Linux device from the table below:
+Select the {MACHINE} value for your Mbed Linux device from the table below:
 
-| Device         | MACHINE            | DISTRO     |
-| :---           | ---                | ---        |
-| Warp7          | `imx7s-warp-mbl`   | `mbl`      |
-| Raspberry Pi 3 | `raspberrypi3-mbl` | `mbl`      |
+| Device         | MACHINE            |
+| :---           | ---                |
+| Warp7          | `imx7s-warp-mbl`   |
+| Raspberry Pi 3 | `raspberrypi3-mbl` |
 
 So, for example, to set up the build environment for a Warp7 board, your command would look like this:
 ```
-MACHINE=imx7s-warp-mbl DISTRO=mbl . setup-environment
+MACHINE=imx7s-warp-mbl . setup-environment
 ```
 
 <span class="notes">**Note:** During the build process, make sure you are using this shell instance when running `bitbake` commands, as the set-up script changes bitbake settings by setting environment variables of the shell process.</span>

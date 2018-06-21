@@ -1,5 +1,6 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/optee-client:"
 SRC_URI += "file://init.d.optee"
+SRC_URI += "file://0001-Fix-for-teec_trace.c-snprintf-Werror-format-truncati.patch"
 
 inherit update-rc.d
 

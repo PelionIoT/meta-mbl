@@ -87,10 +87,12 @@ sudo install -m 0755 /tmp/google-repo-tool /usr/local/bin/repo
 
 ### <a name="install-manifest-tool"></a> 1.4. Installing the manifest tool
 
+Make sure your GitHub SSH key is valid. See <https://help.github.com/articles/connecting-to-github-with-ssh/> for more information about connecting to GitHub with SSH.
+
 Install the Mbed Cloud manifest tool and Cloud SDK with the following commands:
 ```
-sudo pip install -U "git+https://github.com/ARMmbed/manifest-tool-restricted.git"
-sudo pip install mbed-cloud-sdk
+pip install --user -U git+ssh://git@github.com/ARMmbed/manifest-tool-restricted.git#egg=manifest-tool
+pip install --user mbed-cloud-sdk
 ```
 See <https://github.com/ARMmbed/manifest-tool-restricted> for more information about the manifest tool.
 

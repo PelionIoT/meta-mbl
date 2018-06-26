@@ -2,6 +2,8 @@
 setenv image uImage-initramfs-raspberrypi3-mbl.bin
 
 # Load device tree and get kernel args from it
+setenv fdt_addr 0x03000000
+
 fdt addr ${fdt_addr} && fdt get value bootargs /chosen bootargs
 
 # mmcblk0p3 is rootfs1 - use this by default
@@ -11,7 +13,7 @@ setenv rootfs /dev/mmcblk0p3
 ext4size mmc 0:2 rootfs2 && setenv rootfs /dev/mmcblk0p5
 
 echo "using root=${rootfs}"
-setenv bootargs "${bootargs} root=${rootfs}"
+setenv bootargs "${bootargs} root=${rootfs} memmap=16M$256M dwc_otg.fiq_enable=0 dwc_otg.fiq_fsm_enable=0 dwc_otg.nak_holdoff=0"
 
 # Load Linux Kernel image from the boot partition (Linux Kernel image contains the initramfs image)
 echo "Load Linux Kernel image containing initramfs image: ${image}"

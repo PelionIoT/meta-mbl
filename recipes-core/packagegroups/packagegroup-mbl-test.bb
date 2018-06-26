@@ -31,6 +31,7 @@ PACKAGEGROUP_MBL_TEST_PKGS_append = " memtester"
 PACKAGEGROUP_MBL_TEST_PKGS_append_imx7s-warp = " v4l-utils"
 PACKAGEGROUP_MBL_TEST_PKGS_append_imx7s-warp = " optee-test"
 
+PACKAGEGROUP_MBL_TEST_PKGS_append_raspberrypi3 = " optee-test"
 
 RDEPENDS_packagegroup-mbl-test += "${PACKAGEGROUP_MBL_TEST_PKGS}"
 

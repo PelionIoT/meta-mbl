@@ -1,4 +1,6 @@
 # Load device tree and get kernel args from it
+setenv fdt_addr 0x03000000
+
 fdt addr ${fdt_addr} && fdt get value bootargs /chosen bootargs
 
 # mmcblk0p3 is rootfs1 - use this by default

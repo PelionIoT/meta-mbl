@@ -1,6 +1,9 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/optee-client:"
 SRC_URI += "file://init.d.optee"
 SRC_URI += "file://0001-Fix-for-teec_trace.c-snprintf-Werror-format-truncati.patch"
+SRCREV_raspberrypi3 = "2d542f2074223fde918e68efa4a9ff37f927e604"
+
+SRC_URI_remove_raspberrypi3 = "file://0001-Respect-LDFLAGS-set-from-OE-build.patch"
 
 inherit update-rc.d
 

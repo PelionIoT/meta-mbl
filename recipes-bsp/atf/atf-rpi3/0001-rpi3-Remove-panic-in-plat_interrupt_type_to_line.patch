@@ -1,0 +1,24 @@
+From cde7450723c3a8f7c61cf25cf88826b19484b465 Mon Sep 17 00:00:00 2001
+From: "Ying-Chun Liu (PaulLiu)" <paulliu@debian.org>
+Date: Wed, 27 Jun 2018 02:22:58 +0800
+Subject: [PATCH] rpi3: Remove panic() in plat_interrupt_type_to_line()
+
+Signed-off-by: Ying-Chun Liu (PaulLiu) <paul.liu@linaro.org>
+---
+ plat/rpi3/rpi3_common.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/plat/rpi3/rpi3_common.c b/plat/rpi3/rpi3_common.c
+index 65f5e7ad..5eed3f29 100644
+--- a/plat/rpi3/rpi3_common.c
++++ b/plat/rpi3/rpi3_common.c
+@@ -208,5 +208,5 @@ uint32_t plat_interrupt_type_to_line(uint32_t type,
+ 	 * Hence panic() to flag error.
+ 	 */
+ 	ERROR("Interrupt not expected to be routed to EL3");
+-	panic();
++	return 0;
+ }
+-- 
+2.18.0
+

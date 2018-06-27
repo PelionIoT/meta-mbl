@@ -8,11 +8,11 @@ SRC_URI="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=ht
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "
 
-SRC_URI_append_raspberrypi3 = " http://releases.linaro.org/components/toolchain/binaries/latest/aarch64-linux-gnu/gcc-linaro-7.2.1-2017.11-x86_64_aarch64-linux-gnu.tar.xz;name=tc64 http://releases.linaro.org/components/toolchain/binaries/6.4-2017.08/arm-linux-gnueabihf/gcc-linaro-6.4.1-2017.08-x86_64_arm-linux-gnueabihf.tar.xz;name=tc32 "
+SRC_URI_append_raspberrypi3 = " http://releases.linaro.org/components/toolchain/binaries/7.2-2017.11/aarch64-linux-gnu/gcc-linaro-7.2.1-2017.11-x86_64_aarch64-linux-gnu.tar.xz;name=tc64 http://releases.linaro.org/components/toolchain/binaries/7.2-2017.11/arm-linux-gnueabihf/gcc-linaro-7.2.1-2017.11-x86_64_arm-linux-gnueabihf.tar.xz;name=tc32 "
 SRC_URI[tc64.md5sum] = "74451220ef91369da0b6e2b7534b0767"
 SRC_URI[tc64.sha256sum] = "20181f828e1075f1a493947ff91e82dd578ce9f8638fbdfc39e24b62857d8f8d"
-SRC_URI[tc32.md5sum] = "8c6084924df023d1e5c0bac2a4ccfa2f"
-SRC_URI[tc32.sha256sum] = "1c975a1936cc966099b3fcaff8f387d748caff27f43593214ae6d4601241ae40"
+SRC_URI[tc32.md5sum] = "b8429fe715458a88632f9d936ff52c6a"
+SRC_URI[tc32.sha256sum] = "cee0087b1f1205b73996651b99acd3a926d136e71047048f1758ffcec69b1ca2"
 
 BB_STRICT_CHECKSUM = "0"
 

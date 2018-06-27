@@ -2,11 +2,11 @@ DESCRIPTION = "ARM Trusted Firmware Rpi3"
 LICENSE = "BSD"
 LIC_FILES_CHKSUM = "file://license.rst;md5=e927e02bca647e14efd87e9e914b2443"
 
-DEPENDS += " coreutils-native optee-os "
+DEPENDS += " coreutils-native optee-os u-boot "
 
 SRC_URI = "git://github.com/ARM-software/arm-trusted-firmware;protocol=https;branch=master"
 SRCREV = "f790cc0a9c492cf3615c82574e2c3f1ff8af0a3d"
-SRC_URI += " http://releases.linaro.org/components/toolchain/binaries/latest/aarch64-linux-gnu/gcc-linaro-7.2.1-2017.11-x86_64_aarch64-linux-gnu.tar.xz;name=tc64 "
+SRC_URI += " http://releases.linaro.org/components/toolchain/binaries/7.2-2017.11/aarch64-linux-gnu/gcc-linaro-7.2.1-2017.11-x86_64_aarch64-linux-gnu.tar.xz;name=tc64 "
 SRC_URI[tc64.md5sum] = "74451220ef91369da0b6e2b7534b0767"
 SRC_URI[tc64.sha256sum] = "20181f828e1075f1a493947ff91e82dd578ce9f8638fbdfc39e24b62857d8f8d"
 SRC_URI += " file://0001-rpi3-Remove-panic-in-plat_interrupt_type_to_line.patch "

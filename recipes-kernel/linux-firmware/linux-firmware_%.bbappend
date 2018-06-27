@@ -11,6 +11,7 @@ LICENSE_append = "\
 LIC_FILES_CHKSUM_remove = "\
     file://WHENCE;md5=ec6f70c8a1104ff87f6aa144d926f0dd \
     file://LICENCE.Netronome;md5=cd2a3e6effe3cdf42731575b8e9477ed \
+    file://LICENCE.cypress;md5=48cd9436c763bf873961f9ed7b5c147b \
 "
 
 LIC_FILES_CHKSUM_append = "\

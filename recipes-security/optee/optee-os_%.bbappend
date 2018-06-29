@@ -62,7 +62,3 @@ OPTEE_ARCH_raspberrypi3 = "arm32"
 do_compile_prepend() {
    export PATH=${WORKDIR}/gcc-linaro-7.2.1-2017.11-x86_64_aarch64-linux-gnu/bin:${WORKDIR}/gcc-linaro-6.4.1-2017.08-x86_64_arm-linux-gnueabihf/bin:$PATH
 }
-
-do_install_append() {
-    uboot-mkimage -A arm -T kernel -O tee -C none -d ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.bin ${D}/lib/firmware/uTee.optee
-}

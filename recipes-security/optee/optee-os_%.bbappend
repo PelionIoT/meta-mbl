@@ -15,7 +15,7 @@ EXTRA_OEMAKE = "PLATFORM=${OPTEEMACHINE} \
                 ta-targets=ta_arm32 \
                 LDFLAGS= \
                 LIBGCC_LOCATE_CFLAGS=--sysroot=${STAGING_DIR_HOST} \
-                CFG_PAGEABLE_ADDR=0 CFG_NS_ENTRY_ADDR=0x80800000 \
+                CFG_PAGEABLE_ADDR=0 CFG_NS_ENTRY_ADDR=0x87800000 \
                 CFG_DT_ADDR=0x83000000 CFG_DDR_SIZE=0x20000000 \
                 CFG_DT=y CFG_TEE_CORE_LOG_LEVEL=1 \
         "

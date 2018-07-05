@@ -20,7 +20,7 @@ SRC_URI = " \
            git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;branch=linaro-bpi \
            "
 PV = "v2017.09+git${SRCPV}"
-SRCREV = "656b87f1a7093f3205435a58fcef4d61de3db2f2"
+SRCREV = "f3acbea45b9573fc474eab11ced203deb0d1057d"
 
 PE = "2"
 

@@ -1,0 +1,91 @@
+From d22fcf95f0b3af2c438c2e404595be2c1f3dc432 Mon Sep 17 00:00:00 2001
+From: Ryan Harkin <ryan.harkin@linaro.org>
+Date: Thu, 5 Jul 2018 16:01:38 +0100
+Subject: [PATCH] rpi3: optee: update DTS
+
+Apply changes from:
+
+  https://github.com/linaro-swg/linux/commit/a3d16523b5c3bd3c21e2009f2af0901b0d6d09dd
+
+Signed-off-by: Ryan Harkin <ryan.harkin@linaro.org>
+---
+ arch/arm/boot/dts/bcm2710-rpi-3-b-plus.dts |  5 +++++
+ arch/arm/boot/dts/bcm2837.dtsi             | 23 +++++++++++++++--------
+ 2 files changed, 20 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm/boot/dts/bcm2710-rpi-3-b-plus.dts b/arch/arm/boot/dts/bcm2710-rpi-3-b-plus.dts
+index 7641360..3774461 100644
+--- a/arch/arm/boot/dts/bcm2710-rpi-3-b-plus.dts
++++ b/arch/arm/boot/dts/bcm2710-rpi-3-b-plus.dts
+@@ -1,4 +1,9 @@
+ /dts-v1/;
++#ifdef RPI364
++/memreserve/ 0x00000000 0x00001000;
++/memreserve/ 0x08000000 0x02000000;
++#endif
++
+ 
+ #include "bcm2710.dtsi"
+ #include "bcm283x-rpi-lan7515.dtsi"
+diff --git a/arch/arm/boot/dts/bcm2837.dtsi b/arch/arm/boot/dts/bcm2837.dtsi
+index bc1cca5..1340890 100644
+--- a/arch/arm/boot/dts/bcm2837.dtsi
++++ b/arch/arm/boot/dts/bcm2837.dtsi
+@@ -27,6 +27,18 @@
+ 		always-on;
+ 	};
+ 
++        firmware {
++                optee {
++                        compatible = "linaro,optee-tz";
++                        method = "smc";
++                };
++        };
++
++	psci {
++		compatible = "arm,psci-0.2";
++		method = "smc";
++	};
++
+ 	cpus: cpus {
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+@@ -36,32 +48,27 @@
+ 			device_type = "cpu";
+ 			compatible = "arm,cortex-a53";
+ 			reg = <0>;
+-			enable-method = "spin-table";
+-			cpu-release-addr = <0x0 0x000000d8>;
+ 		};
+ 
+ 		cpu1: cpu@1 {
+ 			device_type = "cpu";
+ 			compatible = "arm,cortex-a53";
+ 			reg = <1>;
+-			enable-method = "spin-table";
+-			cpu-release-addr = <0x0 0x000000e0>;
++                        enable-method = "psci";
+ 		};
+ 
+ 		cpu2: cpu@2 {
+ 			device_type = "cpu";
+ 			compatible = "arm,cortex-a53";
+ 			reg = <2>;
+-			enable-method = "spin-table";
+-			cpu-release-addr = <0x0 0x000000e8>;
++                        enable-method = "psci";
+ 		};
+ 
+ 		cpu3: cpu@3 {
+ 			device_type = "cpu";
+ 			compatible = "arm,cortex-a53";
+ 			reg = <3>;
+-			enable-method = "spin-table";
+-			cpu-release-addr = <0x0 0x000000f0>;
++                        enable-method = "psci";
+ 		};
+ 	};
+ };
+-- 
+2.7.4
+

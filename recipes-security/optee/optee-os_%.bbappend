@@ -3,7 +3,7 @@ DEPENDS += " u-boot-mkimage-native "
 
 SRCREV_imx7s-warp-mbl="0ab9388c0d553a6bb5ae04e41b38ba40cf0474bf"
 SRCREV_bananapi-zero="f6fe6bb55ae9ad1b56f03051c1b1db23c64d3177"
-SRCREV_raspberrypi3="7cdc59ca3636de94c15293010a7f34c2c8400476"
+SRCREV_raspberrypi3="e49799d64f1608950fde8d97e8bfde17ad98a547"
 SRC_URI="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "

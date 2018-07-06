@@ -1,5 +1,6 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/optee-client:"
 SRC_URI += "file://init.d.optee"
+SRCREV_raspberrypi3 = "2d542f2074223fde918e68efa4a9ff37f927e604"
 
 inherit update-rc.d
 

@@ -4,8 +4,6 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1"
 
-UBOOT_CONFIG[sd] = "warp7_defconfig,sdcard"
-
 do_deploy_append_imx7s-warp-mbl() {
 
 	install -d ${DEPLOYDIR}

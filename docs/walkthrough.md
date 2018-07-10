@@ -294,7 +294,20 @@ To transfer your disk image to the Warp7's flash device, you must first access t
     sudo eject /dev/sdX
     ```
 1. Detach the micro SD card from your PC and plug it into the Raspberry Pi 3.
-1. Before powering on the Raspberry Pi 3, you'll need to either connect it to a monitor and keyboard (using its HDMI and USB sockets) or connect it to your PC so that you can access its console. To access the console from your PC you can, for example, use a [C232HD-DDHSP-0](http://www.ftdichip.com/Support/Documents/DataSheets/Cables/DS_C232HD_UART_CABLE.pdf) cable. Refer to our instructions on [how to connect that cable to your device](https://github.com/ARMmbed/raas-daemon/blob/master/doc/resources/ftdi-d2xx/HARDWARE.md) then, from your PC run a command like:
+1. Before powering on the Raspberry Pi 3, you'll need to either connect it to a monitor and keyboard (using its HDMI and USB sockets) or connect it to your PC so that you can access its console. To access the console from your PC you can, for example, use a [C232HD-DDHSP-0](http://www.ftdichip.com/Support/Documents/DataSheets/Cables/DS_C232HD_UART_CABLE.pdf) cable. 
+Use the following instructions to connect the C232HD-DDHSP-0 cable to your Raspberry Pi 3:
+
+    * Using [this](https://www.element14.com/community/servlet/JiveServlet/previewBody/73950-102-10-339300/pi3_gpio.png) pin numbering as a reference connect USB-UART colored wires as follows:
+        * **Black** wire to pin **06**
+        * **Yellow** wire to pin **08**
+        * **Orange** wire to pin **10**
+	
+        ![](./pics/rpi3_uart-connection.JPG)
+ 
+    * The cable's TX and RX are used to communicate with the board.
+    * Connect the other end of the C232HD-DDHSP-0 cable to the USB port on your PC.
+
+    After connecting the Raspberry Pi 3, from your PC run a command like:
     ```
     sudo minicom -D /dev/ttyUSB0
     ```
@@ -302,6 +315,7 @@ To transfer your disk image to the Warp7's flash device, you must first access t
     * A baud rate of 115200.
     * [8N1](https://en.wikipedia.org/wiki/8-N-1) encoding.
     * No hardware flow control.
+    
 1. Connect the Raspberry Pi 3's micro USB socket to a USB power supply. It should now boot into Mbed Linux.
 
 ## <a name="log-in"></a> 9. Log in to Mbed Linux

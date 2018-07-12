@@ -186,14 +186,25 @@ This section contains instructions for writing the full disk image to a:
 * Warp7 device
 * Raspberry Pi 3 device
 
+For both Warp7 and Raspberry Pi 3 devices add the current user to the dialout group to allow access to /dev/ttyUSBn devices without using sudo:
+```
+sudo usermod -a -G dialout $USER
+```
+Verify group memberships by typing "groups":
+```
+groups
+<your_user> dialout
+```
+The users might need to log out and log in again before the group membership will take effect for their shell process.
+
 ### 8.1. Write the full disk image to a Warp 7 device
 
 To transfer your disk image to the Warp7's flash device, you must first access the Warp7's serial console. To do this:
 
-1. Connect both the Warp7's I/O USB socket (on the I/O board) and the Warp7's mass storage USB socket (on the CPU board) to your PC. From your PC you should then be able to see a USB TTY device, such as, `/dev/ttyUSB0`.
+1. Connect both the Warp7's I/O USB socket (on the I/O board) and the Warp7's mass storage USB socket (on the CPU board) to your PC. From your PC you should then be able to see a USB TTY device, such as, `/dev/ttyUSB0`. 
 1. Connect to the Warp7's console using a command such as:
     ```
-    sudo minicom -D /dev/ttyUSB0
+    minicom -D /dev/ttyUSB0
     ```
     Use the following settings:
     * A baud rate of 115200.
@@ -294,6 +305,7 @@ To transfer your disk image to the Warp7's flash device, you must first access t
     sudo eject /dev/sdX
     ```
 1. Detach the micro SD card from your PC and plug it into the Raspberry Pi 3.
+
 1. Before powering on the Raspberry Pi 3, you'll need to either connect it to a monitor and keyboard (using its HDMI and USB sockets) or connect it to your PC so that you can access its console. To access the console from your PC you can, for example, use a [C232HD-DDHSP-0](http://www.ftdichip.com/Support/Documents/DataSheets/Cables/DS_C232HD_UART_CABLE.pdf) cable. 
 Use the following instructions to connect the C232HD-DDHSP-0 cable to your Raspberry Pi 3:
 
@@ -309,13 +321,12 @@ Use the following instructions to connect the C232HD-DDHSP-0 cable to your Raspb
 
     After connecting the Raspberry Pi 3, from your PC run a command like:
     ```
-    sudo minicom -D /dev/ttyUSB0
+    minicom -D /dev/ttyUSB0
     ```
     Use the following settings:
     * A baud rate of 115200.
     * [8N1](https://en.wikipedia.org/wiki/8-N-1) encoding.
     * No hardware flow control.
-    
 1. Connect the Raspberry Pi 3's micro USB socket to a USB power supply. It should now boot into Mbed Linux.
 
 ## <a name="log-in"></a> 9. Log in to Mbed Linux

@@ -4,8 +4,10 @@ LIC_FILES_CHKSUM = "file://license.rst;md5=e927e02bca647e14efd87e9e914b2443"
 
 DEPENDS += " coreutils-native optee-os u-boot openssl-native "
 
+PARALLEL_MAKE=""
+
 SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/arm-trusted-firmware.git;protocol=https;branch=linaro-rpi3"
-SRCREV = "86d16ff542278bcc02ea4f320bd4de230f879a2e"
+SRCREV = "598207c1c5b3d4061f4f39a2648a4555671bd611"
 SRC_URI += " http://releases.linaro.org/components/toolchain/binaries/7.2-2017.11/aarch64-linux-gnu/gcc-linaro-7.2.1-2017.11-x86_64_aarch64-linux-gnu.tar.xz;name=tc64 "
 SRC_URI[tc64.md5sum] = "74451220ef91369da0b6e2b7534b0767"
 SRC_URI[tc64.sha256sum] = "20181f828e1075f1a493947ff91e82dd578ce9f8638fbdfc39e24b62857d8f8d"
@@ -25,7 +27,6 @@ do_compile() {
    oe_runmake -C ${S} BUILD_BASE=${B} \
       CROSS_COMPILE=aarch64-linux-gnu- \
       PLAT=${PLATFORM} \
-      DEBUG=1 \
       RPI3_BL33_IN_AARCH32=1 \
       BL33=${DEPLOY_DIR_IMAGE}/u-boot.bin \
       NEED_BL32=yes \
@@ -41,16 +42,17 @@ do_compile() {
       MBEDTLS_DIR=mbedtls \
       all \
       fip
-      cp ${B}/${PLATFORM}/debug/bl1.bin ${B}/${PLATFORM}/debug/bl1.pad.bin
-      truncate --size=131072 ${B}/${PLATFORM}/debug/bl1.pad.bin
-      cat ${B}/${PLATFORM}/debug/bl1.pad.bin ${B}/${PLATFORM}/debug/fip.bin > ${B}/${PLATFORM}/debug/armstub8.bin
+      cp -f ${B}/${PLATFORM}/release/bl1.bin \
+      	 ${B}/${PLATFORM}/release/bl1.pad.bin
+      truncate --size=131072 ${B}/${PLATFORM}/release/bl1.pad.bin
+      cat ${B}/${PLATFORM}/release/bl1.pad.bin ${B}/${PLATFORM}/release/fip.bin > ${B}/${PLATFORM}/release/armstub8.bin
 }
 
 do_install() {
-    install -D -p -m 0644 ${B}/${PLATFORM}/debug/armstub8.bin ${D}/usr/lib/atf-rpi3/armstub8.bin
-    install -D -p -m 0644 ${B}/${PLATFORM}/debug/armstub8.bin ${DEPLOY_DIR_IMAGE}/armstub8.bin
-    install -D -p -m 0644 ${B}/${PLATFORM}/debug/armstub8.bin ${DEPLOY_DIR_IMAGE}/bcm2835-bootfiles/armstub8.bin
-    install -D -p -m 0644 ${B}/${PLATFORM}/debug/rot_key.pem ${DEPLOY_DIR_IMAGE}/rot_key.pem
+    install -D -p -m 0644 ${B}/${PLATFORM}/release/armstub8.bin ${D}/usr/lib/atf-rpi3/armstub8.bin
+    install -D -p -m 0644 ${B}/${PLATFORM}/release/armstub8.bin ${DEPLOY_DIR_IMAGE}/armstub8.bin
+    install -D -p -m 0644 ${B}/${PLATFORM}/release/armstub8.bin ${DEPLOY_DIR_IMAGE}/bcm2835-bootfiles/armstub8.bin
+    install -D -p -m 0644 ${B}/${PLATFORM}/release/rot_key.pem ${DEPLOY_DIR_IMAGE}/rot_key.pem
 }
 
 FILES_${PN} += " /usr/lib/atf-rpi3/armstub8.bin "

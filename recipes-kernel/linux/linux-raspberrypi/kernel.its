@@ -27,7 +27,7 @@
 
 		fdt@1 {
 			description = "Raspberrypi DT";
-			data = /incbin/("bcm2710-rpi-3-b.dtb");
+			data = /incbin/("bcm2710-rpi-3-b-plus.dtb");
 			arch = "arm";
 			type = "flat_dt";
 			compression = "none";

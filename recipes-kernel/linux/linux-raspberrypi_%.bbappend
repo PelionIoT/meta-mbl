@@ -16,6 +16,7 @@ _generate_signed_kernel_image() {
         ln -sf ${WORKDIR}/kernel.its kernel.its
         ln -sf ${B}/arch/arm/boot/zImage zImage
         ln -sf ${B}/arch/arm/boot/dts/bcm2710-rpi-3-b.dtb bcm2710-rpi-3-b.dtb
+        ln -sf ${B}/arch/arm/boot/dts/bcm2710-rpi-3-b-plus.dtb bcm2710-rpi-3-b-plus.dtb
         uboot-mkimage -f kernel.its -r kernel.itb
 }
 
@@ -31,6 +32,8 @@ do_deploy_append() {
         install -m 0644 ${WORKDIR}/kernel.its ${DEPLOYDIR}/fip/
         install -m 0644 ${B}/arch/arm/boot/zImage ${DEPLOYDIR}/fip/
         install -m 0644 ${B}/arch/arm/boot/dts/bcm2710-rpi-3-b.dtb \
+			${DEPLOYDIR}/fip/
+        install -m 0644 ${B}/arch/arm/boot/dts/bcm2710-rpi-3-b-plus.dtb \
 			${DEPLOYDIR}/fip/
 	install -D -p -m 0644 ${B}/kernel.itb \
 		${DEPLOY_DIR_IMAGE}/bcm2835-bootfiles/kernel.itb

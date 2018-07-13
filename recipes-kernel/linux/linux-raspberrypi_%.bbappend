@@ -31,5 +31,7 @@ do_deploy_append() {
         install -m 0644 ${WORKDIR}/kernel.its ${DEPLOYDIR}/fip/
         install -m 0644 ${B}/arch/arm/boot/zImage ${DEPLOYDIR}/fip/
         install -m 0644 ${B}/arch/arm/boot/dts/bcm2710-rpi-3-b.dtb \
-		${DEPLOYDIR}/fip/
+			${DEPLOYDIR}/fip/
+	install -D -p -m 0644 ${B}/kernel.itb \
+		${DEPLOY_DIR_IMAGE}/bcm2835-bootfiles/kernel.itb
 }

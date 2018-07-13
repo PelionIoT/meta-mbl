@@ -1,0 +1,31 @@
+diff --git a/configs/rpi_3_32b_defconfig b/configs/rpi_3_32b_defconfig
+index 317fc28..c68e70f 100644
+--- a/configs/rpi_3_32b_defconfig
++++ b/configs/rpi_3_32b_defconfig
+@@ -5,6 +5,9 @@ CONFIG_TARGET_RPI_3_32B=y
+ CONFIG_SYS_MALLOC_F_LEN=0x2000
+ CONFIG_DEFAULT_DEVICE_TREE="bcm2837-rpi-3-b"
+ CONFIG_DISTRO_DEFAULTS=y
++CONFIG_FIT=y
++CONFIG_FIT_SIGNATURE=y
++CONFIG_FIT_VERBOSE=y
+ CONFIG_OF_BOARD_SETUP=y
+ # CONFIG_DISPLAY_CPUINFO is not set
+ # CONFIG_DISPLAY_BOARDINFO is not set
+diff --git a/include/configs/rpi.h b/include/configs/rpi.h
+index 17cdecd..b79c599 100644
+--- a/include/configs/rpi.h
++++ b/include/configs/rpi.h
+@@ -142,7 +142,10 @@
+ 	"dhcpuboot=usb start; dhcp u-boot.uimg; bootm\0" \
+ 	ENV_DEVICE_SETTINGS \
+ 	ENV_MEM_LAYOUT_SETTINGS \
+-	BOOTENV
+-
++	BOOTENV \
++	"boot_a_script="                                                  \
++		"load ${devtype} ${devnum}:${distro_bootpart} "           \
++			"${scriptaddr} ${prefix}${script}; "              \
++		"source ${scriptaddr}:bootscr\0"
+ 
+ #endif

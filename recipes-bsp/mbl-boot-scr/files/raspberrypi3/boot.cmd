@@ -10,10 +10,12 @@ setenv rootfs /dev/mmcblk0p3
 ext4size mmc 0:2 rootfs2 && setenv rootfs /dev/mmcblk0p5
 
 echo "using root=${rootfs}"
-setenv bootargs "${bootargs} root=${rootfs} memmap=16M$256M dwc_otg.fiq_enable=0 dwc_otg.fiq_fsm_enable=0 dwc_otg.nak_holdoff=0"
+setenv bootargs "${bootargs} 8250.nr_uarts=1 console=ttyS0,115200 rootwait root=${rootfs} memmap=16M$256M dwc_otg.fiq_enable=0 dwc_otg.fiq_fsm_enable=0 dwc_otg.nak_holdoff=0"
 
 # Load Linux from the boot partition
-fatload mmc 0:1 ${kernel_addr_r} uImage
+#fatload mmc 0:1 ${kernel_addr_r} uImage
 
 # Boot Linux with the device tree
-bootm ${kernel_addr_r} - ${fdt_addr}
+#bootm ${kernel_addr_r} - ${fdt_addr}
+load mmc 0 0x02100000 kernel.itb
+bootm 0x02100000

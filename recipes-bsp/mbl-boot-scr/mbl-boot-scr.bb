@@ -10,12 +10,17 @@ FILESEXTRAPATHS_append := "${THISDIR}/files:"
 SRC_URI = "file://boot.cmd"
 
 SRC_URI_append_bananapi-zero = " file://boot.its"
+SRC_URI_append_raspberrypi3 = " file://boot.its"
 
 do_compile() {
     mkimage -A arm -T script -C none -n "Boot script" -d "${WORKDIR}/boot.cmd" boot.scr
 }
 
 do_compile_append_bananapi-zero() {
+    mkimage -f "${WORKDIR}/boot.its" boot.scr
+}
+
+do_compile_append_raspberrypi3() {
     mkimage -f "${WORKDIR}/boot.its" boot.scr
 }
 
@@ -27,6 +32,11 @@ do_deploy() {
 }
 
 do_deploy_append_bananapi-zero() {
+    install -m 0644 ${WORKDIR}/boot.its ${DEPLOYDIR}
+    install -m 0644 ${WORKDIR}/boot.cmd ${DEPLOYDIR}
+}
+
+do_deploy_append_raspberrypi3() {
     install -m 0644 ${WORKDIR}/boot.its ${DEPLOYDIR}
     install -m 0644 ${WORKDIR}/boot.cmd ${DEPLOYDIR}
 }

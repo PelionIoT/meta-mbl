@@ -4,6 +4,7 @@
 
 import logging
 import os
+import shutil
 
 from wic import WicError
 from wic.pluginbase import SourcePlugin
@@ -45,7 +46,8 @@ class RootFsSubdirPlugin(SourcePlugin):
         logger.debug('Subdir source dir: {}'.format(subdir_src))
         logger.debug('Subdir dest dir: {}'.format(subdir_dst))
 
-        exec_cmd('cp -R -p {} {}'.format(subdir_src, subdir_dst))
+        
+        shutil.copytree(subdir_src, subdir_dst)
 
         part.prepare_rootfs(
             cr_workdir,

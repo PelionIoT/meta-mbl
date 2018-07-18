@@ -17,6 +17,7 @@ PACKAGEGROUP_MBL_PKGS_append = " docker"
 PACKAGEGROUP_MBL_PKGS_append = " iptables"
 PACKAGEGROUP_MBL_PKGS_append = " kernel-modules"
 PACKAGEGROUP_MBL_PKGS_append = " rng-tools"
+PACKAGEGROUP_MBL_PKGS_append = " opkg"
 
 ###############################################################################
 # Packages added when the MACHINE and DISTRO have specific features

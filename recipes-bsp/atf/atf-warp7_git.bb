@@ -4,8 +4,8 @@ LIC_FILES_CHKSUM = "file://license.rst;md5=e927e02bca647e14efd87e9e914b2443"
 
 DEPENDS += " coreutils-native optee-os u-boot "
 
-SRC_URI = "git://git@git.linaro.org/landing-teams/working/mbl/arm-trusted-firmware.git;protocol=https;branch=master+imx7"
-SRCREV = "5eb0ce4a751764f23efed89f2d4cb73e8dd4478e"
+SRC_URI = "git://git@git.linaro.org/landing-teams/working/mbl/arm-trusted-firmware.git;protocol=https;nobranch=1"
+SRCREV = "55de83d3ee54b0ac25bbb47f990e5fdf3d43150b"
 SRC_URI += "https://releases.linaro.org/components/toolchain/binaries/7.3-2018.05/arm-linux-gnueabihf/gcc-linaro-7.3.1-2018.05-x86_64_arm-linux-gnueabihf.tar.xz;name=tc32 "
 SRC_URI[tc32.md5sum] = "e414dc2bbd2bbd2f3b10edad0792fdb3"
 

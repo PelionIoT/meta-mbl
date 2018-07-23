@@ -42,3 +42,7 @@ DESCRIPTION = "Image with development, debug, SDK and test support."
 IMAGE_INSTALL += " \
 	packagegroup-mbl-test \
 	"
+
+# No GPLv3 allowed in this image
+IMAGE_LICENSE_CHECKER_BLACKLIST = "GPL-3.0 LGPL-3.0 AGPL-3.0"
+inherit image-license-checker

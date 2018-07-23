@@ -58,7 +58,7 @@ do_mount_fs devtmpfs /dev
 
 #Entries in /dev/pts are pseudo-terminals (pty for short). Unix kernels have a generic notion of terminals. 
 #A terminal provides a way for applications to display output and to receive input through a
-# terminal device. A process may have a controlling terminal — for a text mode application, this is how it interacts with the user.
+# terminal device. A process may have a controlling terminal - for a text mode application, this is how it interacts with the user.
 do_mount_fs devpts /dev/pts
 
 #tmpfs holds implementation of traditional shared memory concept. It is an efficient means of passing data between programs. 
@@ -78,6 +78,9 @@ do_mknod /dev/zero c 1 5
 
 exec </dev/console >/dev/console 2>/dev/console
 echo "Booting from init script in initramfs"
+
+# Workaround findfs failure on Raspberry Pi 3: unable to resolve 'LABEL=rootfs1'
+sleep 0.1
 
 BOOTFLAG_PARTITION="$(findfs LABEL=bootflags)"
 mkdir -p mnt/bootflags

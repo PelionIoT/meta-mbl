@@ -10,7 +10,7 @@
 # Note 2: the labels are important - fstab uses them and so does activate_script.
 
 # Partition 1: Boot partition
-part --source bootimg-partition --fstype=vfat --label boot --active --align 4096 --fixed-size 20
+part --source bootimg-partition --fstype=vfat --label boot --active --align 4096 --fixed-size 30
 
 # Partition 2: Boot flags
 part --fstype=ext4 --label bootflags --fixed-size 20

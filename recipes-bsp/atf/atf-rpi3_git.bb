@@ -26,6 +26,7 @@ do_compile() {
    export PATH=${WORKDIR}/gcc-linaro-7.2.1-2017.11-x86_64_aarch64-linux-gnu/bin:$PATH
    oe_runmake -C ${S} BUILD_BASE=${B} \
       CROSS_COMPILE=aarch64-linux-gnu- \
+      BUILD_PLAT=${B}/${PLATFORM}/ \
       PLAT=${PLATFORM} \
       RPI3_BL33_IN_AARCH32=1 \
       BL33=${DEPLOY_DIR_IMAGE}/u-boot.bin \
@@ -42,17 +43,17 @@ do_compile() {
       MBEDTLS_DIR=mbedtls \
       all \
       fip
-      cp -f ${B}/${PLATFORM}/release/bl1.bin \
-      	 ${B}/${PLATFORM}/release/bl1.pad.bin
-      truncate --size=131072 ${B}/${PLATFORM}/release/bl1.pad.bin
-      cat ${B}/${PLATFORM}/release/bl1.pad.bin ${B}/${PLATFORM}/release/fip.bin > ${B}/${PLATFORM}/release/armstub8.bin
+      cp -f ${B}/${PLATFORM}/bl1.bin \
+        ${B}/${PLATFORM}/bl1.pad.bin
+      truncate --size=131072 ${B}/${PLATFORM}/bl1.pad.bin
+      cat ${B}/${PLATFORM}/bl1.pad.bin ${B}/${PLATFORM}/fip.bin > ${B}/${PLATFORM}/armstub8.bin
 }
 
 do_install() {
-    install -D -p -m 0644 ${B}/${PLATFORM}/release/armstub8.bin ${D}/usr/lib/atf-rpi3/armstub8.bin
-    install -D -p -m 0644 ${B}/${PLATFORM}/release/armstub8.bin ${DEPLOY_DIR_IMAGE}/armstub8.bin
-    install -D -p -m 0644 ${B}/${PLATFORM}/release/armstub8.bin ${DEPLOY_DIR_IMAGE}/bcm2835-bootfiles/armstub8.bin
-    install -D -p -m 0644 ${B}/${PLATFORM}/release/rot_key.pem ${DEPLOY_DIR_IMAGE}/rot_key.pem
+    install -D -p -m 0644 ${B}/${PLATFORM}/armstub8.bin ${D}/usr/lib/atf-rpi3/armstub8.bin
+    install -D -p -m 0644 ${B}/${PLATFORM}/armstub8.bin ${DEPLOY_DIR_IMAGE}/armstub8.bin
+    install -D -p -m 0644 ${B}/${PLATFORM}/armstub8.bin ${DEPLOY_DIR_IMAGE}/bcm2835-bootfiles/armstub8.bin
+    install -D -p -m 0644 ${B}/${PLATFORM}/rot_key.pem ${DEPLOY_DIR_IMAGE}/rot_key.pem
 }
 
 FILES_${PN} += " /usr/lib/atf-rpi3/armstub8.bin "

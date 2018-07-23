@@ -13,15 +13,15 @@ S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
 COMPATIBLE_MACHINE = "(mx7|vf|use-mainline-bsp)"
 
-#PLATFORM_warp7 = "warp7"
+PLATFORM_imx7s-warp = "warp7"
 
 LDFLAGS[unexport] = "1"
 
 do_compile() {
    export PATH=${WORKDIR}/gcc-linaro-7.3.1-2018.05-x86_64_arm-linux-gnueabihf/bin:$PATH
    oe_runmake -C ${S} BUILD_BASE=${B} \
-      DEBUG=1 \
-      PLAT=warp7 \
+      BUILD_PLAT=${B}/${PLATFORM}/ \
+      PLAT=${PLATFORM} \
       ARCH=aarch32 \
       ARM_ARCH_MAJOR=7 \
       CROSS_COMPILE=arm-linux-gnueabihf- \
@@ -32,7 +32,7 @@ do_compile() {
 
 #mkdir -p ${WORKDIR}/fiptool_images
 pwd > /tmp/curpath
-   cp ${B}/warp7/debug/bl2.bin \
+   cp ${B}/${PLATFORM}/bl2.bin \
       ${DEPLOY_DIR_IMAGE}/u-boot.bin \
       ${DEPLOY_DIR_IMAGE}/imx7s-warp.dtb \
       ${DEPLOY_DIR_IMAGE}/optee/tee-header_v2.bin \
@@ -52,10 +52,10 @@ pwd > /tmp/curpath
 do_install() {
 	FIP_SIZE=$(stat -c %s ${B}/warp7.fip)
 	dd if=/dev/zero of=${B}/atf-bl2-fip.bin count=$(expr 32 \* 1024 \+ ${FIP_SIZE}) bs=1
-	dd if=${B}/warp7/debug/bl2.bin of=${B}/atf-bl2-fip.bin
+	dd if=${B}/${PLATFORM}/bl2.bin of=${B}/atf-bl2-fip.bin
 	# the packed image is burned to 1KB offset, so 1MB is shift to 1023KB in image
 	dd if=${B}/warp7.fip of=${B}/atf-bl2-fip.bin bs=1024 seek=1023
-	install -D -p -m 0644 ${B}/warp7/debug/bl2.bin ${DEPLOY_DIR_IMAGE}/bl2.bin
+	install -D -p -m 0644 ${B}/${PLATFORM}/bl2.bin ${DEPLOY_DIR_IMAGE}/bl2.bin
 	install -D -p -m 0644 ${B}/warp7.fip ${DEPLOY_DIR_IMAGE}/warp7.fip
 	install -D -p -m 0644 ${B}/atf-bl2-fip.bin ${DEPLOY_DIR_IMAGE}/
 }

@@ -6,14 +6,10 @@
 # NOTE: this bbappend is BBMASKed (not parsed) on raspberrypi and the
 # meta-raspberrypi linux-firmware is BBMASKed on imx7s-warp-mbl
 
-# Changes that will to go upstream when the firmware is submitted to linux-firmware.git
-LICENSE_append = "\
-    & Firmware-cypress \
-"
-
 LIC_FILES_CHKSUM_remove = "\
     file://WHENCE;md5=eaaf310bac02fee05ea1b334f58c5caf \
     file://LICENSE.amd-ucode;md5=3c5399dc9148d7f0e1f41e34b69cf14f \
+    file://LICENCE.cypress;md5=48cd9436c763bf873961f9ed7b5c147b  \
 "
 
 LIC_FILES_CHKSUM_append = "\
@@ -22,10 +18,7 @@ LIC_FILES_CHKSUM_append = "\
     file://LICENSE.amd-ucode;md5=3a0de451253cc1edbf30a3c621effee3 \
 "
 
-NO_GENERIC_LICENSE[Firmware-cypress] = "LICENCE.cypress"
-
 PACKAGES_prepend = " \
-             ${PN}-cypress-license \
              ${PN}-cyw43430a1 \
              "
 

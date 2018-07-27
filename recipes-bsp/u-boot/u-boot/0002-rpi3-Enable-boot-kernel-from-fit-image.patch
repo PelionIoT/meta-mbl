@@ -1,0 +1,57 @@
+From e8986a554a46ef0eec6aa5b895302530a7ab05c5 Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Fri, 27 Jul 2018 09:15:15 +0800
+Subject: [PATCH 2/2] rpi3: Enable boot kernel from fit image
+
+Enable boot kernel from fit image with select configs
+and specify boot script image node in fit image, bootscr
+node in mbl case.
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+---
+ configs/rpi_3_32b_defconfig | 3 +++
+ include/configs/rpi.h       | 8 ++++++--
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/configs/rpi_3_32b_defconfig b/configs/rpi_3_32b_defconfig
+index 6bcc73b..f8294d2 100644
+--- a/configs/rpi_3_32b_defconfig
++++ b/configs/rpi_3_32b_defconfig
+@@ -5,6 +5,9 @@ CONFIG_TARGET_RPI_3_32B=y
+ CONFIG_SYS_MALLOC_F_LEN=0x2000
+ CONFIG_DEFAULT_DEVICE_TREE="bcm2837-rpi-3-b"
+ CONFIG_DISTRO_DEFAULTS=y
++CONFIG_FIT=y
++CONFIG_FIT_SIGNATURE=y
++CONFIG_FIT_VERBOSE=y
+ CONFIG_OF_BOARD_SETUP=y
+ # CONFIG_DISPLAY_CPUINFO is not set
+ # CONFIG_DISPLAY_BOARDINFO is not set
+diff --git a/include/configs/rpi.h b/include/configs/rpi.h
+index a97550b..2ac4373 100644
+--- a/include/configs/rpi.h
++++ b/include/configs/rpi.h
+@@ -15,6 +15,7 @@
+ 
+ /* Architecture, CPU, etc.*/
+ #define CONFIG_ARCH_CPU_INIT
++#define CONFIG_GZIP_COMPRESSED
+ 
+ /* Use SoC timer for AArch32, but architected timer for AArch64 */
+ #ifndef CONFIG_ARM64
+@@ -159,7 +160,10 @@
+ 	"dhcpuboot=usb start; dhcp u-boot.uimg; bootm\0" \
+ 	ENV_DEVICE_SETTINGS \
+ 	ENV_MEM_LAYOUT_SETTINGS \
+-	BOOTENV
+-
++	BOOTENV \
++	"boot_a_script="                                                  \
++		"load ${devtype} ${devnum}:${distro_bootpart} "           \
++			"${scriptaddr} ${prefix}${script}; "              \
++		"source ${scriptaddr}:bootscr\0"
+ 
+ #endif
+-- 
+2.7.4
+

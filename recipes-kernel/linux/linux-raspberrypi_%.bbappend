@@ -21,11 +21,10 @@ DEPENDS += " u-boot-mkimage-native dtc-native mbl-console-image-initramfs "
 FILESEXTRAPATHS_prepend := "${THISDIR}/linux-raspberrypi:"
 SRC_URI += " file://0001-rpi3-optee-update-DTS.patch"
 SRC_URI += " file://kernel.its "
+SRC_URI += " file://*.cfg "
 
-do_configure_prepend() {
-    kernel_configure_variable IKCONFIG y
-    kernel_configure_variable TEE y
-    kernel_configure_variable OPTEE y
+do_configure_append() {
+        ${S}/scripts/kconfig/merge_config.sh -m -O ${B} ${B}/.config ${WORKDIR}/*.cfg
 }
 
 _generate_signed_kernel_image() {

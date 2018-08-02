@@ -18,6 +18,9 @@ PACKAGEGROUP_MBL_PKGS_append = " iptables"
 PACKAGEGROUP_MBL_PKGS_append = " kernel-modules"
 PACKAGEGROUP_MBL_PKGS_append = " rng-tools"
 PACKAGEGROUP_MBL_PKGS_append = " opkg"
+PACKAGEGROUP_MBL_PKGS_append = " mbl-app-manager"
+PACKAGEGROUP_MBL_PKGS_append = " python3-core"
+PACKAGEGROUP_MBL_PKGS_append = " python3-logging"
 
 ###############################################################################
 # Packages added when the MACHINE and DISTRO have specific features

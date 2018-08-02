@@ -1,0 +1,261 @@
+#!/usr/bin/env python
+# SPDX-License-Identifier: Apache-2.0
+
+__version__ = '1.0'
+
+"""
+This script implements mbl app manager for installing, removing and listing
+installed apps using opkg
+"""
+
+import argparse
+import subprocess
+import os
+import logging
+import sys
+
+
+class PackageHandler(object):
+    def __init__(self, logger):
+        self.logger = logger
+        self.package_info_dic = {}
+        self.root_install_dir = "/home/app/"
+        # When opkg installs new package while "D" environment variable
+        # is defined, opkg will not call ldconfig in rootfs partition
+        self.opkg_env = os.environ.copy()
+        self.opkg_env['D'] = '1'
+
+    def _parse_package_info(self, package_path):
+        """
+        This function will parse package info and fill it into a dictionary
+
+        :param package_path: Package path
+        :return: None
+        """
+
+        # Read package info using opkg:
+        command = ["opkg", "info", package_path]
+        package_info = subprocess.check_output(command, env=self.opkg_env).\
+            decode('utf-8')
+        self.logger.info("Package info:\n" + package_info)
+
+        # All package info fields includes "\n" only once, while description
+        # might have several. Since we use the new line as separator in the
+        # split operation, we want to get rid off the newline in this field.
+        # Assuming description field always come last in package info and
+        # afterwards two "\n".
+        description_with_newline = \
+            package_info[package_info.find("Description: "):
+                         package_info.find("\n\n")]
+        description_no_newline = description_with_newline.replace("\n", "")
+        package_info = package_info.replace(description_with_newline,
+                                            description_no_newline)
+
+        # pair_list will hold pair strings that will later be used for
+        # dictionary key and value
+        pair_list = list(package_info.split("\n"))
+        # list_for_dictionary holds strings, 1'st string will be used as key,
+        # 2'nd as its value, third: key and so on
+        list_for_dictionary = list()
+
+        for pair in pair_list:
+            if pair != '':
+                split = pair.split(": ")
+                list_for_dictionary += split
+
+        # Fill dictionary to look something like:
+        # [Package][Package name]
+        # [Description][Package description...]
+        # [Architecture][...]
+        #  and so on.
+        for i in range(0, len(list_for_dictionary), 2):
+            self.package_info_dic[list_for_dictionary[i]] = \
+                list_for_dictionary[i+1]
+
+    def _get_package_dest_dir(self, package_path):
+            """
+            This function returns the destination directory name
+
+            :param package_path: Package path
+            :return: Package destination directory
+            """
+
+            # Build dictionary from package info
+            self._parse_package_info(package_path)
+            package_dest_dir = self.package_info_dic["Package"]
+            self.logger.info('Destination directory: ' + package_dest_dir)
+            return package_dest_dir
+
+    def _run_opkg(self, command, print_command=True):
+        """
+        Executes opkg with input command
+
+        :param command: Command
+        :param print_command: If true - prints input command. Even in verbose
+               mode we still want to control these prints as we don't want it
+               during list-installed-packages
+        :return: None
+        """
+
+        if print_command:
+            self.logger.debug('Executing opkg command: ' + ' '.join(command))
+        subprocess.check_call(command, env=self.opkg_env)
+
+    def install_package(self, package_path):
+        """
+        Installs package using opkg
+
+        :param package_path: Package path
+        :return: None
+        """
+
+        # Command syntax:
+        # opkg --add-dest <package_name>:/home/app/<package_name>
+        #      install <package_path>
+        package_dest_dir = self._get_package_dest_dir(package_path)
+        assert package_dest_dir is not None, \
+            'Error selecting destination directory'
+
+        add_dest_path = \
+            package_dest_dir + ":" + self.root_install_dir + \
+            package_dest_dir
+        command = ["opkg", "--add-dest", add_dest_path, "install",
+                   package_path]
+        self._run_opkg(command)
+        self.logger.info("Install package: " + package_path +
+                         " succeeded.")
+
+    def remove_package(self, package_name):
+        """
+        Removes package from device using opkg
+
+        :param package_name: Package name
+        :return: None
+        """
+
+        # Command syntax:
+        # opkg --add-dest <package_name>:/home/app/<package_name>
+        #      remove <package_name>
+        package_dest_dir = \
+            package_name + ":" + self.root_install_dir + \
+            package_name
+        command = ["opkg", "--add-dest", package_dest_dir, "remove",
+                   package_name]
+        self._run_opkg(command)
+        self.logger.info("Remove package: " + package_name + " succeeded.")
+
+    def list_installed_packages(self):
+        """
+        Prints installed packages using opkg
+
+        :return: None
+        """
+
+        # Command syntax:
+        # opkg --add-dest <package_name>:/home/app/<package_name>
+        #      list-installed
+        self.logger.info("Installed packages:")
+        subdirectories = os.listdir(self.root_install_dir)
+        for sub_directory in subdirectories:
+            # dir is actually package name as we install packages into
+            # a directory with their name
+            package_pull_path = \
+                os.path.join(self.root_install_dir, sub_directory)
+            if os.path.isdir(package_pull_path):
+                package_dest_dir = sub_directory + ":" + package_pull_path
+                command = ["opkg", "--add-dest", package_dest_dir,
+                           "list-installed"]
+                self._run_opkg(command, False)
+
+
+class StoreValidFile(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        prospective_file = values
+        if not os.path.isfile(prospective_file):
+            raise argparse.ArgumentTypeError(
+                'file: "{0}" not found'.format(prospective_file))
+        if not os.access(prospective_file, os.R_OK):
+            raise argparse.ArgumentTypeError(
+                'file: "{0}" is not a readable file'.format(prospective_file))
+        setattr(namespace, self.dest, os.path.abspath(prospective_file))
+
+
+def get_argument_parser():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description='opkg wrapper script'
+    )
+
+    group = parser.add_mutually_exclusive_group(required=True)
+
+    group.add_argument(
+        '-i',
+        '--install-package',
+        metavar='FILE',
+        action=StoreValidFile,
+        help='Install package on device, input is .ipk file path'
+    )
+
+    group.add_argument(
+        '-r',
+        '--remove-package-name',
+        metavar='NAME',
+        help='Remove installed package from device, input is package name'
+    )
+
+    group.add_argument(
+        '-l',
+        '--list-installed-packages',
+        action='store_true',
+        help='List installed packages on device'
+    )
+
+    parser.add_argument("-v", "--verbose", help="increase output verbosity",
+                        action="store_true")
+
+    return parser
+
+
+def _main():
+    parser = get_argument_parser()
+    args = parser.parse_args()
+
+    debug_level = logging.INFO
+
+    if args.verbose is not None:
+        if args.verbose:
+            debug_level = logging.DEBUG
+        else:
+            debug_level = logging.INFO
+
+    logging.basicConfig(
+        level=debug_level,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    )
+    logger = logging.getLogger('ARM-MBL-APP-MANAGER')
+    logger.debug('Starting APP MANAGER: ' + __version__)
+    logger.info('Command line arguments:{}'.format(args))
+
+    package_handler = PackageHandler(logger)
+
+    try:
+        if args.install_package is not None:
+            package_handler.install_package(args.install_package)
+        elif args.remove_package_name is not None:
+            package_handler.remove_package(args.remove_package_name)
+        elif args.list_installed_packages:
+            package_handler.list_installed_packages()
+
+    except subprocess.CalledProcessError as e:
+        logger.exception(
+            "Operation failed with return error code: " + str(e.returncode))
+        return 1
+    except OSError:
+        logger.exception(
+            "Operation failed with OSError")
+        return 2
+
+
+if __name__ == '__main__':
+    sys.exit(_main())
+

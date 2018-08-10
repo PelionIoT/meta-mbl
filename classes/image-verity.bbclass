@@ -69,4 +69,3 @@ do_generate_verity_metadata() {
 }
 
 addtask generate_verity_metadata after do_image_ext4 before do_image_wic
-

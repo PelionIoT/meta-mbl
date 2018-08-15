@@ -42,7 +42,6 @@ IMAGE_INSTALL = "\
 	packagegroup-core-boot \
 	packagegroup-base \
 	packagegroup-mbl \
-	mbl-boot-scr \
 	${CORE_IMAGE_EXTRA_INSTALL}"
 
 IMAGE_LINGUAS = " "

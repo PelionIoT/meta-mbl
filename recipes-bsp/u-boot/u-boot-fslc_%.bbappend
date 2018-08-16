@@ -1,4 +1,5 @@
 SRCREV = "902e76534d72702ad1d13948d9f667c7be847bd2"
+DEPENDS_append += " mbl-boot-scr"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 

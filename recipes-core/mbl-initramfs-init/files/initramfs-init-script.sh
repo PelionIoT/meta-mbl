@@ -83,8 +83,8 @@ echo "Booting from init script in initramfs"
 sleep 0.1
 
 BOOTFLAG_PARTITION="$(findfs LABEL=bootflags)"
-mkdir -p mnt/bootflags
-mount $BOOTFLAG_PARTITION mnt/bootflags
+mkdir -p /mnt/bootflags
+mount $BOOTFLAG_PARTITION /mnt/bootflags
 
 # Check for the existence of a "rootfs2" on BOOTFLAG_PARTITION.
 # If it exists - use findfs to find the file system with label "rootfs2"
@@ -100,7 +100,7 @@ ROOTFS_PARTITION="$(findfs LABEL=$ROOTFS_LABEL)"
 
 #Switch from initramfs to rootfs:
 
-mkdir -p mnt/rootfs
+mkdir -p /mnt/rootfs
 mount $ROOTFS_PARTITION /mnt/rootfs
 
 mount --move /dev /mnt/rootfs/dev

@@ -1,0 +1,193 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f102b0d..0ceb311 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -19,13 +19,18 @@ add_definitions(-DMBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER)
+ 
+ project(mbedCloudClient)
+ 
++#!!! 
++# Patch: all excessive include_directories commented out in order to make includes ("-I...") length 
++# in CFLAGS as short as possible. Without this patch we get compilation failure "execv: argument too long" 
++# due to excessive include directories. This bug appeared in integration of mbed-cloud-client 1.4.0 into MBL.
++
+ # mbed-cloud-client
+ 
+ ADD_GLOBALDIR( ${CMAKE_CURRENT_SOURCE_DIR})
+ ADD_GLOBALDIR( ${CMAKE_CURRENT_SOURCE_DIR}/source)
+ ADD_GLOBALDIR( ${CMAKE_CURRENT_SOURCE_DIR}/source/include)
+ ADD_GLOBALDIR( ${CMAKE_CURRENT_SOURCE_DIR}/mbed-cloud-client)
+-ADD_GLOBALDIR( ${CMAKE_CURRENT_SOURCE_DIR}/mbed-client)
++# ADD_GLOBALDIR( ${CMAKE_CURRENT_SOURCE_DIR}/mbed-client)
+ 
+ # mbed-client
+ 
+@@ -41,7 +46,7 @@ ADD_GLOBALDIR(${MBED_CLIENT_SOURCE_DIR}/mbed-client-c/source/include)
+ ADD_GLOBALDIR(${MBED_CLIENT_SOURCE_DIR}/mbed-client-classic)
+ ADD_GLOBALDIR(${MBED_CLIENT_SOURCE_DIR}/mbed-client-classic/mbed-client-classic)
+ ADD_GLOBALDIR(${MBED_CLIENT_SOURCE_DIR}/mbed-client-mbed-tls)
+-ADD_GLOBALDIR(${MBED_CLIENT_SOURCE_DIR}/mbed-client-mbed-tls/mbed-client-mbedtls)
++# ADD_GLOBALDIR(${MBED_CLIENT_SOURCE_DIR}/mbed-client-mbed-tls/mbed-client-mbedtls)
+ 
+ # pal headers
+ 
+@@ -56,20 +61,20 @@ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-coap/mbed-coap)
+ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-coap/source/include)
+ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace)
+ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace/mbed-trace)
+-ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-client-randlib)
++# ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-client-randlib)
+ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-client-randlib/mbed-client-randlib)
+ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-client-randlib/mbed-client-randlib/platform)
+ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/nanostack-libservice)
+ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/nanostack-libservice/mbed-client-libservice)
+ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/nanostack-libservice/mbed-client-libservice/platform)
+-ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/sal-stack-nanostack-eventloop)
++# ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/sal-stack-nanostack-eventloop)
+ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/sal-stack-nanostack-eventloop/nanostack-event-loop)
+ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/ns-hal-pal)
+ 
+ # factory-client
+ 
+ SET(FACTORY_CLIENT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/factory-configurator-client)
+-ADD_GLOBALDIR(${FACTORY_CLIENT_SOURCE_DIR}/factory-configurator-client)
++# ADD_GLOBALDIR(${FACTORY_CLIENT_SOURCE_DIR}/factory-configurator-client)
+ 
+ SET(FCC_MODULES
+     ftcd-comm-base
+@@ -90,26 +95,27 @@ SET(FCC_MODULES
+ # includes
+ FOREACH(module ${FCC_MODULES})
+     ADD_GLOBALDIR(${FACTORY_CLIENT_SOURCE_DIR}/${module}/${module})
+-    ADD_GLOBALDIR(${FACTORY_CLIENT_SOURCE_DIR}/${module}/source/include)
++#    ADD_GLOBALDIR(${FACTORY_CLIENT_SOURCE_DIR}/${module}/source/include)
+ ENDFOREACH()
+ 
++
+ include_directories(${FACTORY_CLIENT_SOURCE_DIR}/factory-configurator-client/source/include)
+-include_directories(${FACTORY_CLIENT_SOURCE_DIR}/factory-configurator-client/factory-configurator-client)
+-include_directories(${FACTORY_CLIENT_SOURCE_DIR}/fc_protocol_handler/fc_protocol_handler)
+-include_directories(${FACTORY_CLIENT_SOURCE_DIR}/fc_protocol_handler/source/include)
+-include_directories(${FACTORY_CLIENT_SOURCE_DIR}/secure_store)
+-include_directories(${FACTORY_CLIENT_SOURCE_DIR}/secure_store/secure_store)
+-include_directories(${FACTORY_CLIENT_SOURCE_DIR}/storage)
++# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/factory-configurator-client/factory-configurator-client)
++# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/fc_protocol_handler/fc_protocol_handler)
++# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/fc_protocol_handler/source/include)
++# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/secure_store)
++# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/secure_store/secure_store)
++# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/storage)
+ include_directories(${FACTORY_CLIENT_SOURCE_DIR}/storage/storage)
+ include_directories(${FACTORY_CLIENT_SOURCE_DIR}/key-config-manager)
+ include_directories(${FACTORY_CLIENT_SOURCE_DIR}/key-config-manager/source/include)
+-include_directories(${FACTORY_CLIENT_SOURCE_DIR}/utils)
++# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/utils)
+ include_directories(${FACTORY_CLIENT_SOURCE_DIR}/utils/utils)
+-include_directories(${FACTORY_CLIENT_SOURCE_DIR}/logger)
++# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/logger)
+ include_directories(${FACTORY_CLIENT_SOURCE_DIR}/logger/logger)
+-include_directories(${FACTORY_CLIENT_SOURCE_DIR}/mbed-client-esfs/source/include)
+-include_directories(${FACTORY_CLIENT_SOURCE_DIR}/mbed-client-esfs/source-pal/api)
+-include_directories(${FACTORY_CLIENT_SOURCE_DIR}/mbed-client-esfs/source-pal/linux)
++# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/mbed-client-esfs/source/include)
++# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/mbed-client-esfs/source-pal/api)
++# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/mbed-client-esfs/source-pal/linux)
+ include_directories(${FACTORY_CLIENT_SOURCE_DIR}/crypto-service/crypto-service)
+ include_directories(${FACTORY_CLIENT_SOURCE_DIR}/crypto-service/source/include)
+ include_directories(${FACTORY_CLIENT_SOURCE_DIR}/secsrv-cbor/secsrv-cbor)
+@@ -122,13 +128,13 @@ include_directories(${FACTORY_CLIENT_SOURCE_DIR}/fcc-output-info-handler/fcc-out
+ SET(UPDATE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/update-client-hub)
+ 
+ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR})
+-ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/update-client-hub)
++# ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/update-client-hub)
+ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/atomic-queue)
+ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/atomic-queue/atomic-queue)
+ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/common)
+ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/common/update-client-common)
+-ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/resume-engine)
+-ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/resume-engine/resume-engine)
++# ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/resume-engine)
++# ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/resume-engine/resume-engine)
+ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/control-center)
+ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/control-center/update-client-control-center)
+ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/device-identity)
+@@ -142,8 +148,8 @@ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/manifest-manager/update-client-manife
+ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/manifest-manager/source)
+ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/monitor)
+ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/monitor/update-client-monitor)
+-ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/paal-update-api)
+-ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/paal-update-api/paal-update-api)
++# ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/paal-update-api)
++# ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/paal-update-api/paal-update-api)
+ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/source)
+ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/source/update-client-source)
+ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/source-http)
+diff --git a/factory-configurator-client/CMakeLists.txt b/factory-configurator-client/CMakeLists.txt
+index c41f86a..4c2e821 100644
+--- a/factory-configurator-client/CMakeLists.txt
++++ b/factory-configurator-client/CMakeLists.txt
+@@ -9,10 +9,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mbed-client-esfs/source-pal/linu
+ 
+ # mbed-tace
+ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace)
+-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace/mbed-trace)
++# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace/mbed-trace)
+ 
+ # nanostack
+-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/nanostack-libservice)
++# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/nanostack-libservice)
+ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/nanostack-libservice/mbed-client-libservice)
+ 
+ SET(SOURCE_LIST "")
+diff --git a/factory-configurator-client/common_includes.cmake b/factory-configurator-client/common_includes.cmake
+index f6469b1..bcc0b9e 100644
+--- a/factory-configurator-client/common_includes.cmake
++++ b/factory-configurator-client/common_includes.cmake
+@@ -22,20 +22,20 @@ FOREACH(module ${MODULES})
+ ENDFOREACH()
+ 
+ # factory-configurator-client internal includes
+-ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/crypto/source/include)
+-ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/crypto-service/source/include)
++#ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/crypto/source/include)
++#ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/crypto-service/source/include)
+ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/key-config-manager/source/include)
+-ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-client-esfs/source/include)
++#ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-client-esfs/source/include)
+ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-client-esfs/source/sotp)
+ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/factory-configurator-client/source/include)
+-ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/logger/source/include)
+-ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/fcc-bundle-handler/source/include)
++#ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/logger/source/include)
++#ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/fcc-bundle-handler/source/include)
+ 
+ # mbed-client-pal
+ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mbed-client-pal/Source/PAL-Impl/Services-API)
+ 
+ # mbed-trace
+ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace)
+-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace/mbed-trace)
+-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/nanostack-libservice/mbed-client-libservice)
++#include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace/mbed-trace)
++#include_directories(${CMAKE_CURRENT_SOURCE_DIR}/nanostack-libservice/mbed-client-libservice)
+ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/logger/logger)
+\ No newline at end of file
+diff --git a/mbed-trace/CMakeLists.txt b/mbed-trace/CMakeLists.txt
+index 86396b4..1d90680 100644
+--- a/mbed-trace/CMakeLists.txt
++++ b/mbed-trace/CMakeLists.txt
+@@ -6,10 +6,10 @@ SET(CMAKE_SYSTEM_NAME Generic)
+ project(mbedTrace)
+ 
+ 
+-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace/)
++# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace/)
+ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
+-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../nanostack-libservice/mbed-client-libservice/)
+-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../nanostack-libservice/)
++# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../nanostack-libservice/mbed-client-libservice/)
++# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../nanostack-libservice/)
+ 
+ set (MBED_TRACE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/source/mbed_trace.c)
+ 

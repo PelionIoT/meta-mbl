@@ -1,6 +1,6 @@
 ## Introduction
 
-This document provides instructions for building Mbed Linux with the meta-mbl-restricted-extras layer (which provides Mbed Cloud Client) and explains how to do a firmware update over the air. It describes the end-to-end process from preparing your environment to updating your device's firmware.
+This document provides instructions for building Mbed Linux with Mbed Cloud Client and explains how to do a firmware update over the air. It describes the end-to-end process from preparing your environment to updating your device's firmware.
 
 Warp7 and Raspberry Pi 3 boards are currently supported.
 
@@ -120,7 +120,7 @@ This data contains the rules for downloading and building code for Mbed Linux.  
 ```
 cd ~/mbl
 mkdir mbl-master && cd mbl-master
-repo init -u ssh://git@github.com/armmbed/mbl-manifest.git -b master -m restricted.xml
+repo init -u ssh://git@github.com/armmbed/mbl-manifest.git -b master -m default.xml
 repo sync
 ```
 

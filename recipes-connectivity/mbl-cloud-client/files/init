@@ -1,0 +1,130 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:       mbl-cloud-client
+# Required-Start: $local_fs $network $named $time
+# Required-Stop: $local_fs $network $named $time
+# Should-Start:
+# Should-Stop:
+# Default-Start: 3 4 5
+# Default-Stop:  0 1 2 6
+# Short-Description: Start and stop mbl-cloud-client
+# Description: Start and stop mbl-cloud-client
+### END INIT INFO
+
+init_script="$0"
+name=mbl-cloud-client
+daemon="/opt/arm/${name}"
+
+exit_with_usage() {
+    echo "Usage: ${init_script} {start|stop|restart|try-restart|force-reload|status}" 1>&2
+    exit "$1"
+}
+
+do_start() {
+    echo "Starting ${name}..." 1>&2
+    start-stop-daemon --start --quiet --exec "$daemon"
+    case "$?" in
+        0)
+            echo "${name} started" 1>&2
+            return 0
+            ;;
+        1)
+            echo "${name} is already running" 1>&2
+            return 0
+            ;;
+        *)
+            echo "Failed to start ${name}" 1>&2
+            return 1
+            ;;
+    esac
+}
+
+stop_helper() {
+not_running_ret="$1"
+    echo "Stopping ${name}..." 1>&2
+    start-stop-daemon --stop --quiet --retry 5 --exec "$daemon"
+    case "$?" in
+        0)
+            echo "${name} stopped" 1>&2
+            return 0
+            ;;
+        1)
+            echo "${name} is not running" 1>&2
+            return "$not_running_ret"
+            ;;
+        *)
+            echo "Failed to stop ${name}" 1>&2
+            return 1
+            ;;
+    esac
+}
+
+do_stop() {
+    stop_helper 0
+}
+
+do_restart() {
+    stop_helper 0 && do_start
+}
+
+do_try_restart() {
+    stop_helper 1 && do_start
+}
+
+do_force_reload() {
+    stop_helper 1 && do_start
+}
+
+do_status() {
+    start-stop-daemon --status --quiet --exec "$daemon"
+    case "$?" in
+        0)
+            echo "${name} is running"
+            return 0
+            ;;
+        3)
+            echo "${name} is not running"
+            return 3
+            ;;
+        *)
+            echo "${name} status is unknown"
+            return 4
+            ;;
+    esac
+}
+
+
+if [ "$#" -ne 1 ]; then
+    exit_with_usage 2
+fi
+
+if ! [ -x "$daemon" ]; then
+    echo "${daemon} is not an executable file" 1>&2
+    exit 5
+fi
+
+case "$1" in
+    start|stop|restart|status)
+        do_${1}
+        exit $?
+        ;;
+    force-reload)
+        do_force_reload
+        exit $?
+        ;;
+    try-restart)
+        do_try_restart
+        exit $?
+        ;;
+    reload)
+        # valid but not supported
+        exit_with_usage 3
+        ;;
+    *)
+        exit_with_usage 2
+        ;;
+esac
+
+# Shouldn't get here
+exit 1

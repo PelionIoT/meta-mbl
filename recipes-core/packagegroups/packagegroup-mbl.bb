@@ -36,5 +36,6 @@ PACKAGEGROUP_MBL_PKGS_append = " ${@bb.utils.contains('COMBINED_FEATURES', 'usbg
 PACKAGEGROUP_MBL_PKGS_append_imx7s-warp = " optee-os"
 PACKAGEGROUP_MBL_PKGS_append_imx7s-warp = " optee-client"
 
+PACKAGEGROUP_MBL_PKGS_append_imx7s-warp = " mbl-cloud-client"
 
 RDEPENDS_packagegroup-mbl += "${PACKAGEGROUP_MBL_PKGS}"

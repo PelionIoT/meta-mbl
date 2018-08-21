@@ -29,7 +29,7 @@ run mmcargs;
 
 # Now boot
 echo Booting secure Linux from mmc ...;
-bootm ${loadaddr} - ${fdt_addr};
+bootz ${loadaddr} - ${fdt_addr};
 
 # Failsafe if something goes wrong
 hab_failsafe

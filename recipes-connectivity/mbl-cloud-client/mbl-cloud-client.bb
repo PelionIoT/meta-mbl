@@ -8,16 +8,23 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 S = "${WORKDIR}/git"
 
-SRC_URI = "git://git@github.com/ARMmbed/mbl-core.git;nobranch=1;protocol=ssh; \
-  file://yocto-toolchain.cmake \
-  file://arg_too_long_fix_1.patch;patchdir=${S} \
-  file://arg_too_long_fix_2.patch;patchdir=${S}/cloud-services/mbl-cloud-client/mbed-cloud-client \
-  file://sotp-include-patch.patch;patchdir=${S}/cloud-services/mbl-cloud-client/mbed-cloud-client \
-  file://linux-paths-update-client-pal-filesystem.patch;patchdir=${S}/cloud-services/mbl-cloud-client/mbed-cloud-client \
+# common sources for mbl-cloud-client(public) and mbl-cloud-client-internal  
+SRC_URI_COMMON = "file://yocto-toolchain.cmake \
   file://arm_update_local_config.sh \
   file://init \
   file://logrotate.conf \
   "
+
+# specific sources for the mbl-cloud-client public version  
+SRC_URI_MBL_CLOUD_CLIENT_PUBLIC = "git://git@github.com/ARMmbed/mbl-core.git;nobranch=1;protocol=ssh; \
+  file://arg_too_long_fix_1.patch;patchdir=${S} \
+  file://arg_too_long_fix_2.patch;patchdir=${S}/cloud-services/mbl-cloud-client/mbed-cloud-client \
+  file://sotp-include-patch.patch;patchdir=${S}/cloud-services/mbl-cloud-client/mbed-cloud-client \
+  file://linux-paths-update-client-pal-filesystem.patch;patchdir=${S}/cloud-services/mbl-cloud-client/mbed-cloud-client \
+  "
+
+# all sources for the mbl-cloud-client public version
+SRC_URI = "${SRC_URI_COMMON} ${SRC_URI_MBL_CLOUD_CLIENT_PUBLIC}"
 
 SRCREV = "0b29b87a6e248bdf42aa728c08871506964bfa51"
 

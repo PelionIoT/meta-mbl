@@ -16,3 +16,12 @@
 ###############################################################################
 
 INITRAMFS_IMAGE = "mbl-console-image-initramfs"
+
+FILESEXTRAPATHS_prepend:="${THISDIR}/files:"
+
+SRC_URI += "file://*-mbl.cfg \
+"
+
+do_configure_prepend() { 
+    ${S}/scripts/kconfig/merge_config.sh -m -O ${B} ${B}/.config ${WORKDIR}/*-mbl.cfg    
+}

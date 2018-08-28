@@ -27,7 +27,7 @@ KBUILD_DEFCONFIG_imx7s-warp-mbl ?= "warp7_mbl_defconfig"
 FILESEXTRAPATHS_prepend:="${THISDIR}/files:"
 
 SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/linux.git;protocol=https;nobranch=1 \
-           file://*.cfg \
+           file://*-mbl.cfg \
           "
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
@@ -42,7 +42,7 @@ do_preconfigure() {
 
 	sed -e "${CONF_SED_SCRIPT}" < '${S}/arch/arm/configs/${KBUILD_DEFCONFIG_imx7s-warp-mbl}' >> '${B}/.config'
 
-	${S}/scripts/kconfig/merge_config.sh -m -O ${B} ${B}/.config ${WORKDIR}/*.cfg
+	${S}/scripts/kconfig/merge_config.sh -m -O ${B} ${B}/.config ${WORKDIR}/*-mbl.cfg 
 
 	if [ "${SCMVERSION}" = "y" ]; then
 		# Add GIT revision to the local version
@@ -52,4 +52,3 @@ do_preconfigure() {
 }
 
 INITRAMFS_IMAGE = "mbl-console-image-initramfs"
-

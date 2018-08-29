@@ -8,3 +8,4 @@ LABEL=boot           /boot                vfat       ro,defaults              0 
 LABEL=bootflags      /mnt/flags           auto       defaults                 0  0
 LABEL=config         __REPLACE_ME_WITH_MBL_CONFIG_DIR__ auto    rw,auto,noexec,nodev,nosuid,nouser,async 0  0
 LABEL=cache          /mnt/cache           auto       defaults                 0  0
+LABEL=home           /home                auto       defaults                 0  0

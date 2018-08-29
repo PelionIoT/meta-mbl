@@ -1,4 +1,8 @@
 DESCRIPTION = "ARM Trusted Firmware for RaspberryPi3"
+
+# Licensing: 
+# - ARM Trusted Firmware is licensed under BSD-3-Clause.
+# - mbedtls is licensed under Apache-2.0.
 LICENSE = "BSD-3-Clause & Apache-2.0"
 LIC_FILES_CHKSUM = "file://license.rst;md5=e927e02bca647e14efd87e9e914b2443 \
                     file://mbedtls/apache-2.0.txt;md5=3b83ef96387f14655fc854ddc3c6bd57"

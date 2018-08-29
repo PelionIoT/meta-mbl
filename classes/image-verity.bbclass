@@ -21,14 +21,16 @@
 # This will compile cryptsetup tool in the host architecture
 DEPENDS += "cryptsetup-native"
 
+
+# e.g. mbl-console-image-imx7s-warp-mbl-20180810101241.rootfs
+IMAGE_NAME_WITH_SUFFIX = "${IMAGE_NAME}${IMAGE_NAME_SUFFIX}"
+
 #This task creates a rootfs hash tree and root hash using dm-verity veritysetup tool on the host
 do_generate_verity_metadata() {
-    hash_tree_ext=.hash_tree.bin
-    header_info_ext=.verity_header_information.txt
-    root_hash_ext=.root_hash.txt
+    hash_tree_suffix=.hash_tree.bin
+    header_info_suffix=.verity_header_information.txt
     rootfs_ext=.ext4
     image_link_name="${IMAGE_LINK_NAME}" # e.g. mbl-console-image-imx7s-warp-mbl
-    image_name="${IMAGE_NAME}${IMAGE_NAME_SUFFIX}" # e.g. mbl-console-image-imx7s-warp-mbl-20180810101241.rootfs
 
     # * When the .ext4 image is first created it is written to
     #   ${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.ext4. That name contains a timestamp,
@@ -50,11 +52,11 @@ do_generate_verity_metadata() {
     #   ".rootfs" bit), but we then create symlinks to them using a basename of
     #   ${IMAGE_LINK_NAME}.
 
-    veritysetup format ${IMGDEPLOYDIR}/${image_link_name}${rootfs_ext} ${IMGDEPLOYDIR}/${image_name}${hash_tree_ext}\
-    > ${IMGDEPLOYDIR}/${image_name}${header_info_ext}
+    veritysetup format ${IMGDEPLOYDIR}/${image_link_name}${rootfs_ext} ${IMGDEPLOYDIR}/${IMAGE_NAME_WITH_SUFFIX}${hash_tree_suffix}\
+    > ${IMGDEPLOYDIR}/${IMAGE_NAME_WITH_SUFFIX}${header_info_suffix}
 
-    grep "Root hash:" ${IMGDEPLOYDIR}/${image_name}${header_info_ext} | sed -e 's/.*:[[:blank:]]*//'\
-    > ${IMGDEPLOYDIR}/${image_name}${root_hash_ext}
+    grep "Root hash:" ${IMGDEPLOYDIR}/${IMAGE_NAME_WITH_SUFFIX}${header_info_suffix} | sed -e 's/.*:[[:blank:]]*//'\
+    > ${IMGDEPLOYDIR}/${IMAGE_NAME_WITH_SUFFIX}${ROOT_HASH_SUFFIX}
 
     (
         # Use relative paths in the symlinks so that they will still work after
@@ -62,10 +64,12 @@ do_generate_verity_metadata() {
         # this build of the mbl-console-image recipe) to ${DEPLOY_DIR_IMAGE}
         # (the main deploy dir for the current MACHINE)
         cd ${IMGDEPLOYDIR}
-        ln -sf ${image_name}${hash_tree_ext} ${image_link_name}${hash_tree_ext}
-        ln -sf ${image_name}${header_info_ext} ${image_link_name}${header_info_ext}
-        ln -sf ${image_name}${root_hash_ext} ${image_link_name}${root_hash_ext}
+        ln -sf ${IMAGE_NAME_WITH_SUFFIX}${hash_tree_suffix} ${image_link_name}${hash_tree_suffix}
+        ln -sf ${IMAGE_NAME_WITH_SUFFIX}${header_info_suffix} ${image_link_name}${header_info_suffix}
+        ln -sf ${IMAGE_NAME_WITH_SUFFIX}${ROOT_HASH_SUFFIX} ${image_link_name}${ROOT_HASH_SUFFIX}
     )
 }
 
-addtask generate_verity_metadata after do_image_ext4 before do_image_wic
+addtask generate_verity_metadata after do_image_ext4 before do_sign_root_hash
+
+

@@ -60,7 +60,7 @@ EXTRA_USERS_PARAMS = "useradd -p '' root;"
 
 # No GPLv3 allowed in this image
 IMAGE_LICENSE_CHECKER_BLACKLIST = "GPL-3.0 LGPL-3.0 AGPL-3.0"
-inherit image-license-checker image-verity
+inherit image-license-checker image-signing image-verity key-generation
 
 
 

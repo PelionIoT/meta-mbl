@@ -8,9 +8,9 @@ inherit packagegroup
 # MACHINE independent packages
 ###############################################################################
 PACKAGEGROUP_MBL_TEST_ENV_PKGS_append = " pytest-mbl-testing"
-PACKAGEGROUP_MBL_TEST_ENV_PKGS_append = " python3-mbl-testing"
 PACKAGEGROUP_MBL_TEST_ENV_PKGS_append = " python-numpy"
 PACKAGEGROUP_MBL_TEST_ENV_PKGS_append = " python-scipy-stats"
+PACKAGEGROUP_MBL_TEST_ENV_PKGS_append = " python3-mbl-testing"
 
 
 

@@ -19,7 +19,7 @@ PRIORITY = "optional"
 
 # Licensing Meta-data
 LICENSE = " Apache-2.0 & BSD & BSD-2-Clause & BSD-3-Clause & MIT & PSF & Qhull"
-LIC_FILES_CHECKSUM = "file://LICENSE.txt;md5=be4a7946a904c1b639bcfe4da4f795b8"
+LIC_FILES_CHKSUM = "file://LICENSE.txt;md5=be4a7946a904c1b639bcfe4da4f795b8"
 
 # Inheritance Directives
 inherit distutils pypi setuptools

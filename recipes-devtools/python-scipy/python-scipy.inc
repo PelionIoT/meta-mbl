@@ -43,6 +43,8 @@ S = "${WORKDIR}/${SRCNAME}-${PV}"
 SRC_URI[md5sum] = "aa6bcc85276b6f25e17bcfc4dede8718"
 SRC_URI[sha256sum] = "878352408424dffaa695ffedf2f9f92844e116686923ed9aa8626fc30d32cfd1"
 
+CLEANBROKEN = "1"
+
 # Runtime Meta-data
 RDEPENDS_${PN} += "\
     ${PYTHON_PN}-numpy \

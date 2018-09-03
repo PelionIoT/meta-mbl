@@ -65,3 +65,4 @@ LIC_FILES_CHKSUM = "\
     file://${WORKDIR}/git/${TOOLCHAIN_NAME}/zlib/contrib/minizip/unzip.c;md5=e6ee69414e1309f0669ae661ca56a7b3\
     "
 
+BBCLASSEXTEND="native"

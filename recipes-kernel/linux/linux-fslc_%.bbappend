@@ -51,5 +51,12 @@ do_preconfigure() {
 	fi
 }
 
+do_install_append() {
+	# In order to support FIP generation by the do_compile() ATF routine
+	# we need to populate the.dtb early
+	install -d ${DEPLOY_DIR_IMAGE}/fiptemp
+	install ${B}/arch/arm/boot/dts/imx7s-warp.dtb ${DEPLOY_DIR_IMAGE}/fiptemp
+}
+
 INITRAMFS_IMAGE = "mbl-console-image-initramfs"
 

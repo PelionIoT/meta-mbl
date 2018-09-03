@@ -40,8 +40,8 @@ inherit distutils3
 DEPENDS += "\
     ${PYTHON_PN}-numpy \
 "
-SRC_NAME = "scipy"
-SRC_URI = "https://github.com/${SRC_NAME}/${SRC_NAME}/releases/download/v${PV}/${SRC_NAME}-${PV}.tar.gz"
+SRCNAME = "scipy"
+SRC_URI = "https://github.com/${SRCNAME}/${SRCNAME}/releases/download/v${PV}/${SRCNAME}-${PV}.tar.gz"
 S = "${WORKDIR}/${SRCNAME}-${PV}"
 SRC_URI[md5sum] = "aa6bcc85276b6f25e17bcfc4dede8718"
 SRC_URI[sha256sum] = "878352408424dffaa695ffedf2f9f92844e116686923ed9aa8626fc30d32cfd1"

@@ -4,7 +4,13 @@ DESCRIPTION = "Linaro AArch64 toolchain source license checking"
 # LICENSE symbol. Hence they're omitted.
 #   - Info-ZIP
 #   - BSD-Like
-LICENSE = "BSD-3-Clause & GPL-2.0 & GPL-3.0 & GPL-3.0-with-GCC-exception & LGPL-2.1 & LGPL-3.0 & MIT"
+LICENSE  = "BSD-3-Clause & BSD-3-Clause-With-Intel-Modifications & BSD-Prior & BSL-1.0 & bzip2"
+LICENSE += " & GPL-2.0 & GPL-3.0 & GPL-3.0-with-GCC-exception"
+LICENSE += " & Info-ZIP"
+LICENSE += " & LGPL-2.1 & LGPL-3.0"
+LICENSE += " & MIT & MPL-1.1"
+LICENSE += " & NCSA"
+LICENSE += " & Zlib"
 
 # The linaro-7.2-2017.11 toolchain source is fetched so the (many) licenses not
 # present in the linaro toolchain tarball can be checked. The source used to 
@@ -21,11 +27,12 @@ SRCREV_${TOOLCHAIN_NAME} = "ada5dcbb13a703ed2a53922e819f96b998acc443"
 #   - <srcdir>/COPYING.LIB: LGPLv2.1
 #   - <srcdir>/COPYING3.LIB: LGPLv3
 #   - <srcdir>/COPYING3.RUNTIME: GPL-3.0-with-GCC-exception
-#   - <srcdir>/mkdep: Prior BSD License
+#   - <srcdir>/mkdep: BSD-Prior License (included in meta-mbl/files/custom-licenses/BSD-Prior)
 #   - <srcdir>/libbacktrace/Makefile.in: BSD-3-Clause 
-#   - <srcdir>/libcilkrts/Makefile.in: BSD-3-Clause with Intel modifications (non-standard)
+#   - <srcdir>/libcilkrts/Makefile.in: BSD-3-Clause with Intel modifications 
+#     (included in meta-mbl/files/custom-licenses/BSD-3-Clause-with-Intel-Modifications)
 #   - <srcdir>/libffi/LICENSE: MIT
-#   - <srcdir>/libffi/libffi/msvcc.sh: "MPL-1.1 | GPL-2.0+ | LGPL-2.1+"
+#   - <srcdir>/libffi/libffi/msvcc.sh: "MPL-1.1 | GPL-2.0 | LGPL-2.1"
 #   - <srcdir>/libgo/LICENSE: BSD-3-Clause
 #   - <srcdir>/libhsail-rt/Makefile.in: BSD-3-Clause   
 #   - <srcdir>/libiberty/COPYING.LIB: LGPL-2.1
@@ -38,7 +45,7 @@ SRCREV_${TOOLCHAIN_NAME} = "ada5dcbb13a703ed2a53922e819f96b998acc443"
 #   - <srcdir>/gcc/go/gofrontend/LICENSE: BSD-3-Clause
 #   - <srcdir>/zlib/README: Zlib license.
 #   - <srcdir>/zlib/contrib/dotzlib/LICENSE_1_0.txt:  BSL-1.0. (Boost Standard Library).
-#   - <srcdir>/zlib/contrib/minizip/unzip.c: Info-ZIP
+#   - <srcdir>/zlib/contrib/minizip/unzip.c: Info-ZIP (included in meta-mbl/files/custom-licenses/Info-ZIP)
 LIC_FILES_CHKSUM = "\
     file://${WORKDIR}/git/${TOOLCHAIN_NAME}/COPYING;md5=59530bdf33659b29e73d4adb9f9f6552\
     file://${WORKDIR}/git/${TOOLCHAIN_NAME}/COPYING3;md5=d32239bcb673463ab874e80d47fae504\

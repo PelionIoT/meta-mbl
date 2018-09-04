@@ -2,18 +2,21 @@ FILESEXTRAPATHS_append := "${THISDIR}/files:"
 
 SRC_URI_append = " file://fstab "
 
-fixup_fstab() {
-fstab_file="$1"
-
-    sed -i -e "s|__REPLACE_ME_WITH_MBL_CONFIG_DIR__|${MBL_CONFIG_DIR}|g" "$fstab_file"
+# Create a list of mount points that need to be created
+python() {
+    for part in d.getVar("MBL_PARTITIONS").split():
+        mountpoint = d.getVar("MBL_{}_DIR".format(part))
+        if mountpoint and mountpoint != "/":
+            d.appendVar("MOUNT_POINTS", " {}".format(mountpoint))
 }
 
 do_install_append() {
     # Ensure that mountpoints specified in fstab exist on the root filesystem
-    install -d ${D}/boot
-    install -d ${D}/mnt/flags
-    install -d ${D}${MBL_CONFIG_DIR}
-    install -d ${D}/mnt/cache
-
-    fixup_fstab "${D}${sysconfdir}/fstab"
+    for mountpoint in ${MOUNT_POINTS}; do
+        install -d "${D}${mountpoint}"
+    done
 }
+
+# Replace placeholder strings in fstab with values of BitBake variables
+MBL_VAR_PLACEHOLDER_FILES = "${D}${sysconfdir}/fstab"
+inherit mbl-var-placeholders

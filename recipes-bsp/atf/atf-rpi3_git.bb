@@ -34,6 +34,7 @@ LDFLAGS[unexport] = "1"
 
 do_compile() {
     export PATH=${STAGING_DIR_NATIVE}/usr/bin/aarch64-linux-gnu/bin:$PATH
+    sed -i 's#\(OPENSSL_DIR.*:=\).*#\1 ${STAGING_DIR_NATIVE}/usr#g' ${S}/tools/cert_create/Makefile
 
     # ATF requires BL32 (Trusted OS Firware) which will be optee-os.
     # However, optee-os has not been ported for RPI3 yet, so use

@@ -22,8 +22,6 @@ S = "${WORKDIR}/gcc-linaro-7.2.1-2017.11-x86_64_aarch64-linux-gnu"
 B = "${WORKDIR}/gcc-linaro-7.2.1-2017.11-x86_64_aarch64-linux-gnu"
 
 BBCLASSEXTEND="native"
-INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
-INHIBIT_PACKAGE_STRIP = "1"
 INHIBIT_SYSROOT_STRIP = "1"
 
 do_install() {
@@ -36,3 +34,15 @@ sysroot_stage_all_append() {
 }
 
 FILES_${PN} = " usr "
+
+# It unnecessary to package the native tools so these tasks 
+# can be skipped to save time. Also, these tasks currently
+# generate errors under some build environments
+# (e.g. mbed Linux Jenkins instance).
+#deltask compile
+deltask package
+deltask package_qa
+deltask packagedata
+deltask package_write_ipk
+#deltask install
+#deltask populate_sysroot

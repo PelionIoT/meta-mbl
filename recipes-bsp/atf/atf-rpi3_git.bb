@@ -55,15 +55,10 @@ do_compile() {
         BL32=${DEPLOY_DIR_IMAGE}/tee-header_v2.bin \
         BL32_EXTRA1=${DEPLOY_DIR_IMAGE}/tee-pager_v2.bin \
         BL32_EXTRA2=${DEPLOY_DIR_IMAGE}/tee-pageable_v2.bin \
+        MBEDTLS_DIR=mbedtls \
         LOG_LEVEL=40 \
         CRASH_REPORTING=1 \
-        SPD=opteed \
-        GENERATE_COT=1 \
-        TRUSTED_BOARD_BOOT=1 \
-        USE_TBBR_DEFS=1 \
-        MBEDTLS_DIR=mbedtls \
-        all \
-        fip
+        bl1 bl2 bl31
 
     # remove the dummy binaries
     rm ${DEPLOY_DIR_IMAGE}/tee-header_v2.bin 
@@ -71,13 +66,3 @@ do_compile() {
     rm ${DEPLOY_DIR_IMAGE}/tee-pageable_v2.bin 
 }
 
-
-inherit deploy
-
-do_deploy() {
-    install -d ${DEPLOYDIR}
-    install -D -p -m 0644 ${B}/${PLATFORM}/armstub8.bin ${DEPLOYDIR}/bcm2835-bootfiles/armstub8.bin
-    install -D -p -m 0644 ${B}/${PLATFORM}/rot_key.pem ${DEPLOYDIR}/bcm2835-bootfiles/rot_key.pem
-}
-
-addtask do_deploy after do_compile before do_build

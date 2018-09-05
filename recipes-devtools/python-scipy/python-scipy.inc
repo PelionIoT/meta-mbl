@@ -12,7 +12,7 @@ DESCRIPTION = "\
     engineers. If you need to manipulate numbers on a computer and display or \
     publish the results, give SciPy a try! \
 "
-AUTHOR = "SciPy developers <https://www.scipy.org/>"
+AUTHOR = "SciPy developers <scipy-dev@python.org>"
 HOMEPAGE = "https://www.scipy.org/index.html"
 
 # Package Manager Meta-data
@@ -34,18 +34,38 @@ LIC_FILES_CHKSUM = "\
 "
 
 # Build Meta-data
-DEPENDS += "\
-    ${PYTHON_PN}-numpy \
-"
+inherit pypi
+
 SRCNAME = "scipy"
-SRC_URI = "https://github.com/${SRCNAME}/${SRCNAME}/releases/download/v${PV}/${SRCNAME}-${PV}.tar.gz"
-S = "${WORKDIR}/${SRCNAME}-${PV}"
+PYPI_PACKAGE = "${SRCNAME}"
+PYPI_PACKAGE_EXT = "tar.gz"
 SRC_URI[md5sum] = "aa6bcc85276b6f25e17bcfc4dede8718"
 SRC_URI[sha256sum] = "878352408424dffaa695ffedf2f9f92844e116686923ed9aa8626fc30d32cfd1"
+S = "${WORKDIR}/${SRCNAME}-${PV}"
 
 CLEANBROKEN = "1"
+
+DEPENDS += "\
+    ${PYTHON_PN} \
+    ${PYTHON_PN}-numpy \
+    ${PYTHON_PN}-numpy-native \
+    gcc-runtime \
+"
+
+BBCLASSEXTEND = "\
+    native \
+    nativesdk \
+"
 
 # Runtime Meta-data
 RDEPENDS_${PN} += "\
     ${PYTHON_PN}-numpy \
 "
+
+RDEPENDS_${PN}_class-native = ""
+
+do_compile_prepend_class-target() {
+    export BLAS=/usr/lib/libblas/libblas.so
+    export LAPACK=/usr/lib/lapack/liblapack.so
+    export ATLAS=/usr/lib/libatlas.so
+}

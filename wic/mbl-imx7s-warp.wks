@@ -30,7 +30,14 @@ part --source rootfs-subdir --sourceparams subdir=config --fstype=ext4 --label c
 # Partition 6: Cache partition
 part --source rootfs-subdir --sourceparams subdir=mnt/cache/ --fstype=ext4 --label cache --fixed-size 500
 
-# Partition 7: Home partition
+# Partition 7: First rootfs verity hash partition
+part --source non-rootfs-subdir --sourceparams subdir=verity_hash --fstype=ext4 --label rootfs1_verity_hash --fixed-size 20
+
+# Partition 8: Second rootfs verity hash partition
+part --fstype=ext4 --label rootfs2_verity_hash --fixed-size 20
+
+# Partition 9: Home partition
 part --source rootfs-subdir --sourceparams subdir=home --fstype=ext4 --label home --fixed-size 450
+
 
 bootloader --ptable msdos

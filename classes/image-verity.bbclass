@@ -73,3 +73,24 @@ do_generate_verity_metadata() {
 addtask generate_verity_metadata after do_image_ext4 before do_sign_root_hash
 
 
+
+# This task prepare the content of rootfs1_verity_hash partition under the VERITY_HASH directiry. 
+# The rootfs1_verity_hash partition will contain a rootfs hash tree, root hash and signature.
+do_prepare_rootfs_verity_hash_content() {
+
+    hash_tree_suffix=.hash_tree.bin
+    signed_base64_root_hash_suffix="${ROOT_HASH_SUFFIX}${SIGNED_ROOT_HASH_SUFFIX}${BASE64_SUFFIX}"
+    verity_hash_dir_name="${IMGDEPLOYDIR}/verity_hash"
+
+    # remove an old verity_hash directory and create a new one
+    rm -rf ${verity_hash_dir_name}
+    install -d ${verity_hash_dir_name} 
+
+    # install content for the rootfs1_verity_hash partition
+    install -m 0644 ${IMGDEPLOYDIR}/${IMAGE_LINK_NAME}${hash_tree_suffix} ${verity_hash_dir_name}/
+    install -m 0644 ${IMGDEPLOYDIR}/${IMAGE_LINK_NAME}${ROOT_HASH_SUFFIX} ${verity_hash_dir_name}/
+    install -m 0644 ${IMGDEPLOYDIR}/${IMAGE_LINK_NAME}${signed_base64_root_hash_suffix} ${verity_hash_dir_name}/
+}
+
+addtask prepare_rootfs_verity_hash_content after do_sign_root_hash before do_image_wic
+

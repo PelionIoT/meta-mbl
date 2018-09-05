@@ -44,6 +44,6 @@ do_sign_root_hash() {
         ln -sf ${signed_root_hash_name_base64} ${IMAGE_LINK_NAME}${signed_base64_root_hash_suffix}
     )
 }
- 
-addtask sign_root_hash after do_generate_verity_metadata before do_image_wic
+
+addtask sign_root_hash after do_generate_verity_metadata before do_prepare_rootfs_verity_hash_content
 

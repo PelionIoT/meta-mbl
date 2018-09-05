@@ -29,9 +29,12 @@ S = "${WORKDIR}"
 
 do_install() {
         install -m 0755 ${WORKDIR}/initramfs-init-script.sh ${D}/init
+
+        # Fetch verity rootfs root hash public key
+        install -m 0644 ${VERITY_KEYS_DIR}/${VERITY_ROOTFS_ROOT_HASH_PUBLIC_KEY_NAME} ${D}/${VERITY_ROOTFS_ROOT_HASH_PUBLIC_KEY_NAME}
 }
 
 inherit allarch
 
-FILES_${PN} += " /init "
+FILES_${PN} += " /init /${VERITY_ROOTFS_ROOT_HASH_PUBLIC_KEY_NAME} "
 

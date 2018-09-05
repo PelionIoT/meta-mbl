@@ -39,7 +39,6 @@ fakeroot python do_expand_mbl_var_placeholders() {
             with open(tmppath, mode="w") as tmpfile:
                 for _, line in enumerate(file):
                     new_line = expand_placeholders_in_line(d, line)
-                    bb.warn("Replacing [{}] with [{}] in [{}]".format(line, new_line, path))
                     tmpfile.write(expand_placeholders_in_line(d, line))
 
     # Copy the original file's user, group and permission metadata to the new

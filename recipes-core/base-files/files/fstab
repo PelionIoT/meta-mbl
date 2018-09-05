@@ -8,5 +8,6 @@ LABEL=__REPLACE_ME_WITH_MBL_BOOT_PARTITION_LABEL__           __REPLACE_ME_WITH_M
 LABEL=__REPLACE_ME_WITH_MBL_BOOTFLAGS_PARTITION_LABEL__      __REPLACE_ME_WITH_MBL_BOOTFLAGS_DIR__      auto    defaults    0  0
 LABEL=__REPLACE_ME_WITH_MBL_CONFIG_PARTITION_LABEL__         __REPLACE_ME_WITH_MBL_CONFIG_DIR__         auto    rw,auto,noexec,nodev,nosuid,nouser,async    0   0
 LABEL=__REPLACE_ME_WITH_MBL_FACTORY_CONFIG_PARTITION_LABEL__ __REPLACE_ME_WITH_MBL_FACTORY_CONFIG_DIR__ auto    rw,auto,noexec,nodev,nosuid,nouser,async    0   0
+LABEL=__REPLACE_ME_WITH_MBL_LOG_PARTITION_LABEL__            __REPLACE_ME_WITH_MBL_LOG_DIR__            auto    rw,auto,noexec,nodev,nosuid,nouser,async    0   0
 LABEL=__REPLACE_ME_WITH_MBL_SCRATCH_PARTITION_LABEL__        __REPLACE_ME_WITH_MBL_SCRATCH_DIR__        auto    defaults    0  0
 LABEL=__REPLACE_ME_WITH_MBL_HOME_PARTITION_LABEL__           __REPLACE_ME_WITH_MBL_HOME_DIR__           auto    defaults    0  0

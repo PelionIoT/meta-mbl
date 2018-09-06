@@ -90,13 +90,21 @@ mount $BOOTFLAG_PARTITION /mnt/bootflags
 # If it exists - use findfs to find the file system with label "rootfs2"
 # Else - use findfs to find the file system with ROOTFS_LABEL
 ROOTFS_LABEL="rootfs2"
+VERITY_HASH_LABEL="rootfs2_ver_hash"
 ROOTFS_FILE_INDICATOR="/mnt/bootflags/rootfs2"
 if [ ! -f "$ROOTFS_FILE_INDICATOR" ]
 then
     ROOTFS_LABEL="rootfs1"
+    VERITY_HASH_LABEL="rootfs1_ver_hash"
 fi
 
 ROOTFS_PARTITION="$(findfs LABEL=$ROOTFS_LABEL)"
+VERITY_HASH_PARTITION="$(findfs LABEL=$VERITY_HASH_LABEL)"
+
+#Mount verity_hash partition
+
+mkdir -p /mnt/verity_hash 
+mount $VERITY_HASH_PARTITION /mnt/verity_hash
 
 #Switch from initramfs to rootfs:
 

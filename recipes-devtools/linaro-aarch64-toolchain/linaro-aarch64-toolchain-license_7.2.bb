@@ -1,16 +1,13 @@
 DESCRIPTION = "Linaro AArch64 toolchain source license checking"
-# The following licenses appear in the source for the tool chain but there 
-# is currently no openembedded support for the corresponding SPDX identifier in the 
-# LICENSE symbol. Hence they're omitted.
-#   - Info-ZIP
-#   - BSD-Like
 LICENSE  = "BSD-3-Clause & BSD-3-Clause-With-Intel-Modifications & BSD-Prior & BSL-1.0 & bzip2"
 LICENSE += " & GPL-2.0 & GPL-3.0 & GPL-3.0-with-GCC-exception"
 LICENSE += " & Info-ZIP"
 LICENSE += " & LGPL-2.1 & LGPL-3.0"
-LICENSE += " & MIT & MPL-1.1"
+LICENSE += " & MIT"
+LICENSE += " & (MPL-1.1 | GPL-2.0+ | LGPL-2.1+)"
 LICENSE += " & NCSA"
 LICENSE += " & Zlib"
+
 
 # The linaro-7.2-2017.11 toolchain source is fetched so the (many) licenses not
 # present in the linaro toolchain tarball can be checked. The source used to 
@@ -21,7 +18,7 @@ SRC_URI = "git://git.linaro.org/toolchain/gcc.git;nobranch=1;name=${TOOLCHAIN_NA
 SRCREV_${TOOLCHAIN_NAME} = "ada5dcbb13a703ed2a53922e819f96b998acc443"
 
 # For detailed information on licenses check here: https://spdx.org/licenses. 
-# Licenses found in the sources include the following.:
+# Licenses found in the sources include the following:
 #   - <srcdir>/COPYING: GPLv2
 #   - <srcdir>/COPYING3: GPLv3
 #   - <srcdir>/COPYING.LIB: LGPLv2.1
@@ -41,7 +38,7 @@ SRCREV_${TOOLCHAIN_NAME} = "ada5dcbb13a703ed2a53922e819f96b998acc443"
 #   - <srcdir>/libquadmath/COPYING.LIB: LGPL-2.1
 #   - <srcdir>/libsanitizer/LICENSE.TXT: BSD-Like NCSA
 #   - <srcdir>/libstdc++-v3/doc/html/manual/license.html: GPL-3.0-with-GCC-exception
-#   - <srcdir>/gcc/testsuite/gcc.dg/params/LICENSE: bzip2-1.0.6. bzip2 and libbzip2 License v1.0.6.
+#   - <srcdir>/gcc/testsuite/gcc.dg/params/LICENSE: bzip2.
 #   - <srcdir>/gcc/go/gofrontend/LICENSE: BSD-3-Clause
 #   - <srcdir>/zlib/README: Zlib license.
 #   - <srcdir>/zlib/contrib/dotzlib/LICENSE_1_0.txt:  BSL-1.0. (Boost Standard Library).

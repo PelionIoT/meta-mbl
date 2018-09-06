@@ -39,10 +39,7 @@ FILES_${PN} = " usr "
 # can be skipped to save time. Also, these tasks currently
 # generate errors under some build environments
 # (e.g. mbed Linux Jenkins instance).
-#deltask compile
 deltask package
 deltask package_qa
 deltask packagedata
 deltask package_write_ipk
-#deltask install
-#deltask populate_sysroot

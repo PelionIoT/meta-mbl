@@ -1,3 +1,4 @@
+############################ WORK IN PROGRESS ##################################
 # Descriptive Meta-data
 SUMMARY = "Python library for mathematics, science, and engineering"
 DESCRIPTION = "\

@@ -33,7 +33,11 @@ PLATFORM = "rpi3"
 LDFLAGS[unexport] = "1"
 
 do_compile() {
-    export PATH=${STAGING_DIR_NATIVE}/usr/bin/aarch64-linux-gnu/bin:$PATH
+    export PATH=${STAGING_DIR_NATIVE}${bindir}/aarch64-linux-gnu/bin:$PATH
+    # Due to LDFLAGS is unexported to solve the build fail, we need to
+    # manually add the libdir back. As well as changing the LDLIBS to
+    # link to the libraries we want.
+    export LD_LIBRARY_PATH=${STAGING_DIR_NATIVE}${libdir}:$LD_LIBRARY_PATH
 
     # ATF requires BL32 (Trusted OS Firware) which will be optee-os.
     # However, optee-os has not been ported for RPI3 yet, so use
@@ -43,6 +47,10 @@ do_compile() {
     cp ${DEPLOY_DIR_IMAGE}/u-boot.bin ${DEPLOY_DIR_IMAGE}/tee-header_v2.bin 
     cp ${DEPLOY_DIR_IMAGE}/u-boot.bin ${DEPLOY_DIR_IMAGE}/tee-pager_v2.bin 
     cp ${DEPLOY_DIR_IMAGE}/u-boot.bin ${DEPLOY_DIR_IMAGE}/tee-pageable_v2.bin 
+
+    oe_runmake -C ${S}/tools/fiptool \
+        LDLIBS="-lcrypto -L${STAGING_DIR_NATIVE}${libdir}" \
+        INCLUDE_PATHS="-I../../include/tools_share -I${STAGING_DIR_NATIVE}${includedir}"
 
     oe_runmake -C ${S} BUILD_BASE=${B} \
     CROSS_COMPILE=aarch64-linux-gnu- \
@@ -57,11 +65,10 @@ do_compile() {
         MBEDTLS_DIR=mbedtls \
         LOG_LEVEL=40 \
         CRASH_REPORTING=1 \
-        bl1 bl2 bl31
+        all fip
 
     # remove the dummy binaries
     rm ${DEPLOY_DIR_IMAGE}/tee-header_v2.bin 
     rm ${DEPLOY_DIR_IMAGE}/tee-pager_v2.bin 
     rm ${DEPLOY_DIR_IMAGE}/tee-pageable_v2.bin 
 }
-

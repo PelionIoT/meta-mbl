@@ -1,15 +1,7 @@
 # Specify a kernel image containing mbl-console-image-initramfs rather than using the default zImage
-setenv image zImage-initramfs-imx7s-warp-mbl.bin
-
-# This section is responsbile for loading a signed Linux kernel
-setenv image_signed zImage.imx-signed
-if test ${hab_enabled} -eq 1; then
-	setexpr hab_ivt_addr ${loadaddr} - ${ivt_offset}
-	load mmc ${mmcdev}:${mmcpart} ${hab_ivt_addr} ${image_signed}
-	run warp7_auth_or_fail
-else
-	run loadimage;
-fi
+setenv image kernel.itb
+setenv loadaddr 0x88000000
+run loadimage;
 
 # In order to load OP-TEE Boot from rootfs1 by default
 setenv mmcpart 3
@@ -29,7 +21,7 @@ run mmcargs;
 
 # Now boot
 echo Booting secure Linux from mmc ...;
-bootz ${loadaddr} - ${fdt_addr};
+bootm ${loadaddr} - ${fdt_addr};
 
 # Failsafe if something goes wrong
 hab_failsafe

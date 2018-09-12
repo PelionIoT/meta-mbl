@@ -18,26 +18,14 @@ FILES_${PN} += " \
     ${libdir}/set-up-test-env.sh \
 "
 
-fixup_script() {
-script_name="$1"
-    sed -i -e "s|__REPLACE_ME_WITH_MBL_APP_DIR__|${MBL_APP_DIR}|g" "$script_name"
-    sed -i -e "s|__REPLACE_ME_WITH_OE_USR_LIB_DIR__|${libdir}|g" "$script_name"
-    sed -i -e "s|__REPLACE_ME_WITH_OE_USR_BIN_DIR__|${bindir}|g" "$script_name"
-}
-
 do_install() {
-    install -d ${D}${libdir}  
-    install -d ${D}${bindir}  
-    
+    install -d ${D}${libdir}
+    install -d ${D}${bindir}
+
     install -m 0755 ${WORKDIR}/python3-run.sh ${D}${bindir}/python3-run
     install -m 0755 ${WORKDIR}/pip3-run.sh ${D}${bindir}/pip3-run
     install -m 0755 ${WORKDIR}/virtualenv-run.sh ${D}${bindir}/virtualenv-run
     install -m 0644 ${WORKDIR}/set-up-test-env.sh ${D}${libdir}/set-up-test-env.sh
-    
-    fixup_script "${D}${libdir}/set-up-test-env.sh"
-    fixup_script "${D}${bindir}/pip3-run"
-    fixup_script "${D}${bindir}/virtualenv-run"
-    fixup_script "${D}${bindir}/python3-run"
 }
 
 pkg_postinst_${PN} () {
@@ -47,3 +35,12 @@ pkg_postinst_${PN} () {
 pkg_prerm_${PN} () {
     ${MBL_APP_DIR}${bindir}/pip3-run uninstall -y virtualenv
 }
+
+# Replace placeholder strings in files with values of BitBake variables
+MBL_VAR_PLACEHOLDER_FILES = "\
+    ${D}${libdir}/set-up-test-env.sh \
+    ${D}${bindir}/pip3-run \
+    ${D}${bindir}/virtualenv-run \
+    ${D}${bindir}/python3-run \
+"
+inherit mbl-var-placeholders

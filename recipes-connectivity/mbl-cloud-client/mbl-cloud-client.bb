@@ -126,6 +126,8 @@ do_configure() {
         echo "ERROR mbed update resource file not found!!!"
         exit 1
     fi
+
+    validate_logrotate_vars
     
     cp "${WORKDIR}/yocto-toolchain.cmake" "${S}/cloud-services/mbl-cloud-client/pal-platform/Toolchain/GCC"
 
@@ -144,23 +146,16 @@ do_compile() {
     cd ${CUR_DIR}
 }
 
-# The size and number of mbl-cloud-client log files is configurable via bitbake
-# variables. This function substitutes placeholders in the config file with
-# values from the variables.
-fixup_logrotate_conf() {
-conf_file="$1"
-
+validate_logrotate_vars() {
     if ! expr match "${MBL_MAX_LOGS}" '^ *[0-9][0-9]* *$' > /dev/null; then
         echo "ERROR: MBL_MAX_LOGS value (\"${MBL_MAX_LOGS}\") is invalid"
         exit 1
     fi
-    sed -i -e "s/__REPLACE_ME_WITH_MBL_MAX_LOGS__/${MBL_MAX_LOGS}/" "$conf_file"
 
     if ! expr match "${MBL_MAX_LOG_SIZE}" '^ *[0-9][0-9]*[kMG] *$' > /dev/null; then
         echo "ERROR: MBL_MAX_LOG_SIZE value (\"${MBL_MAX_LOG_SIZE}\") is invalid"
         exit 1
     fi
-    sed -i -e "s/__REPLACE_ME_WITH_MBL_MAX_LOG_SIZE__/${MBL_MAX_LOG_SIZE}/" "$conf_file"
 }
 
 do_install() {
@@ -176,8 +171,11 @@ do_install() {
     install -d "${D}${sysconfdir}/init.d"
     install -m 755 "${WORKDIR}/init" "${D}${sysconfdir}/init.d/mbl-cloud-client"
 
-    logrotate_conf_file="${D}${sysconfdir}/logrotate.d/mbl-cloud-client-logrotate.conf"
     install -d "${D}${sysconfdir}/logrotate.d"
-    install -m 644 "${WORKDIR}/logrotate.conf" "$logrotate_conf_file"
-    fixup_logrotate_conf "$logrotate_conf_file"
+    install -m 644 "${WORKDIR}/logrotate.conf" "${D}${sysconfdir}/logrotate.d/mbl-cloud-client-logrotate.conf"
 }
+
+# Replace placeholder strings in logrotate config with values of BitBake
+# variables
+MBL_VAR_PLACEHOLDER_FILES = "${D}${sysconfdir}/logrotate.d/mbl-cloud-client-logrotate.conf"
+inherit mbl-var-placeholders

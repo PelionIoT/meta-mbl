@@ -7,8 +7,8 @@ iface lo inet loopback
 # Wireless interfaces
 auto wlan0
 iface wlan0 inet dhcp
-	wpa-driver __REPLACE_ME_WITH_WPA_DRIVER__
-	wpa-conf __REPLACE_ME_WITH_WPA_SUPPLICANT_CONFIG_PATH__
+	wpa-driver __REPLACE_ME_WITH_MBL_WPA_DRIVER__
+	wpa-conf __REPLACE_ME_WITH_MBL_WPA_SUPPLICANT_CONFIG_PATH__
 
 iface atml0 inet dhcp
 

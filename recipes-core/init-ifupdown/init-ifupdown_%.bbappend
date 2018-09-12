@@ -7,15 +7,6 @@ FILES_${PN} += " \
     ${MBL_CONFIG_DIR}/network/interfaces \
 "
 
-WPA_SUPPLICANT_CONFIG = "${MBL_CONFIG_DIR}/wpa_supplicant.conf"
-MBL_WPA_DRIVER ?= "nl80211"
-
-fixup_interfaces_conf() {
-interfaces_file="$1"
-
-    sed -i -e "s|__REPLACE_ME_WITH_WPA_SUPPLICANT_CONFIG_PATH__|${WPA_SUPPLICANT_CONFIG}|g" "$interfaces_file"
-    sed -i -e "s|__REPLACE_ME_WITH_WPA_DRIVER__|${MBL_WPA_DRIVER}|g" "$interfaces_file"
-}
 
 do_install_append() {
     rootfs_conf_file="${sysconfdir}/network/interfaces"
@@ -26,6 +17,11 @@ do_install_append() {
 
     mv "${D}${rootfs_conf_file}" "${D}${conffs_conf_file}"
     ln -sf "$conffs_conf_file" "${D}${rootfs_conf_file}"
-
-    fixup_interfaces_conf "${D}${conffs_conf_file}"
 }
+
+# Replace placeholder strings in interfaces file with values of BitBake
+# variables
+MBL_WPA_SUPPLICANT_CONFIG_PATH = "${MBL_CONFIG_DIR}/wpa_supplicant.conf"
+MBL_WPA_DRIVER ?= "nl80211"
+MBL_VAR_PLACEHOLDER_FILES = "${D}${MBL_CONFIG_DIR}/network/interfaces"
+inherit mbl-var-placeholders

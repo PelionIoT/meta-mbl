@@ -12,21 +12,23 @@ PYPI_PACKAGE_EXT = "zip"
 
 inherit setuptools pypi
 
+NONWRAPPED_MBED_PATH = "${bindir}/mbed"
+WRAPPED_MBED_PATH = "${bindir}/wrapped_mbed"
+
 # Replace the mbed script with our wrapper script that can deal with the mbed
 # script having a shebang line longer than the kernel can cope with
 do_install_append() {
-    nonwrapped_path="${bindir}/mbed"
-    wrapped_path="${bindir}/wrapped_mbed"
-    mv "${D}${nonwrapped_path}" "${D}${wrapped_path}"
-    install "${WORKDIR}/mbed-wrapper" "${D}${nonwrapped_path}"
-
-    # Tell the wrapper script what the path to the wrapped script is by
-    # replacing some placeholder text in the wrapper script.  Note that
-    # $wrapped_path is being used here without a preceding $D. This is because
-    # the build system itself will insert a placeholder "FIXMESTAGINGDIRHOST"
-    # into $wrapped_path that will be substituted later to make the script's
-    # final resting place.
-    sed -i -e "s|__REPLACE_ME_WITH_WRAPPED_MBED_PATH__|${wrapped_path}|g" "${D}${nonwrapped_path}"
+    mv "${D}${NONWRAPPED_MBED_PATH}" "${D}${WRAPPED_MBED_PATH}"
+    install "${WORKDIR}/mbed-wrapper" "${D}${NONWRAPPED_MBED_PATH}"
 }
+
+# Tell the wrapper script what the path to the wrapped script is by replacing
+# some placeholder text in the wrapper script.  Note that ${WRAPPED_MBED_PATH}
+# is being used here without a preceding ${D}. This is because the build system
+# itself will insert a placeholder "FIXMESTAGINGDIRHOST" into
+# ${WRAPPED_MBED_PATH} that will be substituted later to make the script's
+# final resting place.
+MBL_VAR_PLACEHOLDER_FILES = "${D}${NONWRAPPED_MBED_PATH}"
+inherit mbl-var-placeholders
 
 BBCLASSEXTEND = "native"

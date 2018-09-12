@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
 
 __version__ = '1.0'
@@ -242,7 +242,7 @@ def _main():
         if args.install_package is not None:
             package_handler.install_package(args.install_package)
         elif args.remove_package_name is not None:
-            package_handler.remove_package(args.remove_package_name)
+            package_handler.remove_package(args.remove_package_name)      
         elif args.list_installed_packages:
             package_handler.list_installed_packages()
 

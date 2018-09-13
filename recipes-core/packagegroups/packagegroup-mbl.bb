@@ -21,6 +21,7 @@ PACKAGEGROUP_MBL_PKGS_append = " opkg"
 PACKAGEGROUP_MBL_PKGS_append = " mbl-app-manager"
 PACKAGEGROUP_MBL_PKGS_append = " python3-core"
 PACKAGEGROUP_MBL_PKGS_append = " python3-logging"
+PACKAGEGROUP_MBL_PKGS_append = " python3-shell"
 
 ###############################################################################
 # Packages added when the MACHINE and DISTRO have specific features

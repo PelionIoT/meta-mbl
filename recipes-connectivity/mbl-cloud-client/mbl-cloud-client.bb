@@ -12,7 +12,6 @@ S = "${WORKDIR}/git"
 SRC_URI_COMMON = "file://yocto-toolchain.cmake \
   file://arm_update_local_config.sh \
   file://init \
-  file://logrotate.conf \
   "
 
 # specific sources for the mbl-cloud-client public version  
@@ -26,7 +25,7 @@ SRC_URI_MBL_CLOUD_CLIENT_PUBLIC = "git://git@github.com/ARMmbed/mbl-core.git;nob
 # all sources for the mbl-cloud-client public version
 SRC_URI = "${SRC_URI_COMMON} ${SRC_URI_MBL_CLOUD_CLIENT_PUBLIC}"
 
-SRCREV = "efd1d3a7370eb6b62c2f567ce42c4e804651d7a0"
+SRCREV = "a42b0acfc471b11e55d07ff5b8d0bf04d1326333"
 
 DEPENDS = " glibc"
 
@@ -34,7 +33,6 @@ RDEPENDS_${PN} = "\
     e2fsprogs-mke2fs \
     libgcc \
     libstdc++ \
-    logrotate \
     start-stop-daemon \
 "
 
@@ -68,9 +66,6 @@ export MBED_UPDATE_RESOURCE_FILE
 
 # Allowed [Debug|Release]
 RELEASE_TYPE="Debug"
-
-MBL_MAX_LOG_SIZE ?= "2M"
-MBL_MAX_LOGS ?= "5"
 
 inherit pythonnative
 inherit cmake
@@ -127,8 +122,6 @@ do_configure() {
         exit 1
     fi
 
-    validate_logrotate_vars
-    
     cp "${WORKDIR}/yocto-toolchain.cmake" "${S}/cloud-services/mbl-cloud-client/pal-platform/Toolchain/GCC"
 
     cmake -G "Unix Makefiles" \
@@ -146,18 +139,6 @@ do_compile() {
     cd ${CUR_DIR}
 }
 
-validate_logrotate_vars() {
-    if ! expr match "${MBL_MAX_LOGS}" '^ *[0-9][0-9]* *$' > /dev/null; then
-        echo "ERROR: MBL_MAX_LOGS value (\"${MBL_MAX_LOGS}\") is invalid"
-        exit 1
-    fi
-
-    if ! expr match "${MBL_MAX_LOG_SIZE}" '^ *[0-9][0-9]*[kMG] *$' > /dev/null; then
-        echo "ERROR: MBL_MAX_LOG_SIZE value (\"${MBL_MAX_LOG_SIZE}\") is invalid"
-        exit 1
-    fi
-}
-
 do_install() {
     install -d "${D}/opt/arm"
     install "${S}/cloud-services/mbl-cloud-client/__${TARGET}/${RELEASE_TYPE}/mbl-cloud-client" "${D}/opt/arm"
@@ -170,12 +151,22 @@ do_install() {
 
     install -d "${D}${sysconfdir}/init.d"
     install -m 755 "${WORKDIR}/init" "${D}${sysconfdir}/init.d/mbl-cloud-client"
-
-    install -d "${D}${sysconfdir}/logrotate.d"
-    install -m 644 "${WORKDIR}/logrotate.conf" "${D}${sysconfdir}/logrotate.d/mbl-cloud-client-logrotate.conf"
 }
 
-# Replace placeholder strings in logrotate config with values of BitBake
-# variables
-MBL_VAR_PLACEHOLDER_FILES = "${D}${sysconfdir}/logrotate.d/mbl-cloud-client-logrotate.conf"
-inherit mbl-var-placeholders
+# Add a logrotate config files
+MBL_LOGROTATE_CONFIG_LOG_NAMES = "mbl-cloud-client arm_update_active_details arm_update_activate"
+
+MBL_LOGROTATE_CONFIG_LOG_PATH[mbl-cloud-client] = "/var/log/mbl-cloud-client.log"
+MBL_LOGROTATE_CONFIG_SIZE[mbl-cloud-client] ?= "1M"
+MBL_LOGROTATE_CONFIG_ROTATE[mbl-cloud-client] ?= "4"
+MBL_LOGROTATE_CONFIG_POSTROTATE[mbl-cloud-client] = "/usr/bin/killall -HUP mbl-cloud-client"
+
+MBL_LOGROTATE_CONFIG_LOG_PATH[arm_update_active_details] = "/var/log/arm_update_active_details.log"
+MBL_LOGROTATE_CONFIG_SIZE[arm_update_active_details] ?= "128k"
+MBL_LOGROTATE_CONFIG_ROTATE[arm_update_active_details] ?= "4"
+
+MBL_LOGROTATE_CONFIG_LOG_PATH[arm_update_activate] = "/var/log/arm_update_activate.log"
+MBL_LOGROTATE_CONFIG_SIZE[arm_update_activate] ?= "128k"
+MBL_LOGROTATE_CONFIG_ROTATE[arm_update_activate] ?= "4"
+
+inherit mbl-logrotate-config

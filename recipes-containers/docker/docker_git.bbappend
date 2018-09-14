@@ -32,3 +32,10 @@ OS_DEFAULT_INITSCRIPT_PARAMS := "defaults"
 
 RSUGGESTS_${PN} = ""
 INHIBIT_PACKAGE_STRIP = "0"
+
+# Add logrotate config
+MBL_LOGROTATE_CONFIG_LOG_NAMES = "dockerd"
+MBL_LOGROTATE_CONFIG_LOG_PATH[dockerd] = "/var/log/dockerd"
+MBL_LOGROTATE_CONFIG_ROTATE[dockerd] = "4"
+MBL_LOGROTATE_CONFIG_SIZE[dockerd] = "1M"
+inherit mbl-logrotate-config

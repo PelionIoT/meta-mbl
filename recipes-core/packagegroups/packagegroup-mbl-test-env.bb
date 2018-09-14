@@ -11,7 +11,5 @@ inherit packagegroup
 ###############################################################################
 PACKAGEGROUP_MBL_TEST_ENV_PKGS_append = " pytest-mbl-testing"
 PACKAGEGROUP_MBL_TEST_ENV_PKGS_append = " python3-mbl-testing"
-PACKAGEGROUP_MBL_TEST_ENV_PKGS_append = " python3-numpy"
-
 
 RDEPENDS_packagegroup-mbl-test-env += "${PACKAGEGROUP_MBL_TEST_ENV_PKGS}"

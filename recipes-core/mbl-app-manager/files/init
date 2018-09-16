@@ -1,0 +1,88 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:       mbl-app-manager
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start: 3 4 5
+# Default-Stop:  0 1 2 6
+# Short-Description: Runs all containers installed in MBL_APP_DIR
+# Description: Runs all containers installed in MBL_APP_DIR
+### END INIT INFO
+
+HOME_APP=__REPLACE_ME_WITH_MBL_APP_DIR__
+
+# start all installed OCI containers in MBL_APP_DIR directory
+do_start() {
+    echo "Starting mbl-app-manager..."
+    echo "Looking for installed containers in $HOME_APP..."
+
+    #return status of the function
+    do_start_status="0"
+
+    # initial container_id 
+    container_id=1
+
+    # check all subdirectories in MBL_APP_DIR 
+    for dir in "$HOME_APP"/*; do
+
+        if [ -d "$dir" ]; then
+
+          # OCi container should have config.json in container's root direcotry
+          file=$dir/config.json
+          if [ -f "$file" ]; then
+
+              # valid OCI container config.json file should define "ociVersion"
+              if grep -Fq "ociVersion" "$file";then 
+
+                  # now we know, that we inside OCI container. Trying to run it...
+                  cur_dir=$(pwd)
+                  cd "$dir"
+
+                  # run OCi container with 'runc run' command at this point. 
+                  # TODO: When the MBL App Lifecycle Manager script will be comitted, use it's run_container function
+                  # in order to run the containers, and not 'runc run' command. 
+                  runc run $container_id
+                  run_res=$?
+                  if [ "$run_res" != "0" ]; then
+                      echo "run OCI container $dir with container_id: $container_id failed with error: $run_res" 
+                      do_start_status="1"
+                  else
+                      echo "OCI container $dir successfully started with container_id: $container_id" 
+                  fi
+
+                  container_id=$((container_id+1))
+                  cd "$cur_dir"
+              fi
+          fi
+        fi
+    done
+    
+    return "$do_start_status"
+}
+
+do_stop() {
+    echo "Stoppping mbl-app-manager..."
+    return "0"
+}
+
+exit_with_usage() {
+    echo "Usage: mbl-app-manager {start|stop}" 1>&2
+    exit "$1"
+}
+
+
+case "$1" in
+    start|stop)
+        do_${1}
+        exit $?
+        ;;
+    *)
+        exit_with_usage 1
+        ;;
+esac
+
+# Shouldn't get here
+exit 1

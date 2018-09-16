@@ -1,8 +1,13 @@
 #!/bin/sh
 
+# Copyright (c) 2018 ARM Ltd.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+
 ### BEGIN INIT INFO
 # Provides:       mbl-app-manager
-# Required-Start:
+# Required-Start: $local_fs
 # Required-Stop:
 # Should-Start:
 # Should-Stop:

@@ -54,7 +54,7 @@ do_start() {
             # run OCi container with 'runc run' command at this point. 
             # TODO: When the MBL App Lifecycle Manager script will be comitted, use it's run_container function
             # in order to run the containers, and not 'runc run' command. 
-            runc run $container_id -b "$dir"
+            runc run $container_id -b "$dir" -d
             run_res=$?
             if [ "$run_res" != "0" ]; then
                 echo "run OCI container $dir with container_id: $container_id failed with error: $run_res" 1>&2

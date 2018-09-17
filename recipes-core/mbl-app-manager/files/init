@@ -21,8 +21,8 @@ HOME_APP=__REPLACE_ME_WITH_MBL_APP_DIR__
 
 # start all installed OCI containers in MBL_APP_DIR directory
 do_start() {
-    echo "Starting mbl-app-manager..."
-    echo "Looking for installed containers in $HOME_APP..."
+    echo "Starting mbl-app-manager..." 1>&2
+    echo "Looking for installed containers in $HOME_APP..." 1>&2
 
     #return status of the function
     do_start_status="0"
@@ -33,59 +33,71 @@ do_start() {
     # check all subdirectories in MBL_APP_DIR 
     for dir in "$HOME_APP"/*; do
 
-        if [ -d "$dir" ]; then
-
-          # OCi container should have config.json in container's root direcotry
-          file=$dir/config.json
-          if [ -f "$file" ]; then
-
-              # valid OCI container config.json file should define "ociVersion"
-              if grep -Fq "ociVersion" "$file";then 
-
-                  # now we know, that we inside OCI container. Trying to run it...
-                  cur_dir=$(pwd)
-                  cd "$dir"
-
-                  # run OCi container with 'runc run' command at this point. 
-                  # TODO: When the MBL App Lifecycle Manager script will be comitted, use it's run_container function
-                  # in order to run the containers, and not 'runc run' command. 
-                  runc run $container_id
-                  run_res=$?
-                  if [ "$run_res" != "0" ]; then
-                      echo "run OCI container $dir with container_id: $container_id failed with error: $run_res" 
-                      do_start_status="1"
-                  else
-                      echo "OCI container $dir successfully started with container_id: $container_id" 
-                  fi
-
-                  container_id=$((container_id+1))
-                  cd "$cur_dir"
-              fi
-          fi
+        if ! [ -d "$dir" ]; then
+            # if $dir is not a directory - continue to next entry
+            continue
         fi
+
+        # OCi container should have config.json in container's root direcotry
+        file=$dir/config.json
+        if ! [ -f "$file" ]; then
+            # if $dir has no config.json file - continue to next entry
+            continue
+        fi
+
+
+        # valid OCI container config.json file should define "ociVersion"
+        if grep -Fq "ociVersion" "$file";then 
+
+            # now we know, that in $dir installed an OCI container. Trying to run it...
+
+            # run OCi container with 'runc run' command at this point. 
+            # TODO: When the MBL App Lifecycle Manager script will be comitted, use it's run_container function
+            # in order to run the containers, and not 'runc run' command. 
+            runc run $container_id -b "$dir"
+            run_res=$?
+            if [ "$run_res" != "0" ]; then
+                echo "run OCI container $dir with container_id: $container_id failed with error: $run_res" 1>&2
+                do_start_status="1"
+            else
+                echo "OCI container $dir successfully started with container_id: $container_id" 1>&2 
+            fi
+
+            container_id=$((container_id+1))
+        fi
+
     done
     
     return "$do_start_status"
 }
 
 do_stop() {
-    echo "Stoppping mbl-app-manager..."
+    echo "Stoppping mbl-app-manager..." 1>&2
     return "0"
 }
 
+
 exit_with_usage() {
-    echo "Usage: mbl-app-manager {start|stop}" 1>&2
+    echo "Usage: mbl-app-manager {start|stop}." 1>&2
+    echo "       start action will run all containers installed in __REPLACE_ME_WITH_MBL_APP_DIR__." 1>&2
+    echo "       stop action does nothing for now." 1>&2
+    echo "       restart, force-reload and status actions are not implemented!" 1>&2
     exit "$1"
 }
-
 
 case "$1" in
     start|stop)
         do_${1}
         exit $?
         ;;
+
+    restart|force-reload|status)
+        echo "The action $1 is not implemented!" 1>&2
+        exit 3
+        ;;
+
     *)
-        exit_with_usage 1
+        exit_with_usage 2
         ;;
 esac
 

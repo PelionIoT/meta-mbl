@@ -211,4 +211,4 @@ fakeroot python do_write_logrotate_configs() {
     for log_name in log_names:
         mbl_logrotate_config_write(d, log_name)
 }
-addtask write_logrotate_configs after do_install before do_package
+addtask write_logrotate_configs after do_install do_deploy before do_package do_populate_sysroot

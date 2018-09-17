@@ -57,4 +57,4 @@ fakeroot python do_expand_mbl_var_placeholders() {
     os.rename(tmppath, path)
 }
 
-addtask expand_mbl_var_placeholders after do_install before do_populate_sysroot
+addtask expand_mbl_var_placeholders after do_install do_deploy before do_package do_populate_sysroot

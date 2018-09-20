@@ -13,7 +13,7 @@ LIC_FILES_CHKSUM = "file://license.rst;md5=e927e02bca647e14efd87e9e914b2443 \
 #   The TF-A secure monitor changes to 32-bit mode before running U-Boot.
 # - The recipe imports mbedtls into the ATF build directory to build libmbedtls.a 
 #   and incorporated into the firmware.
-DEPENDS += " coreutils-native u-boot openssl-native linaro-aarch64-toolchain-native "
+DEPENDS += " coreutils-native u-boot openssl-native linaro-aarch64-toolchain-native optee-os "
 SRC_URI = "git://github.com/ARM-software/arm-trusted-firmware.git;protocol=https;branch=master"
 SRCREV = "3ba929571517347a12e027c629703ced0db0b255"
 SRC_URI += " git://github.com/ARMmbed/mbedtls.git;protocol=https;branch=development;name=mbedtls;destsuffix=git/mbedtls "
@@ -39,15 +39,6 @@ do_compile() {
     # link to the libraries we want.
     export LD_LIBRARY_PATH=${STAGING_DIR_NATIVE}${libdir}:$LD_LIBRARY_PATH
 
-    # ATF requires BL32 (Trusted OS Firware) which will be optee-os.
-    # However, optee-os has not been ported for RPI3 yet, so use
-    # the u-boot.bin as a dummy binary to standing in for 
-    # tee-header_v2.bin, tee-pager_v2.bin, tee-pageable_v2.bin in 
-    # the FIP image. The real binaries will be used when available.
-    cp ${DEPLOY_DIR_IMAGE}/u-boot.bin ${DEPLOY_DIR_IMAGE}/tee-header_v2.bin 
-    cp ${DEPLOY_DIR_IMAGE}/u-boot.bin ${DEPLOY_DIR_IMAGE}/tee-pager_v2.bin 
-    cp ${DEPLOY_DIR_IMAGE}/u-boot.bin ${DEPLOY_DIR_IMAGE}/tee-pageable_v2.bin 
-
     oe_runmake -C ${S}/tools/fiptool \
         LDLIBS="-lcrypto -L${STAGING_DIR_NATIVE}${libdir}" \
         INCLUDE_PATHS="-I../../include/tools_share -I${STAGING_DIR_NATIVE}${includedir}"
@@ -59,16 +50,11 @@ do_compile() {
         RPI3_BL33_IN_AARCH32=1 \
         BL33=${DEPLOY_DIR_IMAGE}/u-boot.bin \
         NEED_BL32=yes \
-        BL32=${DEPLOY_DIR_IMAGE}/tee-header_v2.bin \
-        BL32_EXTRA1=${DEPLOY_DIR_IMAGE}/tee-pager_v2.bin \
-        BL32_EXTRA2=${DEPLOY_DIR_IMAGE}/tee-pageable_v2.bin \
+        BL32=${DEPLOY_DIR_IMAGE}/optee/tee-header_v2.bin \
+        BL32_EXTRA1=${DEPLOY_DIR_IMAGE}/optee/tee-pager_v2.bin \
+        BL32_EXTRA2=${DEPLOY_DIR_IMAGE}/optee/tee-pageable_v2.bin \
         MBEDTLS_DIR=mbedtls \
         LOG_LEVEL=40 \
         CRASH_REPORTING=1 \
         all fip
-
-    # remove the dummy binaries
-    rm ${DEPLOY_DIR_IMAGE}/tee-header_v2.bin 
-    rm ${DEPLOY_DIR_IMAGE}/tee-pager_v2.bin 
-    rm ${DEPLOY_DIR_IMAGE}/tee-pageable_v2.bin 
 }

@@ -13,6 +13,7 @@ PACKAGEGROUP_MBL_TEST_PKGS_append = " dropbear-ssh-dns-sd"
 PACKAGEGROUP_MBL_TEST_PKGS_append = " python3 python3-pip"
 PACKAGEGROUP_MBL_TEST_PKGS_append = " e2fsprogs"
 PACKAGEGROUP_MBL_TEST_PKGS_append = " memtester"
+PACKAGEGROUP_MBL_TEST_PKGS_append = " strace"
 
 
 ###############################################################################

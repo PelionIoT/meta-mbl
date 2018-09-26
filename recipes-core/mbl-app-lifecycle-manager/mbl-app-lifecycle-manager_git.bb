@@ -43,4 +43,5 @@ FILES_${PN} = " \
     ${bindir}/mbl-app-lifecycle-manager \
     ${PYTHON_SITEPACKAGES_DIR}/mbl/__init__.py \
     ${PYTHON_SITEPACKAGES_DIR}/mbl/AppLifecycleManager.py \
+    ${sysconfdir}/init.d/mbl-app-lifecycle-manager \
 "

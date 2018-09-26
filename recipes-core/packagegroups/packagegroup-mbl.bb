@@ -23,6 +23,7 @@ PACKAGEGROUP_MBL_PKGS_append = " mbl-app-lifecycle-manager"
 PACKAGEGROUP_MBL_PKGS_append = " python3-core"
 PACKAGEGROUP_MBL_PKGS_append = " python3-logging"
 PACKAGEGROUP_MBL_PKGS_append = " python3-shell"
+PACKAGEGROUP_MBL_PKGS_append = " mbl-cloud-client"
 
 ###############################################################################
 # Packages added when the MACHINE and DISTRO have specific features
@@ -37,7 +38,5 @@ PACKAGEGROUP_MBL_PKGS_append = " ${@bb.utils.contains('COMBINED_FEATURES', 'usbg
 ###############################################################################
 PACKAGEGROUP_MBL_PKGS_append_imx7s-warp = " optee-os"
 PACKAGEGROUP_MBL_PKGS_append_imx7s-warp = " optee-client"
-
-PACKAGEGROUP_MBL_PKGS_append_imx7s-warp = " mbl-cloud-client"
 
 RDEPENDS_packagegroup-mbl += "${PACKAGEGROUP_MBL_PKGS}"

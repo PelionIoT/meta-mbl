@@ -4,10 +4,10 @@ devpts               /dev/pts             devpts     mode=0620,gid=5       0  0
 tmpfs                /run                 tmpfs      mode=0755,nodev,nosuid,strictatime 0  0
 tmpfs                /var/volatile        tmpfs      defaults              0  0
 
-LABEL=__REPLACE_ME_WITH_MBL_BOOT_PARTITION_LABEL__           __REPLACE_ME_WITH_MBL_BOOT_DIR__           vfat    ro,defaults 0  0
-LABEL=__REPLACE_ME_WITH_MBL_BOOTFLAGS_PARTITION_LABEL__      __REPLACE_ME_WITH_MBL_BOOTFLAGS_DIR__      auto    defaults    0  0
-LABEL=__REPLACE_ME_WITH_MBL_CONFIG_PARTITION_LABEL__         __REPLACE_ME_WITH_MBL_CONFIG_DIR__         auto    rw,auto,noexec,nodev,nosuid,nouser,async    0   0
-LABEL=__REPLACE_ME_WITH_MBL_FACTORY_CONFIG_PARTITION_LABEL__ __REPLACE_ME_WITH_MBL_FACTORY_CONFIG_DIR__ auto    rw,auto,noexec,nodev,nosuid,nouser,async    0   0
-LABEL=__REPLACE_ME_WITH_MBL_LOG_PARTITION_LABEL__            __REPLACE_ME_WITH_MBL_LOG_DIR__            auto    rw,auto,noexec,nodev,nosuid,nouser,async    0   0
-LABEL=__REPLACE_ME_WITH_MBL_SCRATCH_PARTITION_LABEL__        __REPLACE_ME_WITH_MBL_SCRATCH_DIR__        auto    defaults    0  0
-LABEL=__REPLACE_ME_WITH_MBL_HOME_PARTITION_LABEL__           __REPLACE_ME_WITH_MBL_HOME_DIR__           auto    defaults    0  0
+LABEL=__REPLACE_ME_WITH_MBL_BOOT_PARTITION_LABEL__                __REPLACE_ME_WITH_MBL_BOOT_DIR__                 vfat    ro,defaults 0  0
+LABEL=__REPLACE_ME_WITH_MBL_BOOTFLAGS_PARTITION_LABEL__           __REPLACE_ME_WITH_MBL_BOOTFLAGS_DIR__            auto    defaults    0  0
+LABEL=__REPLACE_ME_WITH_MBL_FACTORY_CONFIG_PARTITION_LABEL__      __REPLACE_ME_WITH_MBL_FACTORY_CONFIG_DIR__       auto    rw,auto,noexec,nodev,nosuid,nouser,async    0   0
+LABEL=__REPLACE_ME_WITH_MBL_NON_FACTORY_CONFIG_PARTITION_LABEL__  __REPLACE_ME_WITH_MBL_NON_FACTORY_CONFIG_DIR__   auto    rw,auto,noexec,nodev,nosuid,nouser,async    0   0
+LABEL=__REPLACE_ME_WITH_MBL_LOG_PARTITION_LABEL__                 __REPLACE_ME_WITH_MBL_LOG_DIR__                  auto    rw,auto,noexec,nodev,nosuid,nouser,async    0   0
+LABEL=__REPLACE_ME_WITH_MBL_SCRATCH_PARTITION_LABEL__             __REPLACE_ME_WITH_MBL_SCRATCH_DIR__              auto    defaults    0  0
+LABEL=__REPLACE_ME_WITH_MBL_HOME_PARTITION_LABEL__                __REPLACE_ME_WITH_MBL_HOME_DIR__                 auto    defaults    0  0

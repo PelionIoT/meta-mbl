@@ -46,7 +46,6 @@ class RootFsSubdirPlugin(SourcePlugin):
         logger.debug('Subdir source dir: {}'.format(subdir_src))
         logger.debug('Subdir dest dir: {}'.format(subdir_dst))
 
-        
         shutil.copytree(subdir_src, subdir_dst)
 
         part.prepare_rootfs(

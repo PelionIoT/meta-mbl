@@ -19,30 +19,33 @@ part --source bootimg-partition --fstype=vfat --label boot --active --align 4096
 part --fstype=ext4 --label bootflags --fixed-size 20
 
 # Partition 3: First root partition
-part --source rootfs --fstype=ext4 --exclude-path=config/ --label rootfs1 --fixed-size 500
+part --source rootfs --fstype=ext4 --label rootfs1 --fixed-size 500
 
 # Partition 4: Second root partition
-part --source rootfs --fstype=ext4 --exclude-path=config/ --label rootfs2 --fixed-size 500
+part --source rootfs --fstype=ext4 --label rootfs2 --fixed-size 500
 
-# Partition 5: Config partition
-part --source rootfs-subdir --sourceparams subdir=config --fstype=ext4 --label config --fixed-size 40
-
-# Partition 6: Factory config partition
+# Partition 5: Factory config partition
 part --fstype=ext4 --label factory_config --fixed-size 20
 
-# Partition 7: Log partition
+# Partition 6: First non-factory config partition
+part --source rootfs-subdir --sourceparams subdir=config/user --fstype=ext4 --label nfactory_config1 --fixed-size 20
+
+# Partition 7: Second non-factory config partition
+part --fstype=ext4 --label nfactory_config2 --fixed-size 20
+
+# Partition 8: Log partition
 part --fstype=ext4 --label log --fixed-size 20
 
-# Partition 8: Cache partition
+# Partition 9: Cache partition
 part --source rootfs-subdir --sourceparams subdir=mnt/cache/ --fstype=ext4 --label cache --fixed-size 500
 
-# Partition 9: First rootfs verity hash partition
+# Partition 10: First rootfs verity hash partition
 part --source non-rootfs-subdir --sourceparams subdir=verity_hash --fstype=ext4 --label rootfs1_ver_hash --fixed-size 20
 
-# Partition 10: Second rootfs verity hash partition
+# Partition 11: Second rootfs verity hash partition
 part --fstype=ext4 --label rootfs2_ver_hash --fixed-size 20
 
-# Partition 11: Home partition
+# Partition 12: Home partition
 part --source rootfs-subdir --sourceparams subdir=home --fstype=ext4 --label home --fixed-size 450
 
 

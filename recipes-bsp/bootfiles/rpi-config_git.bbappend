@@ -12,4 +12,9 @@ do_deploy_append() {
     # because we won't need VideoCore4 bootloader to load anything for us
     # except the TF-A.
     echo "kernel_address=0x11000000" >> ${DEPLOYDIR}/bcm2835-bootfiles/config.txt
+
+    # dtb file was loaded by VC4 and put at 0x0. But we put TF-A on 0x0 too.
+    # Thus we need to change the dtb address to 0x03000000
+    echo "device_tree_address=0x03000000" >> ${DEPLOYDIR}/bcm2835-bootfiles/config.txt
+
 }

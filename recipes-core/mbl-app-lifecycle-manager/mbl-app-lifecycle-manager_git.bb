@@ -5,7 +5,7 @@ SRC_URI = "\
     git://git@github.com/ARMmbed/mbl-core.git;nobranch=1;protocol=ssh; \
     file://init \
 "
-SRCREV = "f53e908e1d64e35fd4da0ba0da2d5938f6f3cdf1"
+SRCREV = "${MBL_CORE_SRCREV}"
 S = "${WORKDIR}/git/application-framework/mbl-app-lifecycle-manager"
 
 RDEPENDS_${PN} = " \

@@ -56,5 +56,15 @@ do_compile() {
         MBEDTLS_DIR=mbedtls \
         LOG_LEVEL=40 \
         CRASH_REPORTING=1 \
+        SPD=opteed \
         all fip
 }
+
+inherit deploy
+
+do_deploy() {
+    install -D -p -m 0644 ${B}/${PLATFORM}/armstub8.bin ${DEPLOY_DIR_IMAGE}/armstub8.bin
+    install -D -p -m 0644 ${B}/${PLATFORM}/armstub8.bin ${DEPLOY_DIR_IMAGE}/bcm2835-bootfiles/armstub8.bin
+}
+
+addtask deploy before do_build after do_install

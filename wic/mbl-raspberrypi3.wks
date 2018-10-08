@@ -33,8 +33,8 @@ part --fstype=ext4 --label nfactory_config2 --fixed-size 20
 # Partition 8: Log partition
 part --fstype=ext4 --label log --fixed-size 20
 
-# Partition 9: Cache partition
-part --source rootfs-subdir --sourceparams subdir=mnt/cache/ --fstype=ext4 --label cache --fixed-size 500
+# Partition 9: Scratch partition
+part --source rootfs-subdir --sourceparams subdir=scratch --fstype=ext4 --label scratch --fixed-size 500
 
 # Partition 10: First rootfs verity hash partition
 part --source non-rootfs-subdir --sourceparams subdir=verity_hash --fstype=ext4 --label rootfs1_ver_hash --fixed-size 20

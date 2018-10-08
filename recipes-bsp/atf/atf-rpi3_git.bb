@@ -63,7 +63,6 @@ do_compile() {
 inherit deploy
 
 do_deploy() {
-    install -D -p -m 0644 ${B}/${PLATFORM}/armstub8.bin ${DEPLOY_DIR_IMAGE}/armstub8.bin
     install -D -p -m 0644 ${B}/${PLATFORM}/armstub8.bin ${DEPLOY_DIR_IMAGE}/bcm2835-bootfiles/armstub8.bin
 }
 

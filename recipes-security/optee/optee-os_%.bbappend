@@ -2,8 +2,7 @@
 DEPENDS += " u-boot-mkimage-native "
 DEPENDS_append_raspberrypi3-mbl = " linaro-aarch64-toolchain-native "
 
-SRCREV="0ab9388c0d553a6bb5ae04e41b38ba40cf0474bf"
-SRCREV_raspberrypi3-mbl="62b4cdb5e8895a6b0c477ea9f1cecdb5514e2f87"
+SRCREV="62b4cdb5e8895a6b0c477ea9f1cecdb5514e2f87"
 SRC_URI="git://github.com/OP-TEE/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "
@@ -39,6 +38,7 @@ EXTRA_OEMAKE_append_imx7s-warp-mbl = " \
                 CFG_PAGEABLE_ADDR=0 CFG_NS_ENTRY_ADDR=0x87800000 \
                 CFG_DT_ADDR=0x83000000 CFG_DDR_SIZE=0x20000000 \
                 CFG_DT=y CFG_TEE_CORE_LOG_LEVEL=1 \
+                CFG_TEE_CORE_NB_CORE=1 \
         "
 
 # CROSS_COMPILE_core: Set the cross-compiler for OPTEE core. On RPi3 it should

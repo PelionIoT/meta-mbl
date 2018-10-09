@@ -79,3 +79,9 @@ do_clean_append() {
         oe.path.remove(fip)
         oe.path.remove(unified)
 }
+
+do_rm_work_append() {
+	rm -f ${DEPLOY_DIR_IMAGE}/bl2.bin.imx
+	rm -f ${DEPLOY_DIR_IMAGE}/warp7.fip
+	rm -rf ${DEPLOY_DIR_IMAGE}/fiptemp
+}

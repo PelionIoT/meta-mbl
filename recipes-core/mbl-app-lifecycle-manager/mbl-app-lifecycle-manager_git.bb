@@ -27,10 +27,10 @@ do_install() {
     install -d ${D}${bindir}
     install -m 0755 ${S}/mbl-app-lifecycle-manager ${D}${bindir}
 
-    install -d ${D}${PYTHON_SITEPACKAGES_DIR}/mbl-app-lifecycle-manager
-    install -m 0644 ${S}/mbl/__init__.py ${D}${PYTHON_SITEPACKAGES_DIR}/mbl-app-lifecycle-manager
+    install -d ${D}${PYTHON_SITEPACKAGES_DIR}/mbl-app-lifecycle-manager/mbl/AppLifecycleManager
+    install -m 0644 ${S}/mbl/__init__.py ${D}${PYTHON_SITEPACKAGES_DIR}/mbl-app-lifecycle-manager/mbl/AppLifecycleManager
+    install -m 0644 ${S}/mbl/AppLifecycleManager.py ${D}${PYTHON_SITEPACKAGES_DIR}/mbl-app-lifecycle-manager/mbl/AppLifecycleManager
     install -m 0644 ${S}/mbl/setup.py ${D}${PYTHON_SITEPACKAGES_DIR}/mbl-app-lifecycle-manager
-    install -m 0644 ${S}/mbl/AppLifecycleManager.py ${D}${PYTHON_SITEPACKAGES_DIR}/mbl-app-lifecycle-manager
 
     install -d "${D}${sysconfdir}/init.d"
     install -m 0755 "${WORKDIR}/init" "${D}${sysconfdir}/init.d/mbl-app-lifecycle-manager"
@@ -42,8 +42,8 @@ inherit mbl-var-placeholders
 
 FILES_${PN} = " \
     ${bindir}/mbl-app-lifecycle-manager \
-    ${PYTHON_SITEPACKAGES_DIR}/mbl-app-lifecycle-manager/__init__.py \
+    ${PYTHON_SITEPACKAGES_DIR}/mbl-app-lifecycle-manager/mbl/AppLifecycleManager/__init__.py \
+    ${PYTHON_SITEPACKAGES_DIR}/mbl-app-lifecycle-manager/mbl/AppLifecycleManager/AppLifecycleManager.py \
     ${PYTHON_SITEPACKAGES_DIR}/mbl-app-lifecycle-manager/setup.py \
-    ${PYTHON_SITEPACKAGES_DIR}/mbl-app-lifecycle-manager/AppLifecycleManager.py \
     ${sysconfdir}/init.d/mbl-app-lifecycle-manager \
 "

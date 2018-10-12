@@ -18,15 +18,15 @@ do_install() {
     install -d ${D}${bindir}
     install -m 0755 ${S}/mbl-app-manager ${D}${bindir}
 
-    install -d ${D}${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager
-    install -m 0644 ${S}/mbl/__init__.py ${D}${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager
+    install -d ${D}${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager/mbl/AppManager
+    install -m 0644 ${S}/mbl/__init__.py ${D}${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager/mbl/AppManager
+    install -m 0644 ${S}/mbl/AppManager.py ${D}${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager/mbl/AppManager
     install -m 0644 ${S}/mbl/setup.py ${D}${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager
-    install -m 0644 ${S}/mbl/AppManager.py ${D}${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager
 }
 
 FILES_${PN} = " \
     ${bindir}/mbl-app-manager \
-    ${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager/__init__.py \
+    ${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager/mbl/AppManager__init__.py \
+    ${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager/mbl/AppManagerAppManager.py \
     ${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager/setup.py \
-    ${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager/AppManager.py \
 "

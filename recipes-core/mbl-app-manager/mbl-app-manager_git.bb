@@ -26,7 +26,7 @@ do_install() {
 
 FILES_${PN} = " \
     ${bindir}/mbl-app-manager \
-    ${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager/mbl/AppManager__init__.py \
-    ${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager/mbl/AppManagerAppManager.py \
+    ${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager/mbl/AppManager/__init__.py \
+    ${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager/mbl/AppManager/AppManager.py \
     ${PYTHON_SITEPACKAGES_DIR}/mbl-app-manager/setup.py \
 "

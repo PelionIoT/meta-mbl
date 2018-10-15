@@ -17,9 +17,11 @@
 
 INITRAMFS_IMAGE = "mbl-console-image-initramfs"
 
-FILESEXTRAPATHS_prepend:="${THISDIR}/files:"
+FILESEXTRAPATHS_prepend:="${THISDIR}/files:${THISDIR}/linux-raspberrypi:"
 
 SRC_URI += "file://*-mbl.cfg \
+"
+SRC_URI += "file://0001-rpi3-optee-update-DTS.patch \
 "
 
 # LOADADDR is 0x00080000 by default. But we need to put FIP between

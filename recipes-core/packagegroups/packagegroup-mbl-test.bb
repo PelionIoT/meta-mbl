@@ -20,17 +20,17 @@ PACKAGEGROUP_MBL_TEST_PKGS_append = " strace"
 # Packages that can optionally be added (irrespective of MACHINE)
 #     - kernel-devsrc. Include kernel development sources.
 # Uncomment the relevant line to include the package
+#     - optee-test. MACHINE supports optee so include the optee test suite.
 ###############################################################################
 #PACKAGEGROUP_MBL_TEST_PKGS_append_imx7s-warp = " kernel-devsrc"
+PACKAGEGROUP_MBL_TEST_PKGS_append = " optee-test"
 
 
 ###############################################################################
 # Packages added for MACHINE=imx7s-warp
 #     - v4l-utils. MACHINE has video4linux camera driver so includ utils.
-#     - optee-test. MACHINE supports optee so include the optee test suite.
 ###############################################################################
 PACKAGEGROUP_MBL_TEST_PKGS_append_imx7s-warp = " v4l-utils"
-PACKAGEGROUP_MBL_TEST_PKGS_append_imx7s-warp = " optee-test"
 
 
 RDEPENDS_packagegroup-mbl-test += "${PACKAGEGROUP_MBL_TEST_PKGS}"

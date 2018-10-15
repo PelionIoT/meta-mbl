@@ -10,6 +10,8 @@ inherit packagegroup
 #       and DOCKER chains for the FORWARD table.
 #     - kernel-modules. Required by iptables related modules (e.g. netfilter
 #       connection tracking.
+#     - optee-os. If the machine supports optee include the os.
+#     - optee-client. If the machine supports optee include the client.
 ###############################################################################
 PACKAGEGROUP_MBL_PKGS_append = " avahi-autoipd"
 PACKAGEGROUP_MBL_PKGS_append = " ca-certificates"
@@ -25,19 +27,13 @@ PACKAGEGROUP_MBL_PKGS_append = " python3-core"
 PACKAGEGROUP_MBL_PKGS_append = " python3-logging"
 PACKAGEGROUP_MBL_PKGS_append = " python3-shell"
 PACKAGEGROUP_MBL_PKGS_append = " mbl-cloud-client"
+PACKAGEGROUP_MBL_PKGS_append = " optee-os"
+PACKAGEGROUP_MBL_PKGS_append = " optee-client"
 
 ###############################################################################
 # Packages added when the MACHINE and DISTRO have specific features
 #     - usbinit - bring up the usb0 network interface during boot
 ###############################################################################
 PACKAGEGROUP_MBL_PKGS_append = " ${@bb.utils.contains('COMBINED_FEATURES', 'usbgadget', 'usbinit', '', d)}"
-
-###############################################################################
-# Packages added for MACHINE=imx7s-warp
-#     - optee-os. If the machine supports optee include the os.
-#     - optee-client. If the machine supports optee include the client.
-###############################################################################
-PACKAGEGROUP_MBL_PKGS_append_imx7s-warp = " optee-os"
-PACKAGEGROUP_MBL_PKGS_append_imx7s-warp = " optee-client"
 
 RDEPENDS_packagegroup-mbl += "${PACKAGEGROUP_MBL_PKGS}"

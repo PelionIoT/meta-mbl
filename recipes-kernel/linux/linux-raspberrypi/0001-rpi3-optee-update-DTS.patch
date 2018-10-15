@@ -1,0 +1,61 @@
+From 2ebbe71cc7e365308f0c411846a7aae7fc95bde0 Mon Sep 17 00:00:00 2001
+From: Ryan Harkin <ryan.harkin@linaro.org>
+Date: Thu, 5 Jul 2018 16:01:38 +0100
+Subject: [PATCH] rpi3: optee: update DTS
+
+According to TF-A's memory map for RaspberryPi3.
+0x0~0x20000 is BL1 and 0x20000~0x200000 is FIP.
+We reserve this memory area for not using it.
+
+For OPTEE, the shared memory address is from
+0x08000000~0x10000000. This patch also reserve the
+memory area for not using.
+
+To enable OPTEE, we apply changes from:
+  https://github.com/linaro-swg/linux/commit/a3d16523b5c3bd3c21e2009f2af0901b0d6d09dd
+
+Signed-off-by: Ryan Harkin <ryan.harkin@linaro.org>
+Signed-off-by: Ying-Chun Liu (PaulLiu) <paul.liu@linaro.org>
+---
+ arch/arm/boot/dts/bcm2710-rpi-3-b-plus.dts |  3 +++
+ arch/arm/boot/dts/bcm2837.dtsi             | 12 ++++++++++++
+ 2 files changed, 15 insertions(+)
+
+diff --git a/arch/arm/boot/dts/bcm2710-rpi-3-b-plus.dts b/arch/arm/boot/dts/bcm2710-rpi-3-b-plus.dts
+index 59dd76c3240d..cdb4f6973c33 100644
+--- a/arch/arm/boot/dts/bcm2710-rpi-3-b-plus.dts
++++ b/arch/arm/boot/dts/bcm2710-rpi-3-b-plus.dts
+@@ -1,4 +1,7 @@
+ /dts-v1/;
++/memreserve/ 0x00000000 0x00200000;
++/memreserve/ 0x08000000 0x02000000;
++
+ 
+ #include "bcm2710.dtsi"
+ #include "bcm283x-rpi-lan7515.dtsi"
+diff --git a/arch/arm/boot/dts/bcm2837.dtsi b/arch/arm/boot/dts/bcm2837.dtsi
+index d5d058a568c3..07bca10c38a4 100644
+--- a/arch/arm/boot/dts/bcm2837.dtsi
++++ b/arch/arm/boot/dts/bcm2837.dtsi
+@@ -27,6 +27,18 @@
+ 		always-on;
+ 	};
+ 
++	firmware {
++		optee {
++			compatible = "linaro,optee-tz";
++			method = "smc";
++		};
++	};
++
++	psci {
++		compatible = "arm,psci-0.2";
++		method = "smc";
++	};
++
+ 	cpus: cpus {
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+-- 
+2.19.1
+

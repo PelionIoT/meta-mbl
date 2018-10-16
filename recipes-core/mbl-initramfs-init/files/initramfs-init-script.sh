@@ -102,9 +102,13 @@ ROOTFS_PARTITION="$(findfs LABEL=$ROOTFS_LABEL)"
 VERITY_HASH_PARTITION="$(findfs LABEL=$VERITY_HASH_LABEL)"
 
 #Mount verity_hash partition
-
 mkdir -p /mnt/verity_hash 
 mount $VERITY_HASH_PARTITION /mnt/verity_hash
+
+#Mount /dev/mqueue partition
+mkdir -p /dev/mqueue
+mount -t mqueue none /dev/mqueue
+
 
 #Switch from initramfs to rootfs:
 

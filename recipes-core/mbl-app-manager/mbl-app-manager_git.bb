@@ -4,7 +4,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=4336ad26bb93846e47581adc44c4514d"
 SRC_URI = "\
     git://git@github.com/ARMmbed/mbl-core.git;nobranch=1;protocol=ssh; \
 "
-SRCREV = "46f912c04bd559c63d865b5961ce6b7281efb21f"
+SRCREV = "${MBL_CORE_SRCREV}"
 S = "${WORKDIR}/git/firmware-management/mbl-app-manager"
 
 RDEPENDS_${PN} = " \

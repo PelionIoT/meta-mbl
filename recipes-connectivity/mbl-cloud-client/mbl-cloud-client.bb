@@ -25,7 +25,7 @@ SRC_URI_MBL_CLOUD_CLIENT_PUBLIC = "git://git@github.com/ARMmbed/mbl-core.git;nob
 # all sources for the mbl-cloud-client public version
 SRC_URI = "${SRC_URI_COMMON} ${SRC_URI_MBL_CLOUD_CLIENT_PUBLIC}"
 
-SRCREV = "4d1525af0746c90ab9a6579738d805987036af6c"
+SRCREV = "${MBL_CORE_SRCREV}"
 
 DEPENDS = " glibc"
 

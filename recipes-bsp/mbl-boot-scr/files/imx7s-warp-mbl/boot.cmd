@@ -1,8 +1,3 @@
-# Specify a kernel image containing mbl-console-image-initramfs rather than using the default zImage
-setenv image kernel.itb
-setenv loadaddr 0x88000000
-run loadimage;
-
 # In order to load OP-TEE Boot from rootfs1 by default
 setenv mmcpart 3
 
@@ -20,8 +15,8 @@ run finduuid;
 run mmcargs;
 
 # Now boot
-echo Booting secure Linux from mmc ...;
-bootm ${loadaddr} - ${fdt_addr};
+echo Booting secure Linux from FIT ...;
+bootm ${bootscriptaddr}#conf@1 - ${fdt_addr};
 
 # Failsafe if something goes wrong
 hab_failsafe

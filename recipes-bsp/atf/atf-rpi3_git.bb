@@ -43,6 +43,19 @@ do_compile() {
         LDLIBS="-lcrypto -L${STAGING_DIR_NATIVE}${libdir}" \
         INCLUDE_PATHS="-I../../include/tools_share -I${STAGING_DIR_NATIVE}${includedir}"
 
+    # We build cert_create here prior because we need to change the OPENSSL_DIR for using
+    # the lib from openssl-native. And disable build of the cert_create later when building ATF.
+    oe_runmake -C ${S}/tools/cert_create \
+        PLAT=${PLATFORM} \
+        OPENSSL_DIR="${STAGING_DIR_NATIVE}/usr"
+
+    # CRTTOOLPATH set to fiptool is a workaround to stop rebuild cert_create tool.
+    # It is because the Makefile of cert_create tool "all" target always runs clean, but
+    # fiptool's Makefile doesn't do it.
+    # And since we change the CRTTOOLPATH, in order to find cert_create we have to also
+    # modify CRTTOOL variable.
+    # Both fiptool and cert_create is a .PHONY target so build it in other native recipe
+    # doesn't stop us to use these workarounds.
     oe_runmake -C ${S} BUILD_BASE=${B} \
     CROSS_COMPILE=aarch64-linux-gnu- \
         BUILD_PLAT=${B}/${PLATFORM}/ \
@@ -57,6 +70,11 @@ do_compile() {
         LOG_LEVEL=40 \
         CRASH_REPORTING=1 \
         SPD=opteed \
+        GENERATE_COT=1 \
+        TRUSTED_BOARD_BOOT=1 \
+        USE_TBBR_DEFS=1 \
+        CRTTOOLPATH=${S}/tools/fiptool \
+        CRTTOOL=${S}/tools/cert_create/cert_create \
         all fip
 }
 
@@ -64,6 +82,7 @@ inherit deploy
 
 do_deploy() {
     install -D -p -m 0644 ${B}/${PLATFORM}/armstub8.bin ${DEPLOY_DIR_IMAGE}/bcm2835-bootfiles/armstub8.bin
+    install -D -p -m 0644 ${B}/${PLATFORM}/rot_key.pem ${DEPLOY_DIR_IMAGE}/rot_key.pem
 }
 
 addtask deploy before do_build after do_install

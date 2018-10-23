@@ -29,6 +29,8 @@ PACKAGEGROUP_MBL_PKGS_append = " python3-shell"
 PACKAGEGROUP_MBL_PKGS_append = " mbl-cloud-client"
 PACKAGEGROUP_MBL_PKGS_append = " optee-os"
 PACKAGEGROUP_MBL_PKGS_append = " optee-client"
+PACKAGEGROUP_MBL_PKGS_append = " connman"
+PACKAGEGROUP_MBL_PKGS_append = " connman-client"
 
 ###############################################################################
 # Packages added when the MACHINE and DISTRO have specific features

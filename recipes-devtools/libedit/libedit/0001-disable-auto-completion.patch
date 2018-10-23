@@ -1,0 +1,17 @@
+diff -urN a/src/readline.c b/src/readline.c
+--- a/src/readline.c	2018-10-11 16:18:46.993640128 +0300
++++ b/src/readline.c	2018-10-18 11:41:16.000000000 +0300
+@@ -338,11 +338,12 @@
+ 	 * Word completion - this has to go AFTER rebinding keys
+ 	 * to emacs-style.
+ 	 */
++#ifndef DISABLE_AUTO_COMPLETE
+ 	el_set(e, EL_ADDFN, "rl_complete",
+ 	    "ReadLine compatible completion function",
+ 	    _el_rl_complete);
+ 	el_set(e, EL_BIND, "^I", "rl_complete", NULL);
+-
++#endif
+ 	/*
+ 	 * Send TSTP when ^Z is pressed.
+ 	 */

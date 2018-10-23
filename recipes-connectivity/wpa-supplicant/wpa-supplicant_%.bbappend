@@ -1,3 +1,6 @@
+# make sure the local appending config file will be chosen by prepending and extra local path
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+
 FILES_${PN} += " \
     ${MBL_NON_FACTORY_CONFIG_DIR} \
     ${MBL_NON_FACTORY_CONFIG_DIR}/wpa_supplicant.conf \

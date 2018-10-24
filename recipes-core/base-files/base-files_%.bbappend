@@ -2,6 +2,9 @@ FILESEXTRAPATHS_append := "${THISDIR}/files:"
 
 SRC_URI_append = " file://fstab "
 
+# override hostname in build time. hostname will be set by hostname.sh init script
+hostname_pn-base-files = ""
+
 # Create a list of mount points that need to be created
 python() {
     for part in d.getVar("MBL_PARTITIONS").split():

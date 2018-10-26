@@ -5,8 +5,9 @@ SRC_URI = "\
     git://git@github.com/ARMmbed/mbl-core.git;nobranch=1;protocol=ssh; \
     file://init \
 "
+SRCNAME = "mbl-app-lifecycle-manager"
 SRCREV = "${MBL_CORE_SRCREV}"
-S = "${WORKDIR}/git/application-framework/mbl-app-lifecycle-manager"
+S = "${WORKDIR}/git/application-framework/${SRCNAME}"
 
 RDEPENDS_${PN} = " \
     python3-core \
@@ -16,32 +17,27 @@ RDEPENDS_${PN} = " \
 "
 # FIXME IOTMBL-778: This package only rdepends on the OCI runtime, not docker.
 
+inherit setuptools3
 inherit python3-dir
 
 inherit update-rc.d
-INITSCRIPT_NAME = "mbl-app-lifecycle-manager"
+INITSCRIPT_NAME = "${SRCNAME}"
 INITSCRIPT_PARAMS = "defaults 91 9"
 
 
-do_install() {
+do_install_append() {
     install -d ${D}${bindir}
-    install -m 0755 ${S}/mbl-app-lifecycle-manager ${D}${bindir}
-
-    install -d ${D}${PYTHON_SITEPACKAGES_DIR}/mbl
-    install -m 0644 ${S}/mbl/__init__.py ${D}${PYTHON_SITEPACKAGES_DIR}/mbl
-    install -m 0644 ${S}/mbl/AppLifecycleManager.py ${D}${PYTHON_SITEPACKAGES_DIR}/mbl
+    install -m 0755 ${S}/${SRCNAME} ${D}${bindir}
 
     install -d "${D}${sysconfdir}/init.d"
-    install -m 0755 "${WORKDIR}/init" "${D}${sysconfdir}/init.d/mbl-app-lifecycle-manager"
+    install -m 0755 "${WORKDIR}/init" "${D}${sysconfdir}/init.d/${INITSCRIPT_NAME}"
 }
 
 # Replace placeholder strings in init script with values of BitBake variables
-MBL_VAR_PLACEHOLDER_FILES = "${D}${sysconfdir}/init.d/mbl-app-lifecycle-manager"
+MBL_VAR_PLACEHOLDER_FILES = "${D}${sysconfdir}/init.d/${INITSCRIPT_NAME}"
 inherit mbl-var-placeholders
 
-FILES_${PN} = " \
-    ${bindir}/mbl-app-lifecycle-manager \
-    ${PYTHON_SITEPACKAGES_DIR}/mbl/__init__.py \
-    ${PYTHON_SITEPACKAGES_DIR}/mbl/AppLifecycleManager.py \
-    ${sysconfdir}/init.d/mbl-app-lifecycle-manager \
+FILES_${PN} += " \
+    ${bindir}/${SRCNAME} \
+    ${sysconfdir}/init.d/${INITSCRIPT_NAME} \
 "

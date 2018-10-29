@@ -31,3 +31,22 @@ python() {
 }
 
 EXTRA_OECONF += "--with-dbmliborder=${PYTHON3_DBM_LIBS}"
+
+# Add the missing venv module to pyvenv to allow creation of virtual environments.
+#
+# The inclusion of the venv module is done via the python3-pyvenv package
+# because there is currently no self-contained venv package. This is also done
+# because the venv directory is not copied to ${libdir} (even if added to 
+# python3-core via FILES_${PN}-core) if python3-pyvenv is not included in the packagegroup.
+# As ensurepip is not available, create virtual envs without pip so the creation
+# of virtual environments can complete sucessfully.
+#
+# Install python3-pip to make it accessible to virtual environments.
+#
+# Create virtual environments as follows:
+# e.g $ python3 -m venv my_venv --without-pip --system-site-packages
+# After activating the virtual environment ($ source my_venv/bin/activate);
+# pip is accessed using:
+# e.g (my_venv)$ python3 -m pip --version OR
+#     (my_venv)$ pip3 --version
+FILES_${PN}-pyvenv += "${libdir}/python${PYTHON_MAJMIN}/venv"

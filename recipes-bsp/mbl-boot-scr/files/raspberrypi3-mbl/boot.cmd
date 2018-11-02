@@ -1,0 +1,17 @@
+# The area between 0x10000000 and 0x11000000 has to be kept for secure
+# world so that the kernel doesn't use it.
+setenv bootargs "${bootargs} memmap=16M$256M"
+
+# Set serial console parameters
+setenv bootargs "${bootargs} 8250.nr_uarts=1 console=ttyS0,115200 rootwait rw"
+
+# Let USB driver don't use the FIQs. Using FIQs in USB driver causes the
+# TF-A to be crashed.
+setenv bootargs "${bootargs} dwc_otg.fiq_enable=0 dwc_otg.fiq_fsm_enable=0 dwc_otg.nak_holdoff=0"
+
+# Load Linux Kernel image from the boot partition (Linux Kernel image contains the initramfs image)
+echo "Load fit blob with Linux Kernel image and initramfs image"
+fatload mmc 0 0x02100000 boot.scr
+
+# Boot Linux
+bootm 0x02100000#config@1

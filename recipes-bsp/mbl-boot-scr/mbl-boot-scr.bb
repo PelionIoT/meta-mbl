@@ -9,7 +9,7 @@ FILESEXTRAPATHS_append := "${THISDIR}/files:"
 
 SRC_URI = "file://boot.cmd"
 
-SRC_URI_append_imx7s-warp := " file://boot.its"
+SRC_URI_append := " file://boot.its"
 
 do_compile[depends] += "virtual/kernel:do_deploy"
 
@@ -23,12 +23,18 @@ do_compile_append_imx7s-warp() {
     mkimage -f "${WORKDIR}/boot.its" boot.scr
 }
 
+do_compile_append_raspberrypi3-mbl() {
+    ln -sf ${DEPLOY_DIR_IMAGE}/zImage ${WORKDIR}/zImage
+    ln -sf ${DEPLOY_DIR_IMAGE}/bcm2710-rpi-3-b-plus.dtb ${WORKDIR}/bcm2710-rpi-3-b-plus.dtb
+    ln -sf ${DEPLOY_DIR_IMAGE}/mbl-console-image-initramfs-raspberrypi3-mbl.cpio.gz ${WORKDIR}/mbl-console-image-initramfs-raspberrypi3-mbl.cpio.gz
+    uboot-mkimage -f ${WORKDIR}/boot.its -k ${B} boot.scr
+}
+
 inherit deploy
 
 do_deploy() {
     install -d ${DEPLOYDIR}
     install -m 0644 boot.scr ${DEPLOYDIR}
 }
-
 
 addtask do_deploy after do_compile before do_build

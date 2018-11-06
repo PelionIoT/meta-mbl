@@ -1,6 +1,7 @@
 DESCRIPTION = "ARM Trusted Firmware Warp7"
 
-DEPENDS += " coreutils-native optee-os u-boot linux-fslc u-boot-mkimage-native atf-fiptool-native"
+DEPENDS += " coreutils-native optee-os linux-fslc u-boot-mkimage-native atf-fiptool-native"
+DEPENDS += " virtual/bootloader mbl-boot-scr"
 
 SRC_URI = "git://github.com/ARM-software/arm-trusted-firmware.git;protocol=https;nobranch=1;name=atf"
 SRCREV = "36044baf08a9f816a8a062a8a50ede12a816a6dd"
@@ -32,6 +33,7 @@ PLATFORM_imx7s-warp = "warp7"
 # This problem is avoided by clearing LDFLAGS.
 LDFLAGS[unexport] = "1"
 
+do_compile[depends] += " virtual/kernel:do_install virtual/bootloader:do_deploy"
 do_compile() {
    oe_runmake -C ${S} BUILD_BASE=${B} \
       BUILD_PLAT=${B}/${PLATFORM} \

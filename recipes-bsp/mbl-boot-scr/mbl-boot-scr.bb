@@ -14,13 +14,17 @@ SRC_URI_append := " file://boot.its"
 do_compile[depends] += "virtual/kernel:do_deploy"
 
 do_compile() {
-    mkimage -A arm -T script -C none -n "Boot script" -d "${WORKDIR}/boot.cmd" boot.scr
+    uboot-mkimage -A arm -T script -C none -n "Boot script" -d "${WORKDIR}/boot.cmd" boot.scr
 }
 
 do_compile_append_imx7s-warp() {
+    openssl genrsa -out ${DEPLOY_DIR_IMAGE}/mblkey.key 2048
+    openssl req -batch -new -x509 -key ${DEPLOY_DIR_IMAGE}/mblkey.key -out ${DEPLOY_DIR_IMAGE}/mblkey.crt
+    ln -sf ${DEPLOY_DIR_IMAGE}/mblkey.key mblkey.key
+    ln -sf ${DEPLOY_DIR_IMAGE}/mblkey.crt mblkey.crt
     ln -sf ${DEPLOY_DIR_IMAGE}/zImage ${WORKDIR}/zImage
     ln -sf ${DEPLOY_DIR_IMAGE}/mbl-console-image-initramfs-imx7s-warp-mbl.cpio.gz ${WORKDIR}/mbl-console-image-initramfs-imx7s-warp-mbl.cpio.gz
-    mkimage -f "${WORKDIR}/boot.its" boot.scr
+    uboot-mkimage -f "${WORKDIR}/boot.its" -k ${B} boot.scr
 }
 
 do_compile_append_raspberrypi3-mbl() {

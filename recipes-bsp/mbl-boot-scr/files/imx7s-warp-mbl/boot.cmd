@@ -3,7 +3,7 @@ run mmcargs
 
 # Now boot
 echo Booting secure Linux from FIT ...;
-bootm ${bootscriptaddr}#conf@1 ${bootscriptaddr}:ramdisk@1 ${fdt_addr}
+bootm ${bootscriptaddr}#conf@0 ${bootscriptaddr}:ramdisk@1 ${fdt_addr}
 
 # Failsafe if something goes wrong
 hab_failsafe

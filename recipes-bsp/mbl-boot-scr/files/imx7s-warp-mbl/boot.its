@@ -1,12 +1,12 @@
 /*
- * Minimal dts for a boot.scr image payload.
+ * Warp7 FIT image with kernel, initramfs and boot script.
  *
  */
 
 /dts-v1/;
 
 / {
-	description = "FIT image boot.scr";
+	description = "FIT image for Warp7";
 	#address-cells = <1>;
 
 	images {
@@ -14,16 +14,11 @@
 			description = "boot.scr";
 			data = /incbin/("boot.cmd");
 			type = "script";
-			arch = "standalone";
+			arch = "arm";
 			compression = "none";
-			load = <0x83200000>;
-			entry = <0x83200000>;
+			load = <0x87000000>;
 			hash@1 {
 				algo = "sha1";
-			};
-			signature@1 {
-				algo = "sha1,rsa2048";
-				key-name-hint = "dev";
 			};
 		};
 
@@ -36,9 +31,8 @@
 			compression = "none";
 			load = <0x80800000>;
 			entry = <0x80800000>;
-			signature@1 {
-				algo = "sha1,rsa2048";
-				key-name-hint = "dev";
+			hash@1 {
+				algo = "sha1";
 			};
 		};
 
@@ -51,9 +45,8 @@
 			compression = "gzip";
 			load = <0x82000000>;
 			entry = <0x82000000>;
-			signature@1 {
-				algo = "sha1,rsa2048";
-				key-name-hint = "dev";
+			hash@1 {
+				algo = "sha1";
 			};
 		};
 	};
@@ -62,27 +55,16 @@
 		default = "conf@0";
 
 		conf@0 {
-			description = "imx7s-warp-boot-scr";
-			loadables = "bootscr";
-			signature@1 {
-				algo = "sha1,rsa2048";
-				key-name-hint = "dev";
-				sign-images = "bootscr";
-			};
-		};
-
-		conf@1 {
-			description = "imx7s-kernel-initramfs";
+			description = "imx7s-bootscr-kernel-initramfs";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
-			loadables = "kernel", "ramdisk";
+			loadables = "bootscr", "kernel", "ramdisk";
 			signature@1 {
 				algo = "sha1,rsa2048";
-				key-name-hint = "dev";
+				key-name-hint = "mblkey";
 				sign-images = "loadables";
 			};
 		};
-
 	};
 };
 

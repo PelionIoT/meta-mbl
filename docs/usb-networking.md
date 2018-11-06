@@ -110,8 +110,15 @@ mbl-console-image-test`) then it will be running an SSH server and you can
 operate on the IoT device without using the serial console. The IoT device will
 respond to DNS-SD service discovery requests, so a PC with support for DNS-SD
 can discover the IoT device's SSH service without previous knowledge of the
-device's IP address or hostname. For example on a Linux PC with
-[Avahi][avahi-homepage] installed, the IoT device's SSH service can be
+device's IP address or hostname.
+
+#### Avahi service discovery on a local network
+[Avahi][avahi-homepage] is a free zero-configuration networking (zeroconf) implementation, including a system for multicast DNS/DNS-SD service discovery on a local network. This enables you to plug your computer and the IoT device into a network and instantly be able to view the device's available services.
+Avahi is installed on Ubuntu 16.04 by default, and it is also built into mbl image build.
+
+##### Using Avahi to discover device's services
+
+On a Linux PC with [Avahi][avahi-homepage] installed, the IoT device's SSH service can be
 discovered using the [`avahi-browse`][avahi-browse-manpage] command:
 ```
 avahi-browse --terminate --resolve --verbose _ssh._tcp | grep --after-context 4 '^= *<interface-on-dev-pc>'

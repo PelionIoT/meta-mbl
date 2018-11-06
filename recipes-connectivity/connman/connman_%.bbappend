@@ -29,10 +29,5 @@ EXTRA_OEMAKE += "\
 
 do_install_append() {
     install -d ${D}${MBL_NON_FACTORY_CONFIG_DIR}/connman    
-    install -d ${D}${sysconfdir}/connman
-    install -d ${D}${localstatedir}/lib
-
     install -m 0644 ${WORKDIR}/main.conf ${D}${MBL_NON_FACTORY_CONFIG_DIR}/connman/main.conf
-    ln -s ${MBL_NON_FACTORY_CONFIG_DIR}/connman/main.conf ${D}${sysconfdir}/connman/main.conf
-    ln -s ${MBL_NON_FACTORY_CONFIG_DIR}/connman ${D}${localstatedir}/lib/connman    
 }

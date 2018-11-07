@@ -2,10 +2,10 @@ SUMMARY = "mbl application manager"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=4336ad26bb93846e47581adc44c4514d"
 SRC_URI = "\
-    git://git@github.com/ARMmbed/mbl-core.git;nobranch=1;protocol=ssh; \
+    ${SRC_URI_MBL_CORE_REPO} \
 "
 SRCNAME = "mbl-app-manager"
-SRCREV = "${MBL_CORE_SRCREV}"
+SRCREV = "${SRCREV_MBL_CORE_REPO}"
 S = "${WORKDIR}/git/firmware-management/${SRCNAME}"
 
 RDEPENDS_${PN} = " \

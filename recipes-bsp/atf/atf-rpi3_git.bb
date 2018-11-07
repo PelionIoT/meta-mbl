@@ -1,5 +1,7 @@
 DESCRIPTION = "ARM Trusted Firmware for RaspberryPi3"
 
+PROVIDES = "atf-rpi3"
+
 # Licensing: 
 # - ARM Trusted Firmware is licensed under BSD-3-Clause.
 # - mbedtls is licensed under Apache-2.0.
@@ -32,6 +34,7 @@ PLATFORM = "rpi3"
 # This problem is avoided by clearing LDFLAGS.
 LDFLAGS[unexport] = "1"
 
+do_compile[depends] += "virtual/bootloader:do_deploy"
 do_compile() {
     export PATH=${STAGING_DIR_NATIVE}${bindir}/aarch64-linux-gnu/bin:$PATH
     # Due to LDFLAGS is unexported to solve the build fail, we need to
@@ -81,6 +84,7 @@ do_compile() {
 inherit deploy
 
 do_deploy() {
+    install -d ${DEPLOY_DIR_IMAGE}/bcm2835-bootfiles
     install -D -p -m 0644 ${B}/${PLATFORM}/armstub8.bin ${DEPLOY_DIR_IMAGE}/bcm2835-bootfiles/armstub8.bin
     install -D -p -m 0644 ${B}/${PLATFORM}/rot_key.pem ${DEPLOY_DIR_IMAGE}/rot_key.pem
 }

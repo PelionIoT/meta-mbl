@@ -25,7 +25,14 @@ PACKAGEGROUP_MBL_PKGS_append = " mbl-app-lifecycle-manager"
 PACKAGEGROUP_MBL_PKGS_append = " mbl-app-update-manager"
 PACKAGEGROUP_MBL_PKGS_append = " mbl-firmware-update-manager"
 PACKAGEGROUP_MBL_PKGS_append = " python3-core"
+# pyhton3-debugger and python3-doctest are included because Pytest is
+# dependent on them.
+PACKAGEGROUP_MBL_PKGS_append = " python3-debugger"
+PACKAGEGROUP_MBL_PKGS_append = " python3-doctest"
 PACKAGEGROUP_MBL_PKGS_append = " python3-logging"
+# See meta-mbl/recipes-devtools/python/python3_%.bbappend for information
+# on why python3-ntpath is included in the package group.
+PACKAGEGROUP_MBL_PKGS_append = " python3-ntpath"
 PACKAGEGROUP_MBL_PKGS_append = " python3-pip"
 PACKAGEGROUP_MBL_PKGS_append = " python3-pyvenv"
 PACKAGEGROUP_MBL_PKGS_append = " python3-runpy"

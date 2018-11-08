@@ -35,13 +35,11 @@ EXTRA_OECONF += "--with-dbmliborder=${PYTHON3_DBM_LIBS}"
 # Add the missing venv module to pyvenv to allow creation of virtual environments.
 #
 # The inclusion of the venv module is done via the python3-pyvenv package
-# because there is currently no self-contained venv package. This is also done
-# because the venv directory is not copied to ${libdir} (even if added to 
-# python3-core via FILES_${PN}-core) if python3-pyvenv is not included in the packagegroup.
-# As ensurepip is not available, create virtual envs without pip so the creation
-# of virtual environments can complete sucessfully.
+# because there is currently no self-contained venv package.
+# As ensurepip is not available, virtual envs have to be created without pip
+# so the creation of virtual environments can complete sucessfully.
 #
-# Install python3-pip to make it accessible to virtual environments.
+# Install python3-pip on the system to make it accessible to virtual environments.
 #
 # Create virtual environments as follows:
 # e.g $ python3 -m venv my_venv --without-pip --system-site-packages
@@ -50,3 +48,19 @@ EXTRA_OECONF += "--with-dbmliborder=${PYTHON3_DBM_LIBS}"
 # e.g (my_venv)$ python3 -m pip --version OR
 #     (my_venv)$ pip3 --version
 FILES_${PN}-pyvenv += "${libdir}/python${PYTHON_MAJMIN}/venv"
+
+# Create the python3-ntpath package as the ntpath module is a dependency of
+# Pytest. The module is not normally included in python3-core and the
+# file cannot simply be appended to it because the python3-core package is
+# generated dynamically at build time by a script thus overwritting whatever
+# modification done in this bbappend file.
+# There is not much point upstreaming a fix because python3-pytest is a package
+# provided by OE and it has all required dependencies.
+# The below is only necessary because Pytest is installed on a system running
+# MBL OS only for the purpose of running system tests. Thus Pytest expect all
+# dependencies to be present on the OS image already.
+# It appears that the dependency on ntpath for Pytest has been resolved in
+# Python 3.6 (and later versions). This python3-npath package can be removed
+# when MBL is upgraded from Python 3.5.
+PACKAGES =+ "${PN}-ntpath"
+FILES_${PN}-ntpath += "${libdir}/python${PYTHON_MAJMIN}/ntpath.py"

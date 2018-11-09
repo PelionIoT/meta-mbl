@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: MIT
 
 SUMMARY = "mbl application update manager"
-LICENSE = "Apache-2.0"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=4336ad26bb93846e47581adc44c4514d"
+LICENSE = "BSD-3-Clause"
+LIC_FILES_CHKSUM = "file://${WORKDIR}/git/LICENSE.BSD-3-Clause;md5=2bb1af72135ea3e69b6cc46f6e8b80e1"
 
 SRC_URI = " \
     ${SRC_URI_MBL_CORE_REPO} \

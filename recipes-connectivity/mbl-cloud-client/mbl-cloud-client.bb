@@ -7,7 +7,7 @@ DESCRIPTION="Provides a mechanism to access ARM's mbed Cloud services from mbed 
 HOMEPAGE="https://github.com/ARMmbed/mbl-core/tree/master/cloud-services/mbl-cloud-client"
 
 LICENSE="Apache-2.0"
-LIC_FILES_CHKSUM = "file://${S}/cloud-services/mbl-cloud-client/mbed-cloud-client/LICENSE;md5=4336ad26bb93846e47581adc44c4514d"
+LIC_FILES_CHKSUM = "file://${S}/LICENSE.Apache-2.0;md5=e3fc50a88d0a364313df4b21ef20c29e"
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 S = "${WORKDIR}/git"

@@ -25,14 +25,10 @@ INITSCRIPT_NAME = "${SRCNAME}"
 INITSCRIPT_PARAMS = "defaults 89 11"
 
 do_install_append() {
-    install -d "${D}${bindir}"
-    install -m 0755 "${S}/${SRCNAME}-daemon" "${D}${bindir}"
-
     install -d "${D}${sysconfdir}/init.d"
     install -m 0755 "${WORKDIR}/init" "${D}${sysconfdir}/init.d/${INITSCRIPT_NAME}"
 }
 
 FILES_${PN} += " \
-    ${bindir}/${SRCNAME}-daemon \
     ${sysconfdir}/init.d/${INITSCRIPT_NAME} \
 "

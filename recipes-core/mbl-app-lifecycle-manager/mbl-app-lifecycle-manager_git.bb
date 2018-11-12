@@ -26,9 +26,6 @@ INITSCRIPT_PARAMS = "defaults 91 9"
 
 
 do_install_append() {
-    install -d ${D}${bindir}
-    install -m 0755 ${S}/${SRCNAME} ${D}${bindir}
-
     install -d "${D}${sysconfdir}/init.d"
     install -m 0755 "${WORKDIR}/init" "${D}${sysconfdir}/init.d/${INITSCRIPT_NAME}"
 }
@@ -38,6 +35,5 @@ MBL_VAR_PLACEHOLDER_FILES = "${D}${sysconfdir}/init.d/${INITSCRIPT_NAME}"
 inherit mbl-var-placeholders
 
 FILES_${PN} += " \
-    ${bindir}/${SRCNAME} \
     ${sysconfdir}/init.d/${INITSCRIPT_NAME} \
 "

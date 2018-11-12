@@ -15,12 +15,3 @@ RDEPENDS_${PN} = " \
 
 inherit setuptools3
 inherit python3-dir
-
-do_install_append() {
-    install -d ${D}${bindir}
-    install -m 0755 ${S}/${SRCNAME} ${D}${bindir}
-}
-
-FILES_${PN} += " \
-    ${bindir}/${SRCNAME} \
-"

@@ -16,6 +16,7 @@ PACKAGEGROUP_MBL_TEST_PKGS_append = " e2fsprogs"
 PACKAGEGROUP_MBL_TEST_PKGS_append = " memtester"
 PACKAGEGROUP_MBL_TEST_PKGS_append = " strace"
 PACKAGEGROUP_MBL_TEST_PKGS_append = " optee-test"
+PACKAGEGROUP_MBL_TEST_PKGS_append = " openssh-sftp-server"
 
 
 ###############################################################################

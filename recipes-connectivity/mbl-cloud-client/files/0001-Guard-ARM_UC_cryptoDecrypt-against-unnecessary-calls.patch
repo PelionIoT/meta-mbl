@@ -1,0 +1,20 @@
+diff --git a/update-client-hub/modules/firmware-manager/source/arm_uc_firmware_manager.c b/update-client-hub/modules/firmware-manager/source/arm_uc_firmware_manager.c
+index e6ab8e4..604c180 100644
+--- a/update-client-hub/modules/firmware-manager/source/arm_uc_firmware_manager.c
++++ b/update-client-hub/modules/firmware-manager/source/arm_uc_firmware_manager.c
+@@ -476,9 +476,11 @@ static arm_uc_error_t ARM_UCFM_Finalize(arm_uc_buffer_t *front, arm_uc_buffer_t
+                (back != NULL && ((back->size_max % ARM_UC_SHA256_SIZE) != 0))) {
+         result = (arm_uc_error_t) { FIRM_ERR_INVALID_PARAMETER };
+     } else {
+-        /* flush decryption buffer, discard data */
+-        ARM_UC_cryptoDecryptFinish(&cipherHandle, front);
+-        memset(&cipherHandle, 0, sizeof(arm_uc_cipherHandle_t));
++        if (package_configuration->mode != UCFM_MODE_NONE_SHA_256) {
++            /* flush decryption buffer, discard data */
++            ARM_UC_cryptoDecryptFinish(&cipherHandle, front);
++            memset(&cipherHandle, 0, sizeof(arm_uc_cipherHandle_t));
++        }
+ 
+         /* save buffers, checking if the buffers actually exist */
+         front_buffer = front;
+

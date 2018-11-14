@@ -32,23 +32,6 @@ python() {
 
 EXTRA_OECONF += "--with-dbmliborder=${PYTHON3_DBM_LIBS}"
 
-# Add the missing venv module to pyvenv to allow creation of virtual environments.
-#
-# The inclusion of the venv module is done via the python3-pyvenv package
-# because there is currently no self-contained venv package.
-# As ensurepip is not available, virtual envs have to be created without pip
-# so the creation of virtual environments can complete sucessfully.
-#
-# Install python3-pip on the system to make it accessible to virtual environments.
-#
-# Create virtual environments as follows:
-# e.g $ python3 -m venv my_venv --without-pip --system-site-packages
-# After activating the virtual environment ($ source my_venv/bin/activate);
-# pip is accessed using:
-# e.g (my_venv)$ python3 -m pip --version OR
-#     (my_venv)$ pip3 --version
-FILES_${PN}-pyvenv += "${libdir}/python${PYTHON_MAJMIN}/venv"
-
 # Create the python3-ntpath package as the ntpath module is a dependency of
 # Pytest. The module is not normally included in python3-core and the
 # file cannot simply be appended to it because the python3-core package is

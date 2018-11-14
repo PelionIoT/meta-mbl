@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 # The area between 0x10000000 and 0x11000000 has to be kept for secure
 # world so that the kernel doesn't use it.
 setenv bootargs "${bootargs} memmap=16M$256M"

@@ -1,7 +1,8 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
 #
+# SPDX-License-Identifier: MIT
+
 # Recipe for adding Cypress firmware to the upstream linux-firmware recipe
-# SPDX-License-Identifier: Apache-2.0
-#
 
 # NOTE: this bbappend is BBMASKed (not parsed) on raspberrypi and the
 # meta-raspberrypi linux-firmware is BBMASKed on imx7s-warp-mbl

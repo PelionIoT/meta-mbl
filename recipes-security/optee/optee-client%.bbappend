@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 FILESEXTRAPATHS_prepend := "${THISDIR}/optee-client:"
 SRC_URI += "file://init.d.optee"
 SRC_URI += "file://0001-Fix-for-teec_trace.c-snprintf-Werror-format-truncati.patch"

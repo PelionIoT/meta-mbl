@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 SUMMARY="Public mbed Cloud client for mbed Linux"
 DESCRIPTION="Provides a mechanism to access ARM's mbed Cloud services from mbed Linux"
 HOMEPAGE="https://github.com/ARMmbed/mbl-core/tree/master/cloud-services/mbl-cloud-client"

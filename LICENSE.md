@@ -1,12 +1,27 @@
-Different components of meta-mbl metadata are under different licenses (a mix
-of Apache-2.0 and MIT).
+This repository contains open-source software (OSS) and follows the
+[REUSE practices v2.0][reuse-practices] for stating license information.
+ 
+All source files in this repository will contain copyright and
+[SPDX ID][spdx-id] information, but no license text.
+ 
+The license texts for the OSS contained in this repository are kept
+at the top level and placed in individually named `LICENSE.SPDX-ID`
+files. No copyrights are contained in these files, instead refer to
+the individual source files.
 
-All metadata is Apache-2.0 licensed unless otherwise stated. Please see
-The [Apache-2.0 license file][apache-2-0-license] for the Apache 2.0 license.
+The default license for all bitbake recipe files in this repository 
+is the [MIT License][mit-license].
 
-Metadata files under the MIT license contain in-line copies of their licenses.
+The default license for new source files in this repository is the 
+[BSD 3-Clause "New" or "Revised" License][bsd-3-clause-license].
 
-Source code included in-tree for individual recipes is under the LICENSE stated
-in the associated recipe (.bb file) unless otherwise stated.
+Please refer to the [SPDX License List][spdx-licenses] for more
+information about each SPDX ID. 
+ 
+[reuse-practices]: https://reuse.software/practices/2.0
+[spdx-licenses]: https://spdx.org/licenses
+[spdx-id]: https://spdx.org/ids
+[bsd-3-clause-license]: LICENSE.BSD-3-Clause
+[mit-license]: LICENSE.MIT
 
-[apache-2-0-license]: LICENSE.Apache-2.0
+

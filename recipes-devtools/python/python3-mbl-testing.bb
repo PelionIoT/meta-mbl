@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 SUMMARY = "mbed linux OS - python3,pip3 and virtualenv (install into mbed Linux OS application installation folder)"
 DESCRIPTION = "This package installs and configures target with minimal python 3, pip3 and virtual enviorment. This package must ibe installedinto the mbed Linux OS application installation folder (MBL_APP_DIR). Install this package when D is set e.g 'D=1 opkg install ...'"
 

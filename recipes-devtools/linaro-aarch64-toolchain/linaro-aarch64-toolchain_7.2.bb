@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 DESCRIPTION = "Linaro AArch64 toolchain"
 LICENSE = "BSD-3-Clause & GPL-2.0 & GPL-3.0 & GPL-3.0-with-GCC-exception & LGPL-2.1 & LGPL-3.0 & MIT"
 

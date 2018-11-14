@@ -1,4 +1,9 @@
-# SPDX-License-Identifier: GPL-2.0+
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
+# Output captured from u-boot on WaRP7
+
 # 1 "board/warp7/imximage.cfg"
 # 1 "<built-in>"
 # 1 "<command-line>"

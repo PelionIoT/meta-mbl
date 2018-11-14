@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 SUMMARY = "U-boot boot scripts for mbed Linux"
 HOMEPAGE = "https://github.com/ARMmbed/meta-mbl"
 LICENSE = "Apache-2.0"

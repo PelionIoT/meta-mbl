@@ -1,3 +1,6 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
 
 # By default avahi will install config files to advertise ssh and ssh-sftp
 # services, even if there is no SSH service to advertise. Remove these files

@@ -1,6 +1,9 @@
 /*
- * Warp7 FIT image with kernel, initramfs and boot script.
+ * Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
  *
+ * SPDX-License-Identifier: MIT
+ *
+ * Warp7 FIT image with kernel, initramfs and boot script.
  */
 
 /dts-v1/;

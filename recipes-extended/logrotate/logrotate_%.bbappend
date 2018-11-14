@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 FILESEXTRAPATHS_prepend := "${THISDIR}/files/:"
 SRC_URI_append = " file://logrotate.conf "
 

@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 # The rootfs selection is done in the initramfs other kernel params are set in mmcargs
 run mmcargs
 

@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 SUMMARY = "mbed linux additional packages"
 DESCRIPTION = "mbed linux additional packages to those of the minimal console default setup."
 inherit packagegroup

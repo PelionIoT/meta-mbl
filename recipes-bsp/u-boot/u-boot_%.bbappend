@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 # Don't let meta-raspberrypi's boot script overwrite meta-mbl's
 RDEPENDS_${PN}_remove = "rpi-u-boot-scr"
 DEPENDS_remove = "rpi-u-boot-scr"

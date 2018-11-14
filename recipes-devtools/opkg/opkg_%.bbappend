@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 # make sure the local appending config file will be chosen by prepending and extra local path
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 

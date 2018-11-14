@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 # python3 doesn't really depend on gdbm - it can use alternative database
 # managers like Berkely DB
 DEPENDS_remove = "gdbm"

@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 SUMMARY = "Mbed Linux (mbl) package group to be used in the test environment"
 DESCRIPTION = "\
     This package adds libraries and packages required by the test environment \

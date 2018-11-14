@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 # Add logrotate config file
 MBL_LOGROTATE_CONFIG_LOG_NAMES = "syslog"
 MBL_LOGROTATE_CONFIG_LOG_PATH[syslog] = "/var/log/messages"

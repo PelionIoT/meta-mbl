@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 do_deploy_append() {
     echo "enable_uart=1" >> ${DEPLOYDIR}/bcm2835-bootfiles/config.txt
 

@@ -1,9 +1,11 @@
 /*
+ * Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
  * Minimal dts for a FIT image payload.
  * We only need to embed public key into device tree, and do not care
  * the output FIT image. So you can add any file into FIT image.
- *
- * SPDX-License-Identifier: GPL-2.0+  X11
  */
 
 /dts-v1/;

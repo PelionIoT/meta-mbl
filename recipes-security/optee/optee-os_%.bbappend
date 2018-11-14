@@ -1,3 +1,6 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
 
 DEPENDS += " u-boot-mkimage-native "
 DEPENDS_append_raspberrypi3-mbl = " linaro-aarch64-toolchain-native "

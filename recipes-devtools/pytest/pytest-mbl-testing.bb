@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 SUMMARY = "mbed linux pytest"
 DESCRIPTION = "This package installs and configures target with pytest."
 

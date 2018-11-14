@@ -1,24 +1,10 @@
+# Based on: recipes-kernel/linux/linux-warp7_4.1.bb
+# In open-source project: https://github.com/Freescale/meta-freescale-3rdparty
+# 
+# Original file: Copyright (C) 2016 NXP Semiconductors
+# Modifications: Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
 # SPDX-License-Identifier: MIT
-#
-# Copyright (C) 2016 NXP Semiconductors
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
 
 SRCREV = "7b95bef8f62d015b172c29a287f825de941db9f7"
 

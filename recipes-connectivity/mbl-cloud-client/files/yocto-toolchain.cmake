@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 SET(CMAKE_SYSTEM_NAME Generic)
 
 macro(SET_COMPILER_DBG_RLZ_FLAG flag value)

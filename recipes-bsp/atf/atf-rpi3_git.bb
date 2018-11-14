@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 DESCRIPTION = "ARM Trusted Firmware for RaspberryPi3"
 
 PROVIDES = "atf-rpi3"

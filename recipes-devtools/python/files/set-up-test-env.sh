@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 # The next environment variables are overridden locally while running pip3/python3/virtualenv.
 # This is done in order to minimize the conflicts (shared object loading and binary execute conflicts) and mistakes done while working on targets 
 #  with an existing Python installation on root.

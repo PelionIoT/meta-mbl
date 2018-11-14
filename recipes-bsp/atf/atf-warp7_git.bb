@@ -1,3 +1,7 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
 DESCRIPTION = "ARM Trusted Firmware Warp7"
 
 DEPENDS += " coreutils-native optee-os linux-fslc u-boot-mkimage-native atf-fiptool-native"

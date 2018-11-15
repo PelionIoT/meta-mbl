@@ -74,11 +74,11 @@
 			kernel = "kernel@1";
 			fdt = "fdt@1";
 			ramdisk = "ramdisk@1";
-			loadables = "bootscr", "fdt", "kernel", "ramdisk";
+			loadables = "bootscr";
 			signature@1 {
 				algo = "sha1,rsa2048";
 				key-name-hint = "mblkey";
-				sign-images = "loadables";
+				sign-images = "loadables", "fdt", "kernel", "ramdisk";
 			};
 		};
 	};

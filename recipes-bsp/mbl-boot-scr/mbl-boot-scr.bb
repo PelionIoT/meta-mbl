@@ -32,6 +32,10 @@ do_compile_append_imx7s-warp() {
 }
 
 do_compile_append_raspberrypi3-mbl() {
+    openssl genrsa -out ${DEPLOY_DIR_IMAGE}/mblkey.key 2048
+    openssl req -batch -new -x509 -key ${DEPLOY_DIR_IMAGE}/mblkey.key -out ${DEPLOY_DIR_IMAGE}/mblkey.crt
+    ln -sf ${DEPLOY_DIR_IMAGE}/mblkey.key mblkey.key
+    ln -sf ${DEPLOY_DIR_IMAGE}/mblkey.crt mblkey.crt
     ln -sf ${DEPLOY_DIR_IMAGE}/zImage ${WORKDIR}/zImage
     ln -sf ${DEPLOY_DIR_IMAGE}/bcm2710-rpi-3-b-plus.dtb ${WORKDIR}/bcm2710-rpi-3-b-plus.dtb
     ln -sf ${DEPLOY_DIR_IMAGE}/mbl-console-image-initramfs-raspberrypi3-mbl.cpio.gz ${WORKDIR}/mbl-console-image-initramfs-raspberrypi3-mbl.cpio.gz

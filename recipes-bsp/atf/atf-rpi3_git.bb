@@ -93,4 +93,9 @@ do_deploy() {
     install -D -p -m 0644 ${B}/${PLATFORM}/rot_key.pem ${DEPLOY_DIR_IMAGE}/rot_key.pem
 }
 
+do_clean_append() {
+        stub = "%s/%s" % (d.expand("${DEPLOY_DIR_IMAGE}"), "bcm2835-bootfiles/armstub8.bin")
+        oe.path.remove(stub)
+}
+
 addtask deploy before do_build after do_install

@@ -6,6 +6,10 @@ have:
 * a subject and body conforming to [these guidelines][commit-message-guidelines];
 * references for any relevant bugs, issues or tickets.
 
+When you create a pull request, please provide the following additional
+information in the PR description or in a comment:
+* A description of any testing that you have done.
+
 Once a pull request has been made, it must be reviewed before being accepted.
 If further changes are required once the pull request has been made, these
 changes must be related to the original subject of the pull request. Even small

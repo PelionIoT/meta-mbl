@@ -3,15 +3,23 @@
 Before you create a pull request from a branch, each commit on the branch
 should be a logically self contained change and each commit message should
 have:
-* a subject and body conforming to [these guidelines][commit-message-guidelines];
-* references for any relevant bugs, issues or tickets.
+* A subject and body conforming to [these guidelines][commit-message-guidelines].
+* References for any relevant bugs, issues or tickets.
 
 Once a pull request has been made, it must be reviewed before being accepted.
-If further changes are required once the pull request has been made, these
-changes must be related to the original subject of the pull request. Even small
-changes in the same files that do not relate to the subject of the pull request
-must be made in a different pull request. There are two allowed processes for
-making changes to a pull request:
+If a reviewer requests changes to a pull request, they will probably do so
+using GitHub's review tool, which allows adding review comments for individual
+lines of code. Please:
+* Respond to every comment, even if the response is just a "thumbs up" emoji
+  (which means "I agree and will make the requested change.").
+* Do not mark review comments as "resolved" - leave that to the person who
+  left the comment.
+* Do not reply to a review comment indicating that you have made a change until
+  you have actually pushed that change to the pull request branch.
+* Do not make additional changes that are not related to the original purpose
+  of the PR.
+
+To make changes to a pull request branch we have two allowed processes:
 
 ### 1. Squash Flow: When the pull request initially contains a single commit
 

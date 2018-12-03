@@ -91,7 +91,7 @@ By limiting the scope of the SoC root of trust key to the verification performed
 
 To avoid the possibility of a normal world component, in some way, compromising a trusted world component, all trusted world components shall be booted before normal world components.  Also, to reduce the risk of unknown software running in secure mode, the size of any boot loader that runs in the secure state should be minimized.  A boot flow that uses Trusted Firmware, OP-TEE and U-Boot would follow the illustrated sequence:
 
-![fig1](pics/TWC_before_NWC.png)
+![fig1](assets/TWC_before_NWC.png)
 
 ### Platform Independent Boot Stage Verification
 
@@ -114,7 +114,7 @@ The boot sequence will chain the following boot mechanisms:
 
 The following diagram illustrates the chaining of the secure boot steps:
 
-![fig2](pics/Flow_using_TF_uboot.png)
+![fig2](assets/Flow_using_TF_uboot.png)
 
 #### Trusted World Boot
 
@@ -164,7 +164,7 @@ Verified Boot, used in Chrome OS, relies on integrity checking of read-only bloc
 
 The following diagram illustrates how image signing tools are used to sign different boot components:
 
-![fig3](pics/Image_signing_flow.png)
+![fig3](assets/Image_signing_flow.png)
 
 
 ### Operation on Open and Closed Devices

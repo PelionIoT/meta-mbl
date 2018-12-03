@@ -159,7 +159,7 @@ In [Table 1](#table1):
 * Column 5 provides the `fiptool/cert_create` TF-A tool option for referencing the particular bootchain component in the FIP image or certificate creation process. These tools will be discussed in more detail later.
 
 <a name="fig1"></a>
-![fig1](pics/LAS16-402_slide_15.png "Figure 1")
+![fig1](assets/LAS16-402_slide_15.png "Figure 1")
 **Figure 1: Linaro Connect 2016 Presentation LAS16-402 [slide 15][linaro-connect-las16-402-slides] showing AArch64 secure boot process.**
 
         
@@ -222,7 +222,7 @@ The RPI3 boot chain differs from the generic TF-A secure boot chain in the follo
 ## <a name="section-2-3"></a> 2.3 The TBBR chain of trust
 
 <a name="fig2"></a>
-![fig2](pics/tbbr_cot_2.png "Figure 1")
+![fig2](assets/tbbr_cot_2.png "Figure 1")
 **Figure 2: TBBR chain of trust certificate chains used by the secure boot components.**
 
 [Figure 2](#fig2) shows the TBBR certificate chains as specified in the TBBR specification. The entities relevant to the discussion in this document are described below:

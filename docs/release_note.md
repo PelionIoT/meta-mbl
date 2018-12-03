@@ -1,5 +1,7 @@
 # mbl-os-0.5
 
+Copyright © 2018 Arm Limited.
+
 We are pleased to announce that [Mbed Linux OS 0.5][mbl-linux-release] is now available as a restricted preview release.
 
 ## Summary

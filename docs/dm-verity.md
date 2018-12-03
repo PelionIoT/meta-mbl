@@ -1,5 +1,7 @@
 ## dm-verity
 
+Copyright © 2018 Arm Limited.
+
 ### Introduction
 [dm-verity](https://gitlab.com/cryptsetup/cryptsetup/wikis/DMVerity) provides transparent integrity checking of read only block devices using a cryptographic digest provided by the kernel crypto API.
 dm-verity is implemented using a pre-calculated hash tree which includes the hashes of all device blocks. 

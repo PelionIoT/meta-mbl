@@ -1,5 +1,7 @@
 # Pull Request Guidelines
 
+Copyright © 2018 Arm Limited.
+
 Before you create a pull request from a branch, each commit on the branch
 should be a logically self contained change and each commit message should
 have:

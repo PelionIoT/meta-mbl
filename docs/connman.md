@@ -1,5 +1,8 @@
 ## ConnMan
 
+Copyright © 2018 Arm Limited.
+
+### Introduction
 ConnMan (Connection Manager) has been chosen as the MBed Linux OS network manager. It is a daemon that manages network connections Within embedded devices and integrates a range of features usually split between many daemons such as DHCP, DNS, and NTP.
 
 #### Main attributes

@@ -1,5 +1,7 @@
 # <a name="section-1"></a> 1. Mbed Linux OS Basic Signing Flow
 
+Copyright © 2018 Arm Limited.
+
 ## <a name="section-1-1"></a> 1.1 Overview
 
 The MBL secure boot process is responsible for bringing the system into a secure computing state after power-on, which includes 

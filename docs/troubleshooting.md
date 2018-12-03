@@ -1,5 +1,7 @@
 # Mbed Linux OS (mbl) Troubleshooting
 
+Copyright © 2018 Arm Limited.
+
 ## General tips
 
 ### Using the test images

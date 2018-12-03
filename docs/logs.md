@@ -1,5 +1,7 @@
 # Logs for Mbed Linux OS (mbl)
 
+Copyright © 2018 Arm Limited.
+
 In addition to the standard log files for Linux, there are log files for the Mbed Linux Cloud Client. These are:
 * `/var/log/mbl/cloud-client.log`: the main log file for the Mbed Linux Cloud Client.
 * `/opt/arm/arm_update_activate.log`: the log file used by the firmware update script.

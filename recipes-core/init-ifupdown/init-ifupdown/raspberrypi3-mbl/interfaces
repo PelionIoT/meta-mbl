@@ -4,3 +4,6 @@
 auto lo
 iface lo inet loopback
 
+# The debug interface
+auto eth1
+iface eth1 inet dhcp

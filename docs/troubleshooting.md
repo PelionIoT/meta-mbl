@@ -101,22 +101,22 @@ filename (e.g. `1.20170405.tar.gz`).  This causes problems for Bitbake recipes
 that expect the file name requested in the URL (with the .tar.gz extension).
 
 
-### Update
+## Update
 
-## Ensure the correct Pelion account is used
+### Ensure the correct Pelion account is used
 A Pelion developer certificate (`mbed_cloud_dev_credentials.c`) [is injected into a build](https://os.mbed.com/docs/linux-os/v0.5/getting-started/building-an-mbl-image.html/) to allow a device running that image to connect to Device Management Portal. The device will be viewable and manageable only using the Pelion account from which the developer certificate was generated.
 
 If the user has multiple Mbed.com accounts, it can happen to build an image with a developer certificate from one account and attempts to manage a device running the image on Device Management with a different Mbed.com account.
 
 If the device logs indicates that a device is connected but it is not visible in Device Management, the user should login using his/her other Mbed.com accounts to see if the device is visible in one of the other accounts.
 
-## Ensure the correct update resources directory is used
+### Ensure the correct update resources directory is used
 An update resources file (`update_default_resources.c`) [is injected into a build](https://os.mbed.com/docs/linux-os/v0.5/getting-started/building-an-mbl-image.html/) to allow a device running that image to be updatable over-the-air (OTA).
 
 The directory from which the update resources file was created needs to be used for starting an OTA. This is necessary for updating the applications or the root file system on a device running that image.
 Verify that the correct directory is used by ensuring that the update resources file in the build directory (`builddir/machine-<MACHINE>/mbl-manifest/build-mbl`) is identical to the update resources file found in the directory from which the update command (`manifest-tool update device`) is ran.
 
-## Ensure the the update resources is valid
+### Ensure the the update resources is valid
 By default, the update resource is valid for up to 90 days.
 Verify the validity of the update resource if unable to update the device.
 From the directory where the update resources was created (where `manifest-tool init` was run), run the following command to check the validity:
@@ -125,5 +125,42 @@ From the directory where the update resources was created (where `manifest-tool 
 $ openssl x509 -inform DER -in .update-certificates/default.der -text -noout
 ```
 Inspect the values of the attributes named `Not Before` and `Not After`.
+
+## Bootup
+### Ethernet gadget driver does not complete
+The Warp7 has been seen to hang during boot up when plugged to certain types of USB hubs.
+See an example of the bootup log when the startup is halted:
+```
+...
+[   34.316177] random: crng init done
+Configuring network interfaces... ip: SIOCGIFFLAGS: No such device
+Starting system message bus: dbus.
+Starting Connection Manager
+Mounting cgroups...Done
+Starting rpcbind daemon...done.
+Starting bluetooth: bluetoothd.
+/etc/rc5.d/S20docker.init: line 43: syntax error: unexpected redirection
+Starting tee-supplicant...
+Starting syslogd/klogd: done
+ * Starting Avahi mDNS/DNS-SD Daemon: avahi-daemon
+   ...done.
+Starting Telephony daemon
+Starting mbl-app-update-manager-daemon...
+mbl-app-update-manager-daemon started
+Starting mbl-cloud-client...
+mbl-cloud-client started
+Starting mbl-app-manager...
+Looking for installed containers in /home/app...
+[   36.943021] using random self ethernet address
+[   36.947833] using random host ethernet address
+[   36.978068] usb0: HOST MAC 0e:bc:b3:90:ee:d5
+[   37.010025] usb0: MAC de:3a:52:94:f2:fe
+[   37.014619] using random self ethernet address
+[   37.019315] using random host ethernet address
+[   37.038809] g_ether gadget: Ethernet Gadget, version: Memorial Day 2008
+[   37.045463] g_ether gadget: g_ether ready
+[   37.327967] IPv6: ADDRCONF(NETDEV_UP): usb0: link is not ready
+```
+Use a different USB hub or plug the Warp7 directly to a host machine if the device does not successfully boot up.
 
 [mbl-logs]: logs.md

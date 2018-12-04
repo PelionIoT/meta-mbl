@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 SRCREV = "bf0774452781b16759512f456d42a2a0f874c220"
-DEPENDS_append += " mbl-boot-scr u-boot-mkimage-native"
+DEPENDS_append += " mbl-boot-scr u-boot-tools-native"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 

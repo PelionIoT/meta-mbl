@@ -36,6 +36,8 @@ IMAGE_FEATURES += "debug-tweaks"
 LICENSE = "MIT"
 HOMEPAGE = "https://github.com/ARMmbed/meta-mbl"
 
+do_image_wic[depends] += "virtual/atf:do_deploy"
+
 inherit core-image extrausers
 
 IMAGE_ROOTFS_SIZE ?= "8192"

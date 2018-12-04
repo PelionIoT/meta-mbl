@@ -17,7 +17,7 @@ SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/linux.git;protocol=htt
            file://kernel.its \
           "
 
-DEPENDS += " u-boot-mkimage-native dtc-native mbl-console-image-initramfs "
+DEPENDS += " u-boot-tools-native dtc-native mbl-console-image-initramfs "
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
 

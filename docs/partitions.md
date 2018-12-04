@@ -1,5 +1,7 @@
 # Current Mbed Linux OS partition layout
 
+Copyright © 2018 Arm Limited.
+
 ## General information
 
 The partition layout for every board includes at least the following partitions

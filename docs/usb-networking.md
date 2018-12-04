@@ -1,5 +1,8 @@
 ## Networking over USB in Mbed Linux OS
 
+Copyright © 2018 Arm Limited.
+
+### Introduction
 An Mbed Linux OS IoT device with suitable hardware supports 
 networking over USB by using the Mbed Linux OS kernel's appropriate driver mechanism.
 
@@ -215,7 +218,7 @@ can discover the IoT device's SSH service without previous knowledge of the
 device's IP address or hostname.
 
 #### Avahi service discovery on a local network
-[Avahi][avahi-homepage] is a free zero-configuration networking (zeroconf) implementation, including a system for multicast DNS/DNS-SD service discovery on a local network. This enables you to plug your computer and the IoT device into a network and instantly be able to view the device's available services.
+[Avahi][avahi-homepage] is a zero-configuration networking (zeroconf) implementation that allows mDNS/DNS-SD service discovery on a local network. This enables you to plug your computer and the IoT device into a network and instantly be able to view the device's available services.
 Avahi is installed on Ubuntu 16.04 by default, and it is also built into mbl image build.
 
 ##### Using Avahi to discover device's services

@@ -97,7 +97,33 @@ trust_server_names = on
 
 This results in Wget using the last component of a redirection URL (e.g.
 1.20170405) for the local file name rather than using the requested URL
-filename (e.g. 1.20170405.tar.gz).  This causes problems for Bitbake recipes
+filename (e.g. `1.20170405.tar.gz`).  This causes problems for Bitbake recipes
 that expect the file name requested in the URL (with the .tar.gz extension).
+
+
+### Update
+
+## Ensure the correct Pelion account is used
+A Pelion developer certificate (`mbed_cloud_dev_credentials.c`) [is injected into a build](https://os.mbed.com/docs/linux-os/v0.5/getting-started/building-an-mbl-image.html/) to allow a device running that image to connect to Device Management Portal. The device will be viewable and manageable only using the Pelion account from which the developer certificate was generated.
+
+If the user has multiple Mbed.com accounts, it can happen to build an image with a developer certificate from one account and attempts to manage a device running the image on Device Management with a different Mbed.com account.
+
+If the device logs indicates that a device is connected but it is not visible in Device Management, the user should login using his/her other Mbed.com accounts to see if the device is visible in one of the other accounts.
+
+## Ensure the correct update resources directory is used
+An update resources file (`update_default_resources.c`) [is injected into a build](https://os.mbed.com/docs/linux-os/v0.5/getting-started/building-an-mbl-image.html/) to allow a device running that image to be updatable over-the-air (OTA).
+
+The directory from which the update resources file was created needs to be used for starting an OTA. This is necessary for updating the applications or the root file system on a device running that image.
+Verify that the correct directory is used by ensuring that the update resources file in the build directory (`builddir/machine-<MACHINE>/mbl-manifest/build-mbl`) is identical to the update resources file found in the directory from which the update command (`manifest-tool update device`) is ran.
+
+## Ensure the the update resources is valid
+By default, the update resource is valid for up to 90 days.
+Verify the validity of the update resource if unable to update the device.
+From the directory where the update resources was created (where `manifest-tool init` was run), run the following command to check the validity:
+
+```
+$ openssl x509 -inform DER -in .update-certificates/default.der -text -noout
+```
+Inspect the values of the attributes named `Not Before` and `Not After`.
 
 [mbl-logs]: logs.md

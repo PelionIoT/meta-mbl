@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-DESCRIPTION = "ARM Trusted Firmware Tools"
+DESCRIPTION = "ARM Trusted Firmware Warp7 - FIP Tool"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://license.rst;md5=e927e02bca647e14efd87e9e914b2443"
 
@@ -21,12 +21,10 @@ B = "${WORKDIR}/build"
 
 do_compile() {
    oe_runmake -C ${S} BUILD_BASE=${B} fiptool
-   oe_runmake -C ${S} BUILD_BASE=${B} certtool
 }
 
 do_install () {
 	install -d ${D}${bindir}
 	install -m 0755 ${S}/tools/fiptool/fiptool ${D}${bindir}/atf-fiptool
-	install -m 0755 ${S}/tools/cert_create/cert_create ${D}${bindir}/atf-cert_create
 	install -m 0755 ${S}/tools/fip_create/fip_create ${D}${bindir}/atf-fip_create
 }

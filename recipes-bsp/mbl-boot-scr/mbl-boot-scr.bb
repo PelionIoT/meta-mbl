@@ -28,6 +28,7 @@ do_compile_append_imx7s-warp() {
     ln -sf ${DEPLOY_DIR_IMAGE}/mblkey.crt mblkey.crt
     ln -sf ${DEPLOY_DIR_IMAGE}/zImage ${WORKDIR}/zImage
     ln -sf ${DEPLOY_DIR_IMAGE}/mbl-console-image-initramfs-imx7s-warp-mbl.cpio.gz ${WORKDIR}/mbl-console-image-initramfs-imx7s-warp-mbl.cpio.gz
+    ln -sf ${DEPLOY_DIR_IMAGE}/imx7s-warp.dtb ${WORKDIR}/imx7s-warp.dtb
     uboot-mkimage -f "${WORKDIR}/boot.its" -k ${B} boot.scr
 }
 

@@ -7,7 +7,7 @@ PROVIDES += "virtual/atf"
 DEPENDS_append = " u-boot-tools-native"
 
 SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/arm-trusted-firmware.git;protocol=https;nobranch=1;name=atf"
-SRCREV_atf = "8a9f3e55ce939f1b2646e044de5eb804437f057f"
+SRCREV_atf = "f664ffbd2d132f0c35c9f9fc4961a882ef81c297"
 
 SRC_URI_append +="file://u-boot.cfgout.warp7;name=uboot.cfgout;"
 SRCREV_uboot.cfgout="6bb815da1bc986dc717a59cc6d2552f8"
@@ -32,7 +32,6 @@ ATF_COMPILE_FLAGS_append = " \
       ARM_CORTEX_A7=yes \
       CROSS_COMPILE=${TARGET_PREFIX} \
       NEED_BL2=yes \
-      HW_CONFIG=${DEPLOY_DIR_IMAGE}/${KERNEL_DEVICETREE} \
 "
 
 do_compile_append() {

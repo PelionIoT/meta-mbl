@@ -13,6 +13,7 @@
 	#address-cells = <1>;
 
 	images {
+
 		bootscr {
 			description = "boot.scr";
 			data = /incbin/("boot.cmd");
@@ -34,6 +35,17 @@
 			compression = "none";
 			load = <0x80800000>;
 			entry = <0x80800000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+
+		fdt@1 {
+			description = "WaRP7 DT";
+			data = /incbin/("imx7s-warp.dtb");
+			arch = "arm";
+			type = "flat_dt";
+			compression = "none";
 			hash@1 {
 				algo = "sha1";
 			};
@@ -61,6 +73,7 @@
 			description = "imx7s-bootscr-kernel-initramfs";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
+			fdt = "fdt@1";
 			loadables = "bootscr", "kernel", "ramdisk";
 			signature@1 {
 				algo = "sha1,rsa2048";

@@ -6,7 +6,7 @@
 run mmcargs
 
 # Extract FDT from FIT
-imxtract ${bootscriptaddr}#conf@0 fdt@1 ${fdt_addr}
+imxtract ${bootscriptaddr}#conf@imx7s-warp.dtb fdt@imx7s-warp.dtb ${fdt_addr}
 
 # Apply OP-TEE provided overlay
 fdt addr ${fdt_addr}
@@ -15,7 +15,7 @@ fdt apply ${fdtovaddr}
 
 # Now boot
 echo Booting secure Linux from FIT ...;
-bootm ${bootscriptaddr}:kernel@1 ${bootscriptaddr}:ramdisk@1 ${fdt_addr}
+bootm ${bootscriptaddr}#conf@imx7s-warp.dtb ${bootscriptaddr}:ramdisk@1 ${fdt_addr}
 
 # Failsafe if something goes wrong
 hab_failsafe

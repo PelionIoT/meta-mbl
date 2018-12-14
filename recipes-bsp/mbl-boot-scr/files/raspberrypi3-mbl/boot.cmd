@@ -18,4 +18,4 @@ echo "Load fit blob with Linux Kernel image and initramfs image"
 fatload mmc 0 0x02100000 boot.scr
 
 # Boot Linux
-bootm 0x02100000#config@1
+bootm 0x02100000#conf@bcm2710-rpi-3-b-plus.dtb

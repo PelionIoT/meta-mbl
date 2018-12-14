@@ -14,10 +14,9 @@ FILESEXTRAPATHS_prepend:="${THISDIR}/files:"
 
 SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/linux.git;protocol=https;nobranch=1 \
            file://*-mbl.cfg \
-           file://kernel.its \
           "
 
-DEPENDS += " u-boot-tools-native dtc-native mbl-console-image-initramfs "
+DEPENDS += " mbl-console-image-initramfs "
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
 
@@ -38,32 +37,6 @@ do_preconfigure() {
 		head=`git --git-dir=${S}/.git rev-parse --verify --short HEAD 2> /dev/null`
 		printf "%s%s" +g $head > ${S}/.scmversion
 	fi
-}
-
-do_install_append() {
-	# In order to support FIP generation by the do_compile() ATF routine
-	# we need to populate the.dtb early
-	install -d ${DEPLOY_DIR_IMAGE}/fiptemp
-	install ${B}/arch/arm/boot/dts/imx7s-warp.dtb ${DEPLOY_DIR_IMAGE}/fiptemp
-}
-
-do_clean_append() {
-        fiptemp = "%s/%s" % (d.expand("${DEPLOY_DIR_IMAGE}"), "fiptemp")
-        oe.path.remove(fiptemp)
-
-}
-
-_generate_signed_kernel_image() {
-        echo "Generating kernel FIT image.."
-        ln -sf ${WORKDIR}/kernel.its kernel.its
-        ln -sf ${B}/arch/arm/boot/zImage zImage
-        ln -sf ${DEPLOY_DIR_IMAGE}/${INITRAMFS_IMAGE_NAME}.cpio.gz mbl-console-image-initramfs-imx7s-warp-mbl.cpio.gz
-        uboot-mkimage -f kernel.its -r kernel.itb
-}
-
-do_deploy_append() {
-        _generate_signed_kernel_image
-        install -m 0644 ${B}/kernel.itb ${DEPLOYDIR}
 }
 
 INITRAMFS_IMAGE = "mbl-console-image-initramfs"

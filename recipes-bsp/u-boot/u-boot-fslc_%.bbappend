@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-SRCREV = "407a3560f72a3be781cd062b509a7726406a5c6f"
+SRCREV = "c9c520b295d65cba77233fff7155e3338f5219c0"
 DEPENDS_append += " mbl-boot-scr"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"

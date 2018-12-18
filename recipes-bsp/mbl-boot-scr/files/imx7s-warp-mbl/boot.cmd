@@ -5,6 +5,10 @@
 # The rootfs selection is done in the initramfs other kernel params are set in mmcargs
 run mmcargs
 
+# Verify the image - failsafe on failure
+iminfo ${bootscriptaddr}
+if test $? -eq 1; then; hab_failsafe; fi;
+
 # Extract FDT from FIT
 imxtract ${bootscriptaddr}#conf@imx7s-warp.dtb fdt@imx7s-warp.dtb ${fdt_addr}
 

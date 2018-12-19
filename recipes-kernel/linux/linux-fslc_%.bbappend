@@ -9,6 +9,7 @@
 SRCREV = "7b95bef8f62d015b172c29a287f825de941db9f7"
 
 KBUILD_DEFCONFIG_imx7s-warp-mbl ?= "warp7_mbl_defconfig"
+KBUILD_DEFCONFIG_imx7d-pico-mbl ?= "imx_v6_v7_defconfig"
 
 FILESEXTRAPATHS_prepend:="${THISDIR}/files:"
 
@@ -30,7 +31,10 @@ do_preconfigure() {
 
 	sed -e "${CONF_SED_SCRIPT}" < '${S}/arch/arm/configs/${KBUILD_DEFCONFIG_imx7s-warp-mbl}' >> '${B}/.config'
 
-	${S}/scripts/kconfig/merge_config.sh -m -O ${B} ${B}/.config ${WORKDIR}/*-mbl.cfg 
+	cfgs=`find ${WORKDIR}/ -maxdepth 1 -name '*-mbl.cfg' | wc -l`;
+	if [ ${cfgs} -gt 0 ]; then
+		${S}/scripts/kconfig/merge_config.sh -m -O ${B} ${B}/.config ${WORKDIR}/*-mbl.cfg
+	fi
 
 	if [ "${SCMVERSION}" = "y" ]; then
 		# Add GIT revision to the local version

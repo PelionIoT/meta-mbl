@@ -85,7 +85,7 @@ VERITY_HASH_PARTITION="$(findfs LABEL=$VERITY_HASH_LABEL)"
 
 #Mount verity_hash partition
 mkdir -p /mnt/verity_hash 
-mount $VERITY_HASH_PARTITION /mnt/verity_hash
+mount -r $VERITY_HASH_PARTITION /mnt/verity_hash
 
 #Mount /dev/mqueue partition
 mkdir -p /dev/mqueue

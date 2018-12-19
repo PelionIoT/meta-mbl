@@ -9,7 +9,9 @@
 #   date time correctly.   
 ###############################################################################
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
-SRC_URI += "file://0001-IOTMBL58-bootmisc.sh-fix-issue-with-setting-system-d.patch;striplevel=5;patchdir=${WORKDIR}"
+SRC_URI += " file://0001-IOTMBL58-bootmisc.sh-fix-issue-with-setting-system-d.patch;striplevel=5;patchdir=${WORKDIR} \
+             file://0001-IOTMBL1092-remount-rw-partitions-to-ro-before-umount.patch;striplevel=5;patchdir=${WORKDIR} \
+"
 
 # make sure the local appending config file will be chosen by prepending and extra local path
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"

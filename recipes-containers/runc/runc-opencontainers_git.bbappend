@@ -5,8 +5,18 @@
 ###############################################################################
 # runc-opencontainers_git.bbappend
 #   This file modifies the behaviour of the docker_git recipe to:
-#       - Removes the unnecessary RRECOMMENDS lxc directive.  
+#       - Removes the unnecessary RRECOMMENDS lxc and docker directives.  
 #       - Restore the default build behaviour of stripping binaries.
+#       - Remove docker-run -> runc soft link
 ###############################################################################
-RRECOMMENDS_${PN}_remove = "lxc"
 INHIBIT_PACKAGE_STRIP = "0"
+
+# This soft link was added on original recipe to link docker-runc -> runc
+do_install_append() {
+	rm ${D}/${bindir}/docker-runc
+}
+
+# Add cgroup-lite package to set up cgroups at system boot. This is only recommended since
+# runc can runc without this added package.
+# If not added, before starting a container, container invoker will have to manually mount the cgroups.
+RRECOMMENDS_${PN} += "cgroup-lite"

@@ -8,10 +8,8 @@ inherit packagegroup
 
 ###############################################################################
 # Packages added irrespective of the MACHINE
-#     - ca-certificates. Required by docker when performing pull from dockerhub
-#     - docker. Containerised environment for secure application execution.
-#     - iptables. Required by docker for building iptables DOCKER-ISOLATION 
-#       and DOCKER chains for the FORWARD table.
+#     - runc-opencontainers. Open Container Initiative (oci) containerised 
+#       environment for secure application execution.
 #     - kernel-modules. Required by iptables related modules (e.g. netfilter
 #       connection tracking.
 #     - optee-os. If the machine supports optee include the os.
@@ -19,7 +17,7 @@ inherit packagegroup
 ###############################################################################
 PACKAGEGROUP_MBL_PKGS_append = " avahi-autoipd"
 PACKAGEGROUP_MBL_PKGS_append = " ca-certificates"
-PACKAGEGROUP_MBL_PKGS_append = " docker"
+PACKAGEGROUP_MBL_PKGS_append = " runc-opencontainers"
 PACKAGEGROUP_MBL_PKGS_append = " iptables"
 PACKAGEGROUP_MBL_PKGS_append = " kernel-modules"
 PACKAGEGROUP_MBL_PKGS_append = " rng-tools"

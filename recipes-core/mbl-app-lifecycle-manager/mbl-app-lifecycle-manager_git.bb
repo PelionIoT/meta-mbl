@@ -18,9 +18,8 @@ RDEPENDS_${PN} = " \
     python3-core \
     python3-json \
     python3-logging \
-    docker \
+    virtual/runc \
 "
-# FIXME IOTMBL-778: This package only rdepends on the OCI runtime, not docker.
 
 inherit setuptools3
 inherit python3-dir

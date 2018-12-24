@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-INITRAMFS_IMAGE = "mbl-console-image-initramfs"
+INITRAMFS_IMAGE = "mbl-image-initramfs"
 
 FILESEXTRAPATHS_prepend:="${THISDIR}/files:${THISDIR}/linux-raspberrypi:"
 

@@ -3,12 +3,12 @@
 # SPDX-License-Identifier: MIT
 
 ###############################################################################
-# mbl-console-image-test.bb
+# mbl-image-development.bb
 #   This file is the mbed linux OpenEmbedded recipe for building a minimal 
 #   uboot/kernel/filesystem image including test packages. 
 ###############################################################################
 
-require mbl-console-image.bb
+require mbl-image-production.bb
 
 SUMMARY = "Mbed Linux Basic Minimal Image With Test Packages"
 DESCRIPTION = "Image with development, debug, SDK and test support."
@@ -26,7 +26,7 @@ DESCRIPTION = "Image with development, debug, SDK and test support."
 # IMAGE_FEATURES += " tools-testapps"
 
 IMAGE_INSTALL += " \
-	packagegroup-mbl-test \
+	packagegroup-mbl-development \
 	"
 
 # No GPLv3 allowed in this image

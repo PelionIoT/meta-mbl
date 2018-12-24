@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 ###############################################################################
-# mbl-console-image.bb
+# mbl-image-production.bb
 #   This file is the mbed linux OpenEmbedded recipe for building a minimal 
 #   uboot/kernel/filesystem image 
 ###############################################################################
@@ -15,7 +15,7 @@ SUMMARY = "Mbed Linux Basic Minimal Image"
 #   inheriting from core-image to override the default behaviour. 
 #   
 #     packagegroup-core-boot        Essential packages to boot minimal sysmtem.
-#     packagegroup-mbl              mbed linux packages added for this image.
+#     packagegroup-mbl-production   mbed linux packages added for this image.
 #     CORE_IMAGE_EXTRA_INSTALL      Symbol conventionally defined in local.conf 
 #                                   to add extra packages.
 #
@@ -27,7 +27,7 @@ SUMMARY = "Mbed Linux Basic Minimal Image"
 IMAGE_INSTALL = "\
 	packagegroup-core-boot \
 	packagegroup-base \
-	packagegroup-mbl \
+	packagegroup-mbl-production \
 	${CORE_IMAGE_EXTRA_INSTALL}"
 
 IMAGE_LINGUAS = " "

@@ -7,7 +7,7 @@ meta-mbl provides the recipes for building the above software by leveraging the 
 The main components of the layer are:
 
 * ```meta-mbl/conf/distro/mbl.conf``` - This is the OE distribution configuration for creating an mbed linux distribution
-* ```meta-mbl/recipes-core/images/mbl-console-image-test.bb``` - This is the OE recipe for creating a minimal image for testing and evaluation.
+* ```meta-mbl/recipes-core/images/mbl-image-development.bb``` - This is the OE recipe for creating a minimal image for testing and development.
 
 
 ## Documentation

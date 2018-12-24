@@ -10,7 +10,7 @@
 DEPENDS += "cryptsetup-native"
 
 
-# e.g. mbl-console-image-imx7s-warp-mbl-20180810101241.rootfs
+# e.g. mbl-image-production-imx7s-warp-mbl-20180810101241.rootfs
 IMAGE_NAME_WITH_SUFFIX = "${IMAGE_NAME}${IMAGE_NAME_SUFFIX}"
 
 #This task creates a rootfs hash tree and root hash using dm-verity veritysetup tool on the host
@@ -18,7 +18,7 @@ do_generate_verity_metadata() {
     hash_tree_suffix=.hash_tree.bin
     header_info_suffix=.verity_header_information.txt
     rootfs_ext=.ext4
-    image_link_name="${IMAGE_LINK_NAME}" # e.g. mbl-console-image-imx7s-warp-mbl
+    image_link_name="${IMAGE_LINK_NAME}" # e.g. mbl-image-production-imx7s-warp-mbl
 
     # * When the .ext4 image is first created it is written to
     #   ${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.ext4. That name contains a timestamp,
@@ -49,7 +49,7 @@ do_generate_verity_metadata() {
     (
         # Use relative paths in the symlinks so that they will still work after
         # they're copied/moved from ${IMGDEPLOYDIR} (a deploy dir specific to
-        # this build of the mbl-console-image recipe) to ${DEPLOY_DIR_IMAGE}
+        # this build of the mbl-image-production recipe) to ${DEPLOY_DIR_IMAGE}
         # (the main deploy dir for the current MACHINE)
         cd ${IMGDEPLOYDIR}
         ln -sf ${IMAGE_NAME_WITH_SUFFIX}${hash_tree_suffix} ${image_link_name}${hash_tree_suffix}

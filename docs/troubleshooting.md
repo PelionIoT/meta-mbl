@@ -10,10 +10,10 @@ Troubleshooting and development can sometimes be much easier when using the
 "test" variant of the mbl images rather than the standard images due to the
 inclusion of an SSH client and server, allowing files to be easily copied
 between the IoT device and a development PC using `scp`. To create test images,
-specify `mbl-console-image-test` rather than `mbl-console-image` when running
+specify `mbl-image-development` rather than `mbl-image-production` when running
 Bitbake:
 ```
-bitbake mbl-console-image-test
+bitbake mbl-image-development
 ```
 In particular, this makes collecting log files much easier. See the
 [logs][mbl-logs] documentation for more information.

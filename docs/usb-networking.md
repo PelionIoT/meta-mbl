@@ -211,7 +211,7 @@ commands.
 
 #### SSH (test image only)
 If the IoT device is running a "test" image (created using `bitbake
-mbl-console-image-test`) then it will be running an SSH server and you can
+mbl-image-development`) then it will be running an SSH server and you can
 operate on the IoT device without using the serial console. The IoT device will
 respond to DNS-SD service discovery requests, so a PC with support for DNS-SD
 can discover the IoT device's SSH service without previous knowledge of the

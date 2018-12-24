@@ -25,9 +25,9 @@ do_sign_root_hash() {
     (
         # Use relative paths in the symlinks so that they will still work after
         # they're copied/moved from ${IMGDEPLOYDIR} (a deploy dir specific to
-        # this build of the mbl-console-image recipe) to ${DEPLOY_DIR_IMAGE}
+        # this build of the mbl-image-production recipe) to ${DEPLOY_DIR_IMAGE}
         # (the main deploy dir for the current MACHINE)
-        # IMAGE_LINK_NAME example: mbl-console-image-imx7s-warp-mbl   
+        # IMAGE_LINK_NAME example: mbl-image-production-imx7s-warp-mbl   
         cd ${IMGDEPLOYDIR}
         ln -sf ${signed_root_hash_name_base64} ${IMAGE_LINK_NAME}${signed_base64_root_hash_suffix}
     )

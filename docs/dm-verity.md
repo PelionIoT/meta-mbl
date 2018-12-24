@@ -16,7 +16,7 @@ Integration of dm-veirty is in progress but its not yet completed. Here is the c
 
 InitRamFs and InitRamFs init script is used to verify the signature of the root hash and to activate dm-verity.
 Relevant recipie and init script can be found here:
-* ```meta-mbl/recipes-core/images/mbl-console-image-initramfs.bb```
+* ```meta-mbl/recipes-core/images/mbl-image-initramfs.bb```
 * ```meta-mbl/recipes-core/mbl-initramfs-init/files/initramfs-init-script.sh```
 
 Currently the InitRamFs init script is not yet activating dm-verity and it is just mounting the active roofs and continue with the boot sequence.

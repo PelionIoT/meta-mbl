@@ -31,8 +31,8 @@
 #
 # Example
 # -------
-# The mbl-console-image image with recipe file
-# recipes-core/images/mbl-console-image.bb contains the following two lines to
+# The mbl-image-production image with recipe file
+# recipes-core/images/mbl-image-production.bb contains the following two lines to
 # prevent the image from containing anything licensed under GPLv3 flavoured
 # licenses.
 #

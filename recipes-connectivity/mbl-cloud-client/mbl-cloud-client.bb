@@ -22,7 +22,6 @@ SRC_URI_COMMON = "file://yocto-toolchain.cmake \
 SRC_URI_MBL_CLOUD_CLIENT_PUBLIC = "${SRC_URI_MBL_CORE_REPO} \
   file://arg_too_long_fix_1.patch;patchdir=${S} \
   file://arg_too_long_fix_2.patch;patchdir=${S}/cloud-services/mbl-cloud-client/mbed-cloud-client \
-  file://0001-Guard-ARM_UC_cryptoDecrypt-against-unnecessary-calls.patch;patchdir=${S}/cloud-services/mbl-cloud-client/mbed-cloud-client \
   file://linux-paths-update-client-pal-filesystem.patch;patchdir=${S}/cloud-services/mbl-cloud-client/mbed-cloud-client \
   "
 
@@ -38,6 +37,7 @@ RDEPENDS_${PN} = "\
     libgcc \
     libstdc++ \
     start-stop-daemon \
+    util-linux \
 "
 
 # Installed packages

@@ -1,8 +1,8 @@
 diff --git a/cloud-services/mbl-cloud-client/CMakeLists.txt b/cloud-services/mbl-cloud-client/CMakeLists.txt
-index 6bc9141..7c6bcac 100644
+index 5eca8e2..dddee65 100644
 --- a/cloud-services/mbl-cloud-client/CMakeLists.txt
 +++ b/cloud-services/mbl-cloud-client/CMakeLists.txt
-@@ -41,21 +41,27 @@ add_compile_options(-Wlogical-op)
+@@ -42,21 +42,27 @@ add_compile_options(-Wlogical-op)
  
  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/source)
  
@@ -42,7 +42,7 @@ index 6bc9141..7c6bcac 100644
  FILE(GLOB MBL_CLOUD_CLIENT_SRC
      "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
 @@ -83,3 +89,4 @@ target_link_libraries(mbl-cloud-client mbedCloudClient)
- target_link_libraries(mbl-cloud-client mbedPalInsecureROT)
+ 
  target_link_libraries(mbl-cloud-client pthread)
  target_link_libraries(mbl-cloud-client rt)
 +

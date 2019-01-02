@@ -1,4 +1,8 @@
-# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+# Based on: meta/classes/kernel-fitimage.bbclass
+# In open-source project: http://git.openembedded.org/openembedded-core/
+#
+# Original file: No copyright notice was included
+# Modifications: Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: MIT
 

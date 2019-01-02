@@ -34,7 +34,6 @@ inherit kernel-fitimage mbl-artifact-names
 # recipe make the ${DEPLOY_DIR_IMAGE}/${MBL_UBOOT_CMD_FILENAME} available for use.
 # ${MBL_UBOOT_CMD_FILENAME} is referenced in the ITS file and used to build
 # the FIT image.
-DEPENDS += " mbl-boot-scr"
 do_compile[depends] += "mbl-boot-scr:do_deploy"
 
 #

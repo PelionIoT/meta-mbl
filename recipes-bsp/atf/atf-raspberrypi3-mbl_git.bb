@@ -10,13 +10,13 @@ require atf.inc
 #   The TF-A secure monitor changes to 32-bit mode before running U-Boot.
 # - The recipe imports mbedtls into the ATF build directory to build libmbedtls.a
 #   and incorporated into the firmware.
-DEPENDS_append += " linaro-aarch64-toolchain-native "
+DEPENDS += "linaro-aarch64-toolchain-native"
 
 SRCREV_atf = "3ba929571517347a12e027c629703ced0db0b255"
 
 PLATFORM = "rpi3"
 
-ATF_COMPILE_FLAGS_append = " \
+ATF_COMPILE_FLAGS += " \
       CROSS_COMPILE=aarch64-linux-gnu- \
       RPI3_BL33_IN_AARCH32=1 \
       NEED_BL32=yes \

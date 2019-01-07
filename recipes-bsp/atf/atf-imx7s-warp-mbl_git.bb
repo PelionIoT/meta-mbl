@@ -4,7 +4,7 @@
 
 require atf.inc
 
-DEPENDS_append = " u-boot-tools-native"
+DEPENDS += "u-boot-tools-native"
 
 SRCREV_atf = "f664ffbd2d132f0c35c9f9fc4961a882ef81c297"
 
@@ -13,15 +13,15 @@ SRCREV_atf = "f664ffbd2d132f0c35c9f9fc4961a882ef81c297"
 # image. uboot.cfgout is a necessary input when generating a .imx image
 # To regenerate uboot.cfgout just do
 # "make warp7_config;make u-boot.imx CROSS_COMPILE=your-x-compiler-"
-SRC_URI_append = " file://u-boot.cfgout.warp7;name=uboot.cfgout;"
-SRCREV_uboot.cfgout="6bb815da1bc986dc717a59cc6d2552f8"
-LICENSE_append = " & GPL-2.0"
-LIC_FILES_CHKSUM_append = " file://${COMMON_LICENSE_DIR}/GPL-2.0;md5=801f80980d171dd6425610833a22dbe6"
+SRC_URI += "file://u-boot.cfgout.warp7;name=uboot.cfgout;"
+SRCREV_uboot.cfgout = "6bb815da1bc986dc717a59cc6d2552f8"
+LICENSE += "& GPL-2.0"
+LIC_FILES_CHKSUM += "file://${COMMON_LICENSE_DIR}/GPL-2.0;md5=801f80980d171dd6425610833a22dbe6"
 
 PLATFORM = "warp7"
 MBL_UNIFIED_BIN = "atf-bl2-fip.bin"
 
-ATF_COMPILE_FLAGS_append = " \
+ATF_COMPILE_FLAGS += " \
       AARCH32_SP=optee \
       ARCH=aarch32 \
       ARM_ARCH_MAJOR=7 \

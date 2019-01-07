@@ -4,8 +4,6 @@
 
 require atf.inc
 
-PROVIDES += "virtual/atf"
-
 # This recipe builds the ARM Trusted Firmware for RaspberryPi3.
 # - TF-A and OPTEE as 64-bit (aarch64) are built with the aarch64 toolchain
 #   because the boot loader of VideoCore4 will boot to 64-bit ARM bootloaders.

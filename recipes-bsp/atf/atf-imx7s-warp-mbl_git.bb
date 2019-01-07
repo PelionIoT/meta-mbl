@@ -4,8 +4,6 @@
 
 require atf.inc
 
-PROVIDES += "virtual/atf"
-
 DEPENDS_append = " u-boot-tools-native"
 
 SRCREV_atf = "f664ffbd2d132f0c35c9f9fc4961a882ef81c297"

@@ -6,6 +6,8 @@ DESCRIPTION = "ARM Trusted Firmware"
 
 DEPENDS += " openssl-native coreutils-native optee-os u-boot virtual/kernel"
 
+PROVIDES += "virtual/atf"
+
 SRC_URI = " \
     git://git.linaro.org/landing-teams/working/mbl/arm-trusted-firmware.git;protocol=https;nobranch=1;name=atf \
     git://github.com/ARMmbed/mbedtls.git;protocol=https;branch=development;name=mbedtls;destsuffix=mbedtls \

@@ -12,7 +12,6 @@ inherit packagegroup
 #       environment for secure application execution.
 #     - kernel-modules. Required by iptables related modules (e.g. netfilter
 #       connection tracking.
-#     - optee-os. If the machine supports optee include the os.
 #     - optee-client. If the machine supports optee include the client.
 ###############################################################################
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " avahi-autoipd"
@@ -40,7 +39,6 @@ PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " python3-runpy"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " python3-shell"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " python3-venv"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " mbl-cloud-client"
-PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " optee-os"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " optee-client"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " connman"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " connman-client"

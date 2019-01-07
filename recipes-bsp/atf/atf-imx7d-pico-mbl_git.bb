@@ -26,3 +26,5 @@ do_deploy() {
 }
 
 addtask deploy after do_compile
+
+inherit noinstall

@@ -67,6 +67,13 @@ do_compile_prepend_raspberrypi3-mbl() {
    export PATH=${STAGING_DIR_NATIVE}/${bindir}/aarch64-linux-gnu/bin:$PATH
 }
 
-do_install_append() {
-    uboot-mkimage -A arm -T kernel -O tee -C none -d ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.bin ${D}/lib/firmware/uTee.optee
-}
+# We don't want any part of optee-os ending up on the root file system. It
+# would be nice to inherit from the noinstall class here, but the noinstall
+# class removes the do_install task and, unconventionally, the optees-os
+# recipe's do_deploy task uses files created by the do_install task.
+#
+# Additionally, the optee-test build uses things that optee-os leaves in
+# /usr/include so we can't get rid of do_populate_sysroot either.
+PACKAGES = ""
+RPROVIDES = ""
+inherit nopackages

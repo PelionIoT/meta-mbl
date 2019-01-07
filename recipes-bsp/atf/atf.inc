@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+
 DESCRIPTION = "ARM Trusted Firmware"
 
 DEPENDS += " openssl-native coreutils-native optee-os u-boot virtual/kernel"
@@ -91,3 +92,5 @@ do_deploy() {
 }
 
 addtask deploy after do_compile
+
+inherit noinstall

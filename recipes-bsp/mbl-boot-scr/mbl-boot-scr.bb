@@ -34,5 +34,4 @@ do_deploy() {
 
 addtask do_deploy after do_compile before do_build
 
-PACKAGES = ""
-inherit nopackages
+inherit noinstall

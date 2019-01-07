@@ -6,12 +6,12 @@ DESCRIPTION = "ARM Trusted Firmware"
 
 DEPENDS += " openssl-native coreutils-native optee-os u-boot virtual/kernel"
 
-SRC_URI_append = " git://github.com/ARMmbed/mbedtls.git;protocol=https;branch=development;name=mbedtls;destsuffix=git/mbedtls "
+SRC_URI_append = " git://github.com/ARMmbed/mbedtls.git;protocol=https;branch=development;name=mbedtls;destsuffix=mbedtls "
 SRCREV_mbedtls = "1ab9b5714852c6810c0a0bfd8c3b5c60a9a15482"
 
 LICENSE = "BSD-3-Clause & Apache-2.0"
 LIC_FILES_CHKSUM = "file://license.rst;md5=e927e02bca647e14efd87e9e914b2443 \
-                    file://mbedtls/apache-2.0.txt;md5=3b83ef96387f14655fc854ddc3c6bd57"
+                    file://${WORKDIR}/mbedtls/apache-2.0.txt;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
@@ -36,7 +36,7 @@ ATF_COMPILE_FLAGS = "-C ${S} \
       CRTTOOLPATH=${S}/tools/fiptool \
       GENERATE_COT=1 \
       LOG_LEVEL=40 \
-      MBEDTLS_DIR=mbedtls \
+      MBEDTLS_DIR=${WORKDIR}/mbedtls \
       PLAT=${PLATFORM} \
       TRUSTED_BOARD_BOOT=1 \
       USE_TBBR_DEFS=1 \

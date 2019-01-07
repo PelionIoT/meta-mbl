@@ -16,8 +16,6 @@ DEPENDS_append += " linaro-aarch64-toolchain-native "
 
 SRCREV_atf = "3ba929571517347a12e027c629703ced0db0b255"
 
-PARALLEL_MAKE=""
-
 PLATFORM = "rpi3"
 
 ATF_COMPILE_FLAGS_append = " \

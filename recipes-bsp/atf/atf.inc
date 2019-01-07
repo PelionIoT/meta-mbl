@@ -20,6 +20,9 @@ LIC_FILES_CHKSUM = "file://license.rst;md5=e927e02bca647e14efd87e9e914b2443 \
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
 
+# The ATF makefiles don't support parallel make
+PARALLEL_MAKE=""
+
 # LDFLAGS is configured in bitbake.conf as linker flags to be passed to CC.
 # It sets it to include "-Wl,-O1". The ATF build system inherits LDFLAGS
 # from the environment and passes it directly to LD when building BL1,

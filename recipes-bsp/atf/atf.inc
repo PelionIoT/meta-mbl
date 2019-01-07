@@ -6,7 +6,11 @@ DESCRIPTION = "ARM Trusted Firmware"
 
 DEPENDS += " openssl-native coreutils-native optee-os u-boot virtual/kernel"
 
-SRC_URI_append = " git://github.com/ARMmbed/mbedtls.git;protocol=https;branch=development;name=mbedtls;destsuffix=mbedtls "
+SRC_URI = " \
+    git://git.linaro.org/landing-teams/working/mbl/arm-trusted-firmware.git;protocol=https;nobranch=1;name=atf \
+    git://github.com/ARMmbed/mbedtls.git;protocol=https;branch=development;name=mbedtls;destsuffix=mbedtls \
+"
+
 SRCREV_mbedtls = "1ab9b5714852c6810c0a0bfd8c3b5c60a9a15482"
 
 LICENSE = "BSD-3-Clause & Apache-2.0"

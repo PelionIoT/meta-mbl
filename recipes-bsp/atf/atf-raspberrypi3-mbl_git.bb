@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+require atf.inc
+
 PROVIDES += "virtual/atf"
 
 # This recipe builds the ARM Trusted Firmware for RaspberryPi3.
@@ -12,10 +14,7 @@ PROVIDES += "virtual/atf"
 #   and incorporated into the firmware.
 DEPENDS_append += " linaro-aarch64-toolchain-native "
 
-SRC_URI_append = "git://github.com/ARM-software/arm-trusted-firmware.git;protocol=https;branch=master;name=atf"
 SRCREV_atf = "3ba929571517347a12e027c629703ced0db0b255"
-
-require atf.inc
 
 PARALLEL_MAKE=""
 

@@ -90,4 +90,4 @@ do_deploy() {
     install -D -p -m 0644 ${B}/${PLATFORM}/rot_key.pem ${DEPLOYDIR}
 }
 
-addtask deploy before do_image_wic after do_compile
+addtask deploy after do_compile

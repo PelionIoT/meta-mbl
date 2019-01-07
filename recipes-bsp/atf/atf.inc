@@ -9,10 +9,8 @@ DEPENDS += " openssl-native coreutils-native optee-os u-boot virtual/kernel"
 SRC_URI_append = " git://github.com/ARMmbed/mbedtls.git;protocol=https;branch=development;name=mbedtls;destsuffix=git/mbedtls "
 SRCREV_mbedtls = "1ab9b5714852c6810c0a0bfd8c3b5c60a9a15482"
 
-LICENSE = "BSD-3-Clause & GPLv2 & Apache-2.0"
-LICENSE-atf = "BSD-3-Clause"
+LICENSE = "BSD-3-Clause & Apache-2.0"
 LIC_FILES_CHKSUM = "file://license.rst;md5=e927e02bca647e14efd87e9e914b2443 \
-                    file://${COMMON_LICENSE_DIR}/GPL-2.0;md5=801f80980d171dd6425610833a22dbe6 \
                     file://mbedtls/apache-2.0.txt;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
 S = "${WORKDIR}/git"

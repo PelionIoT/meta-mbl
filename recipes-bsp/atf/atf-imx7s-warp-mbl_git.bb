@@ -9,9 +9,6 @@ DEPENDS_append = " u-boot-tools-native"
 SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/arm-trusted-firmware.git;protocol=https;nobranch=1;name=atf"
 SRCREV_atf = "f664ffbd2d132f0c35c9f9fc4961a882ef81c297"
 
-SRC_URI_append +="file://u-boot.cfgout.warp7;name=uboot.cfgout;"
-SRCREV_uboot.cfgout="6bb815da1bc986dc717a59cc6d2552f8"
-
 require atf.inc
 
 # Notes on uboot.cfgout
@@ -19,8 +16,10 @@ require atf.inc
 # image. uboot.cfgout is a necessary input when generating a .imx image
 # To regenerate uboot.cfgout just do
 # "make warp7_config;make u-boot.imx CROSS_COMPILE=your-x-compiler-"
-
-LICENSE-uboot.cfgout = "GPLv2"
+SRC_URI_append = " file://u-boot.cfgout.warp7;name=uboot.cfgout;"
+SRCREV_uboot.cfgout="6bb815da1bc986dc717a59cc6d2552f8"
+LICENSE_append = " & GPL-2.0"
+LIC_FILES_CHKSUM_append = " file://${COMMON_LICENSE_DIR}/GPL-2.0;md5=801f80980d171dd6425610833a22dbe6"
 
 PLATFORM = "warp7"
 MBL_UNIFIED_BIN = "atf-bl2-fip.bin"

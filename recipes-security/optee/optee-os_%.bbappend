@@ -6,42 +6,84 @@ DEPENDS += " u-boot-tools-native "
 DEPENDS_append_raspberrypi3-mbl = " linaro-aarch64-toolchain-native "
 
 SRCREV="644e5420ae01992e59c29f1417c9fd8445fab521"
+SRCREV_imx7d-pico-mbl="89af39033471cb21ed4db18f491ffb77e30e2a68"
 SRC_URI="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "
+
 OPTEEMACHINE_imx7s-warp-mbl="imx-mx7swarp7_mbl"
 OPTEEOUTPUTMACHINE_imx7s-warp-mbl="imx"
+
+OPTEEMACHINE_imx7d-pico-mbl="imx-mx7dpico_mbl"
+OPTEEOUTPUTMACHINE_imx7d-pico-mbl="imx"
+
 OPTEEMACHINE_raspberrypi3-mbl="rpi3"
 OPTEEOUTPUTMACHINE_raspberrypi3-mbl="rpi3"
 
-# PLATFORM: choose the platform. The platform normally be "soc-board" type.
-# CROSS_COMPILE_ta_arm32: Set the cross-compiler for 32-bit TA.
-EXTRA_OEMAKE = "PLATFORM=${OPTEEMACHINE} \
+OPTEE_ARCH = "arm32"
+
+# CFG_DT
+#    Enable device tree support.
+#
+# CFG_TEE_CORE_LOG_LEVEL
+#   Configure Trusted Execution Environment core log level.
+#     1 => only show ERROR logging.
+#     4 => most verbose including xtest output.
+#
+# CROSS_COMPILE_ta_arm32
+#   Configure the CROSS_COMPILE symbol for the AArch32 trusted applications.
+#   This is the same for all targets.
+#
+# LDFLAGS
+#   The linker flags are cleared in order to stop LDFLAGS breaking
+#   compilation of TAs.
+#
+# LIBGCC_LOCATE_CFLAGS
+#   This symbol is used to specify the logical root directory for headers and
+#   libraries for the GNU linker. The directory is set to be the
+#   STAGING_DIR_HOST i.e. ${WORKDIR}/recipe-sysroot. Support for this is added
+#   by optee_os_git.bb patching the optee-os project gcc.mk makefile with
+#   0001-allow-setting-sysroot-for-libgcc-lookup.patch.
+#   See https://gcc.gnu.org/onlinedocs/gcc/Directory-Options.html for details
+#   about --sysroot.
+#
+# NOWERROR
+#   Do not treat warnings as errors.
+#
+# PLATFORM
+#   A platform is a family of closely related hardware configurations.
+#   See optee_os/documentation/build_system.md in the optee_os repo
+#   for more information.
+#
+EXTRA_OEMAKE = " \
+                CFG_DT=y \
+                CFG_TEE_CORE_LOG_LEVEL=1 \
                 CROSS_COMPILE_ta_arm32=${HOST_PREFIX} \
-                NOWERROR=1 \
                 LDFLAGS= \
                 LIBGCC_LOCATE_CFLAGS=--sysroot=${STAGING_DIR_HOST} \
+                NOWERROR=1 \
+                PLATFORM=${OPTEEMACHINE} \
          "
 
 # CROSS_COMPILE_core: Set the cross-compiler for OPTEE core.
-# ta-targets: Set the ta-targets. On WaRP7 it should be ta_arm32 for 32-bit TA.
+# ta-targets: Set the ta-targets. On WaRP7 and PICO IMX7D it should be ta_arm32
+# for 32-bit TA.
 # CFG_PAGEABLE_ADDR: Set pageable address. Note that pageable is currently not
 #                    using on WaRP7. So we set it to 0.
-# CFG_NS_ENTRY_ADDR: Set the Non-secure entry address. Should be the address of
-#                    the kernel.
-# CFG_DT: Enable device tree support.
-# CFG_DT_ADDR: The address of the device tree.
-# CFG_DDR_SIZE: Set the size of the DDR.
-# CFG_TEE_CORE_LOG_LEVEL: Set the log level to 1 (only show ERROR). 4 is
-#                         most verbose but will let xtest output too many
-#                         things.
-EXTRA_OEMAKE_append_imx7s-warp-mbl = " \
+# CFG_TEE_CORE_NB_CORE: Set the CPU core number information.
+EXTRA_OEMAKE_append_imx = " \
+                CFG_ARM32_core=y \
+                CFG_PAGEABLE_ADDR=0 \
                 CROSS_COMPILE_core=${HOST_PREFIX} \
                 ta-targets=ta_arm32 \
-                CFG_PAGEABLE_ADDR=0 \
-                CFG_DT=y CFG_TEE_CORE_LOG_LEVEL=1 \
+	"
+
+EXTRA_OEMAKE_append_imx7s-warp-mbl = " \
                 CFG_TEE_CORE_NB_CORE=1 \
-		CFG_ARM32_core=y \
+        "
+
+EXTRA_OEMAKE_append_imx7d-pico-mbl = " \
+                CFG_TEE_CORE_NB_CORE=2 \
         "
 
 # CROSS_COMPILE_core: Set the cross-compiler for OPTEE core. On RPi3 it should
@@ -49,19 +91,12 @@ EXTRA_OEMAKE_append_imx7s-warp-mbl = " \
 #                     it supports 32-bit TA. Thus CROSS_COMPILE_ta_arm32
 #                     still sets to ${HOST_PREFIX}
 # CFG_ARM64_core: set OPTEE core to be in ARM64 rather than ARM32.
-# CFG_DT: Enable device tree support.
 # CFG_DT_ADDR: The address of the device tree.
-# CFG_TEE_CORE_LOG_LEVEL: Set the log level to 1 (only show ERROR). 4 is
-#                         most verbose but will let xtest output too many
-#                         things.
 EXTRA_OEMAKE_append_raspberrypi3-mbl = " \
                 CROSS_COMPILE_core=aarch64-linux-gnu- \
-                CFG_DT=y CFG_DT_ADDR=0x03000000 \
-                CFG_TEE_CORE_LOG_LEVEL=1 \
+                CFG_DT_ADDR=0x03000000 \
                 CFG_ARM64_core=y \
         "
-
-OPTEE_ARCH = "arm32"
 
 do_compile_prepend_raspberrypi3-mbl() {
    export PATH=${STAGING_DIR_NATIVE}/${bindir}/aarch64-linux-gnu/bin:$PATH

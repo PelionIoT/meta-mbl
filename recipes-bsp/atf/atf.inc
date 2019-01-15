@@ -5,7 +5,7 @@
 
 DESCRIPTION = "ARM Trusted Firmware"
 
-DEPENDS += " openssl-native coreutils-native optee-os u-boot virtual/kernel"
+DEPENDS += " openssl-native coreutils-native virtual/optee-os u-boot virtual/kernel"
 
 PROVIDES += "virtual/atf"
 

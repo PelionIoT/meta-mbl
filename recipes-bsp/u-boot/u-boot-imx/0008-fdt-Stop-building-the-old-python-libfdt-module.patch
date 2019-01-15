@@ -1,0 +1,210 @@
+From d2501696c127058fda5d1ef1b4ea6463ee2cd9f6 Mon Sep 17 00:00:00 2001
+From: Simon Glass <sjg@chromium.org>
+Date: Sat, 27 May 2017 07:38:24 -0600
+Subject: [PATCH 8/8] fdt: Stop building the old python libfdt module
+
+This is no-longer needed, so stop building it.
+
+Signed-off-by: Simon Glass <sjg@chromium.org>
+---
+ lib/libfdt/libfdt_legacy.swig | 112 ------------------------------------------
+ lib/libfdt/setup.py           |  38 --------------
+ tools/Makefile                |  18 -------
+ 3 files changed, 168 deletions(-)
+ delete mode 100644 lib/libfdt/libfdt_legacy.swig
+ delete mode 100644 lib/libfdt/setup.py
+
+diff --git a/lib/libfdt/libfdt_legacy.swig b/lib/libfdt/libfdt_legacy.swig
+deleted file mode 100644
+index 9880dd9..0000000
+--- a/lib/libfdt/libfdt_legacy.swig
++++ /dev/null
+@@ -1,112 +0,0 @@
+-%module libfdt_legacy
+-
+-%{
+-#define SWIG_FILE_WITH_INIT
+-#include "libfdt.h"
+-%}
+-
+-%pythoncode %{
+-def Raise(errnum):
+-    raise ValueError('Error %s' % fdt_strerror(errnum))
+-
+-def Name(fdt, offset):
+-    name, len = fdt_get_name(fdt, offset)
+-    return name
+-
+-def String(fdt, offset):
+-    offset = fdt32_to_cpu(offset)
+-    name = fdt_string(fdt, offset)
+-    return name
+-
+-def swap32(x):
+-    return (((x << 24) & 0xFF000000) |
+-            ((x <<  8) & 0x00FF0000) |
+-            ((x >>  8) & 0x0000FF00) |
+-            ((x >> 24) & 0x000000FF))
+-
+-def fdt32_to_cpu(x):
+-    return swap32(x)
+-
+-def Data(prop):
+-    set_prop(prop)
+-    return get_prop_data()
+-%}
+-
+-%include "typemaps.i"
+-%include "cstring.i"
+-
+-%typemap(in) void* = char*;
+-
+-typedef int fdt32_t;
+-
+-struct fdt_property {
+-        fdt32_t tag;
+-        fdt32_t len;
+-        fdt32_t nameoff;
+-        char data[0];
+-};
+-
+-/*
+- * This is a work-around since I'm not sure of a better way to copy out the
+- * contents of a string. This is used in dtoc/GetProps(). The intent is to
+- * pass in a pointer to a property and access the data field at the end of
+- * it. Ideally the Data() function above would be able to do this directly,
+- * but I'm not sure how to do that.
+- */
+-#pragma SWIG nowarn=454
+-%inline %{
+-    static struct fdt_property *cur_prop;
+-
+-    void set_prop(struct fdt_property *prop) {
+-        cur_prop = prop;
+-    }
+-%}
+-
+-%cstring_output_allocate_size(char **s, int *sz, free(*$1));
+-%inline %{
+-    void get_prop_data(char **s, int *sz) {
+-        *sz = fdt32_to_cpu(cur_prop->len);
+-        *s = (char *)malloc(*sz);
+-        if (!*s)
+-            *sz = 0;
+-        else
+-            memcpy(*s, cur_prop + 1, *sz);
+-    }
+-%}
+-
+-%typemap(in) (const void *) {
+-  if (!PyByteArray_Check($input)) {
+-    SWIG_exception_fail(SWIG_TypeError, "in method '" "$symname" "', argument "
+-                       "$argnum"" of type '" "$type""'");
+-  }
+-  $1 = (void *) PyByteArray_AsString($input);
+-}
+-
+-const void *fdt_offset_ptr(const void *fdt, int offset, unsigned int checklen);
+-int fdt_path_offset(const void *fdt, const char *path);
+-int fdt_first_property_offset(const void *fdt, int nodeoffset);
+-int fdt_next_property_offset(const void *fdt, int offset);
+-const char *fdt_strerror(int errval);
+-const struct fdt_property *fdt_get_property_by_offset(const void *fdt,
+-                                                      int offset,
+-                                                      int *OUTPUT);
+-const char *fdt_get_name(const void *fdt, int nodeoffset, int *OUTPUT);
+-const char *fdt_string(const void *fdt, int stroffset);
+-int fdt_first_subnode(const void *fdt, int offset);
+-int fdt_next_subnode(const void *fdt, int offset);
+-
+-%typemap(in) (void *) {
+-  if (!PyByteArray_Check($input)) {
+-    SWIG_exception_fail(SWIG_TypeError, "in method '" "$symname" "', argument "
+-                       "$argnum"" of type '" "$type""'");
+-  }
+-  $1 = PyByteArray_AsString($input);
+-}
+-
+-int fdt_delprop(void *fdt, int nodeoffset, const char *name);
+-
+-const char *fdt_strerror(int errval);
+-int fdt_pack(void *fdt);
+-
+-int fdt_totalsize(const void *fdt);
+-int fdt_off_dt_struct(const void *fdt);
+diff --git a/lib/libfdt/setup.py b/lib/libfdt/setup.py
+deleted file mode 100644
+index 6bd1bee..0000000
+--- a/lib/libfdt/setup.py
++++ /dev/null
+@@ -1,38 +0,0 @@
+-#!/usr/bin/env python
+-
+-"""
+-setup.py file for SWIG libfdt
+-"""
+-
+-from distutils.core import setup, Extension
+-import os
+-import sys
+-
+-# Don't cross-compile - always use the host compiler.
+-del os.environ['CROSS_COMPILE']
+-del os.environ['CC']
+-
+-progname = sys.argv[0]
+-cflags = sys.argv[1]
+-files = sys.argv[2:]
+-
+-if cflags:
+-    cflags = [flag for flag in cflags.split(' ') if flag]
+-else:
+-    cflags = None
+-
+-libfdt_module = Extension(
+-    '_libfdt_legacy',
+-    sources = files,
+-    extra_compile_args =  cflags
+-)
+-
+-sys.argv = [progname, '--quiet', 'build_ext', '--inplace']
+-
+-setup (name = 'libfdt_legaacy',
+-       version = '0.1',
+-       author      = "SWIG Docs",
+-       description = """Simple swig libfdt from docs""",
+-       ext_modules = [libfdt_module],
+-       py_modules = ["libfdt_legacy"],
+-       )
+diff --git a/tools/Makefile b/tools/Makefile
+index bc411e4..cb1683e 100644
+--- a/tools/Makefile
++++ b/tools/Makefile
+@@ -141,24 +141,6 @@ tools/_libfdt.so: $(LIBFDT_SRCS) $(LIBFDT_SWIG)
+ 		$(libfdt_tree)/pylibfdt/setup.py --quiet build_ext \
+ 			--build-lib tools
+ 
+-# Build a libfdt Python module if swig is available
+-# Use 'sudo apt-get install swig libpython-dev' to enable this
+-hostprogs-y += \
+-	$(if $(shell which swig 2> /dev/null),_libfdt_legacy.so)
+-_libfdt_legacy.so-sharedobjs += $(LIBFDT_OBJS)
+-libfdt:
+-
+-tools/_libfdt_legacy.so: $(patsubst %.o,%.c,$(LIBFDT_OBJS)) \
+-		tools/libfdt_legacy_wrap.c
+-	LDFLAGS="$(HOSTLDFLAGS)" CFLAGS= ${PYTHON} $(srctree)/lib/libfdt/setup.py \
+-		"$(_hostc_flags)" $^
+-	mv _libfdt_legacy.so $@
+-
+-tools/libfdt_legacy_wrap.c: $(srctree)/lib/libfdt/libfdt_legacy.swig
+-	swig -python -o $@ $<
+-
+-# TODO(sjg@chromium.org): Is this correct on Mac OS?
+-
+ ifneq ($(CONFIG_MX23)$(CONFIG_MX28),)
+ # Add CONFIG_MXS into host CFLAGS, so we can check whether or not register
+ # the mxsimage support within tools/mxsimage.c .
+-- 
+2.7.4
+

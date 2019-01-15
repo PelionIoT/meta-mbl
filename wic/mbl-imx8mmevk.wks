@@ -1,0 +1,55 @@
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+# Specification of partitioning of imx7d-pico mmc to support mbed Update
+# See docs/partitions.md
+
+# Note 1: don't specify mount points and "on-device" options - if we do that then
+# WIC will try to add the devices to fstab, but it will only add them to fstab
+# in the final wic image, not the rootfs images. That would be a problem for us
+# because we use the rootfs images as firmware files for Update. We just deal
+# with fstab manually to avoid this.
+#
+# Note 2: the labels are important - fstab uses them and so does activate_script.
+
+# Copy initial binary boot blob
+part --source rawcopy --sourceparams="file=imx-boot-imx8mmevk-mbl-sd.bin" --no-table --align 33
+
+# Partition 1: Boot partition
+part --source bootimg-partition --fstype=vfat --label boot --active --align 4096 --fixed-size 32
+
+# Partition 2: Boot flags
+part --fstype=ext4 --label bootflags --fixed-size 20
+
+# Partition 3: First root partition
+part --source rootfs --fstype=ext4 --label rootfs1 --fixed-size 500
+
+# Partition 4: Second root partition
+part --source rootfs --fstype=ext4 --label rootfs2 --fixed-size 500
+
+# Partition 5: Factory config partition
+part --fstype=ext4 --label factory_config --fixed-size 20
+
+# Partition 6: First non-factory config partition
+part --source rootfs-subdir --sourceparams subdir=config/user --fstype=ext4 --label nfactory_config1 --fixed-size 20
+
+# Partition 7: Second non-factory config partition
+part --fstype=ext4 --label nfactory_config2 --fixed-size 20
+
+# Partition 8: Log partition
+part --fstype=ext4 --label log --fixed-size 20
+
+# Partition 9: Scratch partition
+part --source rootfs-subdir --sourceparams subdir=scratch --fstype=ext4 --label scratch --fixed-size 500
+
+# Partition 10: First rootfs verity hash partition
+part --source non-rootfs-subdir --sourceparams subdir=verity_hash --fstype=ext4 --label rootfs1_ver_hash --fixed-size 20
+
+# Partition 11: Second rootfs verity hash partition
+part --fstype=ext4 --label rootfs2_ver_hash --fixed-size 20
+
+# Partition 12: Home partition
+part --source rootfs-subdir --sourceparams subdir=home --fstype=ext4 --label home --fixed-size 450
+
+bootloader --ptable msdos

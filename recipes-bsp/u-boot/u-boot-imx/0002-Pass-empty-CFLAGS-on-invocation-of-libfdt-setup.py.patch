@@ -1,0 +1,37 @@
+From 3226545e1b67a2f34f4622d8b1675d610f8cb45f Mon Sep 17 00:00:00 2001
+From: Max Filippov <jcmvbkbc@gmail.com>
+Date: Thu, 16 Mar 2017 15:23:55 -0700
+Subject: [PATCH 2/8] Pass empty CFLAGS on invocation of libfdt/setup.py
+
+When building u-boot tools in cross-build environment CFLAGS environment
+variable set up for target is taken into an account when building code
+for host. Make it empty on invocation of python.
+
+This fixes the following build errors when cross-compiling for xtensa:
+
+  cc1: error: unrecognized command line option "-mlongcalls"
+  cc1: error: unrecognized command line option "-mauto-litpools"
+
+Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
+Reviewed-by: Simon Glass <sjg@chromium.org>
+Reviewed-by: Tom Rini <trini@konsulko.com>
+---
+ tools/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/Makefile b/tools/Makefile
+index beaf45a..3c0a537 100644
+--- a/tools/Makefile
++++ b/tools/Makefile
+@@ -120,7 +120,7 @@ _libfdt.so-sharedobjs += $(LIBFDT_OBJS)
+ libfdt:
+ 
+ tools/_libfdt.so: $(patsubst %.o,%.c,$(LIBFDT_OBJS)) tools/libfdt_wrap.c
+-	LDFLAGS="$(HOSTLDFLAGS)" python $(srctree)/lib/libfdt/setup.py \
++	LDFLAGS="$(HOSTLDFLAGS)" CFLAGS= python $(srctree)/lib/libfdt/setup.py \
+ 		"$(_hostc_flags)" $^
+ 	mv _libfdt.so $@
+ 
+-- 
+2.7.4
+

@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 #
+
 # This file contains imx7s-pico-mbl.conf changes needed for the current
 # (non-standard) form of the BSP. These changes will be removed when
 # the BSP adopts mbl-fitimage.bbclass to generate the FIT image.
@@ -19,4 +20,3 @@ do_deploy_append_imx7d-pico-mbl() {
     # automatically as part of deploy.bbclass processing (do_deploy[dirs] = "S{DEPLOYDIR} ${B}")
     install -m 0644 boot.scr ${DEPLOYDIR}
 }
-

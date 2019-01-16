@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+# Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: MIT
 #
@@ -16,6 +16,16 @@ do_compile_append_imx7d-pico-mbl() {
 
 
 do_deploy_append_imx7d-pico-mbl() {
+    # It's unnecessary to create the DEPLOYDIR before installing to it because is created
+    # automatically as part of deploy.bbclass processing (do_deploy[dirs] = "S{DEPLOYDIR} ${B}")
+    install -m 0644 boot.scr ${DEPLOYDIR}
+}
+
+do_compile_append_imx8mmevk-mbl() {
+    mkimage -A arm -T script -C none -n "Boot script" -d "${WORKDIR}/boot.cmd" boot.scr
+}
+
+do_deploy_append_imx8mmevk-mbl() {
     # It's unnecessary to create the DEPLOYDIR before installing to it because is created
     # automatically as part of deploy.bbclass processing (do_deploy[dirs] = "S{DEPLOYDIR} ${B}")
     install -m 0644 boot.scr ${DEPLOYDIR}

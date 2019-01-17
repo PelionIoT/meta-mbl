@@ -46,15 +46,15 @@ fakeroot python do_expand_mbl_var_placeholders() {
                 for line in file:
                     new_line = expand_placeholders_in_line(d, line)
                     tmpfile.write(expand_placeholders_in_line(d, line))
+                    
+        # Copy the original file's user, group and 
+        # permission metadata to the new file
+        info = os.stat(path)
+        os.chmod(tmppath, info.st_mode)
+        os.chown(tmppath, info.st_uid, info.st_gid)
 
-    # Copy the original file's user, group and permission metadata to the new
-    # file
-    info = os.stat(path)
-    os.chmod(tmppath, info.st_mode)
-    os.chown(tmppath, info.st_uid, info.st_gid)
-
-    # Replace the original file with the new file
-    os.rename(tmppath, path)
+        # Replace the original file with the new file
+        os.rename(tmppath, path)
 }
 
 addtask expand_mbl_var_placeholders after do_install do_deploy before do_package do_populate_sysroot

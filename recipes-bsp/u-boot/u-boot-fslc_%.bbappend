@@ -16,3 +16,10 @@ DEPENDS += "flex-native bison-native"
 do_compile_append_imx7s-warp-mbl() {
 	ln -snf ${B}/dts/dt.dtb ${B}/${UBOOT_DTB_BINARY}
 }
+
+# This function is temp temporary solution to install u-boot. It will be
+# removed when u-boot # is booted by optee-os, instead of SPL, because we
+# need u-boot.bin, not u-boot.img in that case.
+do_deploy_append_imx7d-pico-mbl() {
+	install -D -p -m 0644 ${B}/u-boot.img ${DEPLOYDIR}
+}

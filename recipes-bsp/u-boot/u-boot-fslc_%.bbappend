@@ -15,3 +15,12 @@ DEPENDS += "flex-native bison-native"
 do_compile_append_imx7s-warp-mbl() {
 	ln -snf ${B}/dts/dt.dtb ${B}/${UBOOT_DTB_BINARY}
 }
+
+
+do_deploy_append_imx7d-pico-mbl() {
+	install -D -p -m 0644 ${B}/u-boot-dtb.cfgout ${DEPLOYDIR}/u-boot.cfgout
+}
+
+do_deploy_append_imx7s-warp-mbl() {
+	install -D -p -m 0644 ${B}/u-boot.cfgout ${DEPLOYDIR}
+}

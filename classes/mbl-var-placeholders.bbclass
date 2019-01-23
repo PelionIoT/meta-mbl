@@ -58,3 +58,4 @@ fakeroot python do_expand_mbl_var_placeholders() {
 }
 
 addtask expand_mbl_var_placeholders after do_install do_deploy before do_package do_populate_sysroot
+do_expand_mbl_var_placeholders[depends] += "virtual/fakeroot-native:do_populate_sysroot"

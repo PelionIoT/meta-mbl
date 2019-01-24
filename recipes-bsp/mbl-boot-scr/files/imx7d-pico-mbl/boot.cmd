@@ -1,6 +1,6 @@
 # Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
 #
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: BSD-3-Clause
 
 # Specify a kernel image containing mbl-console-image-initramfs (do not use the default uImage)
 setenv image uImage-initramfs-imx7d-pico-mbl.bin

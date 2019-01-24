@@ -38,7 +38,6 @@ RDEPENDS_${PN} = "\
     libstdc++ \
     start-stop-daemon \
     util-linux \
-    systemd \
 "
 
 # Installed packages

@@ -2,22 +2,20 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-# Specify a kernel image containing mbl-console-image-initramfs (do not use the default uImage)
-setenv image uImage-initramfs-imx7d-pico-mbl.bin
+# The rootfs selection is done in the initramfs other kernel params are set in mmcargs
+run mmcargs
 
-setenv kernel_addr_r 0x88000000
+# The logic of verifying the fit image is moved to u-boot config, so that fitimage
+# is verified before running any external script. So we do not verify the image
+# again here.
 
-setenv bootargs "console=ttymxc4,115200"
+# Extract FDT from FIT
+echo "imxtract ${bootscriptaddr}#conf@imx7d-pico.dtb fdt@imx7d-pico.dtb ${fdt_addr}"
+imxtract ${bootscriptaddr}#conf@imx7d-pico.dtb fdt@imx7d-pico.dtb ${fdt_addr}
 
-# Load Linux Kernel image from the boot partition (Linux Kernel image contains the initramfs image)
-echo "Load Linux Kernel image containing initramfs image: ${image}"
-fatload mmc 0:1 ${kernel_addr_r} ${image}
-
-fatload mmc 0:1 ${fdt_addr} imx7d-pico.dtb
-
-# Boot Linux with the device tree
-bootm ${kernel_addr_r} - ${fdt_addr}
+# Now boot
+echo Booting secure Linux from FIT ...;
+bootm ${bootscriptaddr}#conf@imx7d-pico.dtb ${bootscriptaddr}:ramdisk@1 ${fdt_addr}
 
 # Failsafe if something goes wrong
-echo Fail to boot Linux, try hab_failsafe ...;
 hab_failsafe

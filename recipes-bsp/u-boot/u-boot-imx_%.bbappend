@@ -13,5 +13,5 @@ SRC_URI_append_imx8mmevk-mbl = " file://0001-tools-fix-cross-compiling-tools-whe
 do_deploy_append() {
     # Fixup the name expected by the incoming imx-boot recipe
     cd ${DEPLOYDIR}/${BOOT_TOOLS}
-    ln -sf u-boot-nodtb.bin-${MACHINE}-${UBOOT_CONFIG} u-boot-nodtb.bin 
+    install -m 0777 ${B}/${config}/u-boot-nodtb.bin  ${DEPLOYDIR}/${BOOT_TOOLS}/u-boot-nodtb.bin
 }

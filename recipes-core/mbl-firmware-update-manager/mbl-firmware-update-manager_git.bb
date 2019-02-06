@@ -16,6 +16,7 @@ S = "${WORKDIR}/git/firmware-management/${SRCNAME}"
 RDEPENDS_${PN} = " \
     python3-core \
     python3-logging \
+    mbl-firmware-update-header-util \
 "
 
 inherit setuptools3

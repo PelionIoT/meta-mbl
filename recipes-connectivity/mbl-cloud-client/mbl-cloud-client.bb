@@ -38,6 +38,7 @@ RDEPENDS_${PN} = "\
     libstdc++ \
     start-stop-daemon \
     util-linux \
+    jsoncpp \
 "
 
 # Installed packages

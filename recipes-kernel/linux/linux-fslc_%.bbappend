@@ -28,7 +28,7 @@ do_preconfigure() {
 	kernel_conf_variable LOCALVERSION "\"${LOCALVERSION}\""
 	kernel_conf_variable LOCALVERSION_AUTO y
 
-	sed -e "${CONF_SED_SCRIPT}" < '${S}/arch/arm/configs/${KBUILD_DEFCONFIG_imx7s-warp-mbl}' >> '${B}/.config'
+	sed -e "${CONF_SED_SCRIPT}" < '${S}/arch/arm/configs/${KBUILD_DEFCONFIG}' >> '${B}/.config'
 
 	cfgs=`find ${WORKDIR}/ -maxdepth 1 -name '*-mbl.cfg' | wc -l`;
 	if [ ${cfgs} -gt 0 ]; then

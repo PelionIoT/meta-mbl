@@ -41,9 +41,6 @@ RDEPENDS_${PN} = "\
     jsoncpp \
 "
 
-# Installed packages
-PACKAGES = "${PN}-dbg ${PN}"
-
 FILES_${PN} += "\
     /opt \
     /opt/arm \
@@ -56,8 +53,16 @@ FILES_${PN} += "\
     ${sysconfdir}/logrotate.d/mbl-cloud-client-logrotate.conf \
 "
 
+FILES_${PN}-staticdev += "\
+    ${libdir}/*.a \
+"
+
 FILES_${PN}-dbg += "/opt/arm/.debug \
                     /usr/src/debug/mbl-cloud-client"
+                    
+FILES_${PN}-dev += "\
+    ${includedir} \
+"
 
 # !!!
 # Note: currently, we use x86_x64 PC Linux PAL platform implementation that is intented 
@@ -102,7 +107,7 @@ do_setup_pal_env[depends] += "python-certifi-native:do_populate_sysroot"
 do_setup_pal_env[depends] += "python-idna-native:do_populate_sysroot"
 
 do_configure() {
-    CUR_DIR=$(pwd)
+
     cd "${S}/cloud-services/mbl-cloud-client/__${TARGET}"
 
     if [ -z "${MBED_CLOUD_IDENTITY_CERT_FILE}" ]; then
@@ -133,15 +138,12 @@ do_configure() {
           -DCMAKE_BUILD_TYPE="${RELEASE_TYPE}" \
           -DCMAKE_TOOLCHAIN_FILE="${S}/cloud-services/mbl-cloud-client/pal-platform/Toolchain/GCC/yocto-toolchain.cmake" \
           -DEXTARNAL_DEFINE_FILE="${S}/cloud-services/mbl-cloud-client/define.txt"
-
-    cd ${CUR_DIR}
 }
 
 do_compile() {
-    CUR_DIR=$(pwd)
+
     cd "${S}/cloud-services/mbl-cloud-client/__${TARGET}"
     oe_runmake mbl-cloud-client
-    cd ${CUR_DIR}
 }
 
 do_install() {
@@ -156,6 +158,14 @@ do_install() {
 
     install -d "${D}${sysconfdir}/init.d"
     install -m 755 "${WORKDIR}/init" "${D}${sysconfdir}/init.d/mbl-cloud-client"
+    
+    install -d ${D}${libdir}
+    install -m 0644 ${S}/cloud-services/mbl-cloud-client/__${TARGET}/${RELEASE_TYPE}/*.a ${D}${libdir}
+    
+    install -d ${D}${includedir}
+    install -m 0644 ${S}/cloud-services/mbl-cloud-client/*.h ${D}${includedir}
+    install -m 0644 "${S}/cloud-services/mbl-cloud-client/define.txt" ${D}${includedir}
+    cp -r --no-preserve=ownership "${S}/cloud-services/mbl-cloud-client/mbed-cloud-client" ${D}${includedir}/
 }
 
 # Add a logrotate config files

@@ -6,7 +6,8 @@
 #
 # SPDX-License-Identifier: MIT
 
-SRCREV = "7b95bef8f62d015b172c29a287f825de941db9f7"
+LINUX_VERSION = "4.14.95"
+SRCREV = "67c30f8be14648031b28ece4496ee5818d7406fe"
 
 KBUILD_DEFCONFIG_imx7s-warp-mbl ?= "warp7_mbl_defconfig"
 KBUILD_DEFCONFIG_imx7d-pico-mbl ?= "imx_v6_v7_defconfig"
@@ -27,7 +28,7 @@ do_preconfigure() {
 	kernel_conf_variable LOCALVERSION "\"${LOCALVERSION}\""
 	kernel_conf_variable LOCALVERSION_AUTO y
 
-	sed -e "${CONF_SED_SCRIPT}" < '${S}/arch/arm/configs/${KBUILD_DEFCONFIG_imx7s-warp-mbl}' >> '${B}/.config'
+	sed -e "${CONF_SED_SCRIPT}" < '${S}/arch/arm/configs/${KBUILD_DEFCONFIG}' >> '${B}/.config'
 
 	cfgs=`find ${WORKDIR}/ -maxdepth 1 -name '*-mbl.cfg' | wc -l`;
 	if [ ${cfgs} -gt 0 ]; then

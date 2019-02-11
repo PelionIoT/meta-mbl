@@ -6,3 +6,5 @@ PROVIDES += "virtual/atf"
 
 SRCBRANCH = "imx_4.14.78_1.0.0_ga"
 SRCREV = "d6451cc1e162eff89b03dd63e86d55b9baa8885b"
+
+EXTRA_OEMAKE += " SPD=opteed "

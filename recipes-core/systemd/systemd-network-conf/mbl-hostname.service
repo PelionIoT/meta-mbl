@@ -1,0 +1,14 @@
+# Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+[Unit]
+Description=MBL Hostname Setup
+After=systemd-hostnamed.service
+Before=systemd-networkd.service
+
+[Service]
+ExecStart=/opt/arm/mbl-hostname.sh
+
+[Install]
+WantedBy=basic.target

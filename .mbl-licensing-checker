@@ -1,0 +1,2 @@
+[mbl-licensing-checker]
+match = .*\.(bb|bbappend|bbclass|inc|network|py|service|sh)$

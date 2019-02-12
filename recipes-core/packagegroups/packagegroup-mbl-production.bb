@@ -24,7 +24,7 @@ PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ${PYTEST_DEPENDENCIES}"
 
 ###############################################################################
 # Packages added irrespective of the MACHINE
-#     - runc-opencontainers. Open Container Initiative (oci) containerised 
+#     - runc-opencontainers. Open Container Initiative (oci) containerised
 #       environment for secure application execution.
 #     - kernel-modules. Required by iptables related modules (e.g. netfilter
 #       connection tracking.
@@ -53,11 +53,18 @@ PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " mbl-cloud-client"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " optee-client"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " connman"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " connman-client"
+PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " systemd-network-conf"
 
-###############################################################################
+##########################################################################################
 # Packages added when the MACHINE and DISTRO have specific features
-#     - usbinit - bring up the usb0 network interface during boot
-###############################################################################
-PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ${@bb.utils.contains('COMBINED_FEATURES', 'usbgadget', 'usbinit', '', d)}"
+#     - systemd-network-conf-usb-gether - bring up the usb0 network interface during boot
+##########################################################################################
+PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ${@bb.utils.contains('COMBINED_FEATURES', 'usbgadget', 'systemd-network-conf-usb-gether', '', d)}"
+
+##########################################################################################
+# Packages added when the MACHINE have specific features
+#     - systemd-network-conf-usb-gether - bring up the eth* network interface during boot
+##########################################################################################
+PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ${@bb.utils.contains('MACHINE_FEATURES', 'ethernet', 'systemd-network-conf-eth', '', d)}"
 
 RDEPENDS_packagegroup-mbl-production += "${PACKAGEGROUP_MBL_PRODUCTION_PKGS}"

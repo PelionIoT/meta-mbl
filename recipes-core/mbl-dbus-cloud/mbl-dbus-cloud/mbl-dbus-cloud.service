@@ -1,0 +1,16 @@
+# Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+[Unit]
+Description= D-Bus MBL Cloud Client
+After=dbus.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=@bindir@/dbus-uuidgen --ensure
+ExecStart=@bindir@/dbus-daemon --config-file=@datadir@/dbus-1/mbl-dbus-cloud.conf
+
+[Install]
+WantedBy=multi-user.target

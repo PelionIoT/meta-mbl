@@ -1,0 +1,13 @@
+# Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+[Unit]
+Description=MBL App Lifecycle Manager
+After=mbl-cloud-client.service
+
+[Service]
+ExecStart=/opt/arm/mbl-app-lifecycle-manager-init.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -20,7 +20,7 @@ part --source rawcopy --sourceparams="file=imx-boot-imx8mmevk-mbl-sd.bin-flash_e
 part --source bootimg-partition --fstype=vfat --label boot --active --align 4096 --fixed-size 32
 
 # Partition 2: Boot flags
-part --fstype=ext4 --label bootflags --fixed-size 20
+part --source rootfs-subdir --sourceparams subdir=mnt/flags --fstype=ext4 --label bootflags --fixed-size 20
 
 # Partition 3: First root partition
 part --source rootfs --fstype=ext4 --label rootfs1 --fixed-size 500

@@ -14,3 +14,5 @@ RDEPENDS_${PN} = "python3-core"
 
 inherit setuptools3
 inherit python3-dir
+
+BBCLASSEXTEND = "native"

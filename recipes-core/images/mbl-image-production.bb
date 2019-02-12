@@ -46,6 +46,8 @@ IMAGE_ROOTFS_EXTRA_SPACE_append = "${@bb.utils.contains("DISTRO_FEATURES", "syst
 # Add a root account with empty password
 EXTRA_USERS_PARAMS = "useradd -p '' root;"
 
-# No GPLv3 allowed in this image
-IMAGE_LICENSE_CHECKER_BLACKLIST = "GPL-3.0 LGPL-3.0 AGPL-3.0"
-inherit image-license-checker image-signing image-verity key-generation mbl-firmware-update-header
+# No GPLv3 allowed in the non-rootfs parts of this image
+IMAGE_LICENSE_CHECKER_NON_ROOTFS_BLACKLIST = "GPL-3.0 LGPL-3.0 AGPL-3.0"
+inherit image-license-checker
+
+inherit image-signing image-verity key-generation mbl-firmware-update-header

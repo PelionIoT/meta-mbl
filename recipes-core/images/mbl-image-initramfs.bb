@@ -35,3 +35,8 @@ NO_RECOMMENDATIONS = "1"
 #  dependency. There EXTRA_IMAGEDEPENDS is therefore cleared in mbl-image-initramfs
 #  to stop this circular dependency being formed.
 EXTRA_IMAGEDEPENDS = ""
+
+# No GPLv3 allowed anywhere in this image
+IMAGE_LICENSE_CHECKER_NON_ROOTFS_BLACKLIST = "GPL-3.0 LGPL-3.0 AGPL-3.0"
+IMAGE_LICENSE_CHECKER_ROOTFS_BLACKLIST = "GPL-3.0 LGPL-3.0 AGPL-3.0"
+inherit image-license-checker

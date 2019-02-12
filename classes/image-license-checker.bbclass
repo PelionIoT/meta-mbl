@@ -25,22 +25,27 @@
 # Usage
 # -----
 # To use this class in a recipe for an image:
-# * Set IMAGE_LICENSE_CHECKER_BLACKLIST to a space delimited list of SPDX
-#   license names to be blacklisted.
+# * If you want to blacklist licenses in the rootfs, set
+#   IMAGE_LICENSE_CHECKER_ROOTFS_BLACKLIST to a space delimited list of SPDX
+#   license names to be blacklisted from the rootfs.
+# * If you want to blacklist licenses in the non-rootfs parts of an image, set
+#   IMAGE_LICENSE_CHECKER_NON_ROOTFS_BLACKLIST to a space delimited list of SPDX
+#   license names to be blacklisted from the non-rootfs parts of the image.
 # * Add the line "inherit image-license-checker".
 #
 # Example
 # -------
 # The mbl-image-production image with recipe file
-# recipes-core/images/mbl-image-production.bb contains the following two lines to
-# prevent the image from containing anything licensed under GPLv3 flavoured
-# licenses.
+# recipes-core/images/mbl-image-production.bb contains the following two lines
+# to prevent the non-rootfs parts of the image from containing anything
+# licensed under GPLv3 flavoured licenses.
 #
-# IMAGE_LICENSE_CHECKER_BLACKLIST = "GPL-3.0 LGPL-3.0 AGPL-3.0"
+# IMAGE_LICENSE_CHECKER_NON_ROOTFS_BLACKLIST = "GPL-3.0 LGPL-3.0 AGPL-3.0"
 # inherit image-license-checker
 #
 
-IMAGE_LICENSE_CHECKER_BLACKLIST ?= ""
+IMAGE_LICENSE_CHECKER_ROOTFS_BLACKLIST ?= ""
+IMAGE_LICENSE_CHECKER_NON_ROOTFS_BLACKLIST ?= ""
 
 
 def bad_license(d, license, blacklist):
@@ -121,7 +126,7 @@ python check_rootfs_licenses() {
     """
     Check packages installed on the rootfs for blacklisted licenses.
     """
-    blacklist = d.getVar('IMAGE_LICENSE_CHECKER_BLACKLIST').split()
+    blacklist = d.getVar('IMAGE_LICENSE_CHECKER_ROOTFS_BLACKLIST').split()
 
     bad_packages = []
     for inst_package in oe.rootfs.image_list_installed_packages(d):
@@ -141,7 +146,7 @@ python check_deploy_licenses() {
     Check recipes that deploy files used in an image (e.g. U-Boot) for
     blacklisted licenses.
     """
-    blacklist = d.getVar('IMAGE_LICENSE_CHECKER_BLACKLIST').split()
+    blacklist = d.getVar('IMAGE_LICENSE_CHECKER_NON_ROOTFS_BLACKLIST').split()
 
     bad_recipes = []
     for recipe in get_deployed_dependencies(d).keys():

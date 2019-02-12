@@ -29,6 +29,6 @@ IMAGE_INSTALL += " \
 	packagegroup-mbl-development \
 	"
 
-# No GPLv3 allowed in this image
-IMAGE_LICENSE_CHECKER_BLACKLIST = "GPL-3.0 LGPL-3.0 AGPL-3.0"
+# No GPLv3 allowed in the non-rootfs parts of the image
+IMAGE_LICENSE_CHECKER_NON_ROOTFS_BLACKLIST = "GPL-3.0 LGPL-3.0 AGPL-3.0"
 inherit image-license-checker

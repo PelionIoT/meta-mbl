@@ -6,6 +6,22 @@ SUMMARY = "mbed linux additional packages"
 DESCRIPTION = "mbed linux additional packages to those of the minimal console default setup."
 inherit packagegroup
 
+# These packages are all dependencies of pytest. We only install pytest on a
+# board at runtime when we want to do testing, so we can't rely on RDEPENDS to
+# install them all for us. Additionally, we can't rely on pip's dependency
+# mechanism to install them for us when we install pytest because outside of
+# Yocto, all of these packages are just part of the python3 base installation -
+# Yocto splits up the python3 base installation into smaller packages, but pip
+# doesn't know about those smaller packages.
+PYTEST_DEPENDENCIES = " \
+    python3-debugger \
+    python3-doctest \
+    python3-ntpath \
+    python3-pathlib \
+"
+PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ${PYTEST_DEPENDENCIES}"
+
+
 ###############################################################################
 # Packages added irrespective of the MACHINE
 #     - runc-opencontainers. Open Container Initiative (oci) containerised 
@@ -26,14 +42,9 @@ PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " mbl-app-lifecycle-manager"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " mbl-app-update-manager"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " mbl-firmware-update-manager"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " python3-core"
-# pyhton3-debugger and python3-doctest are included because Pytest is
-# dependent on them.
-PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " python3-debugger"
-PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " python3-doctest"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " python3-logging"
-# See meta-mbl/recipes-devtools/python/python3_%.bbappend for information
-# on why python3-ntpath is included in the package group.
-PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " python3-ntpath"
+# python3-pickle is required for "python3 -m pip install -U pytest"
+PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " python3-pickle"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " python3-pip"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " python3-runpy"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " python3-shell"

@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = "file://${WORKDIR}/git/LICENSE.BSD-3-Clause;md5=1a8858961a0fa
 
 SRC_URI = " \
     ${SRC_URI_MBL_CORE_REPO} \
-    file://init \
+    file://mbl-app-update-manager.service \
 "
 SRCNAME = "mbl-app-update-manager"
 SRCREV = "${SRCREV_MBL_CORE_REPO}"
@@ -23,16 +23,11 @@ RDEPENDS_${PN} = " \
 
 inherit setuptools3
 inherit python3-dir
+inherit systemd
 
-inherit update-rc.d
-INITSCRIPT_NAME = "${SRCNAME}"
-INITSCRIPT_PARAMS = "defaults 89 11"
+SYSTEMD_SERVICE_${PN} = "mbl-app-update-manager.service"
 
 do_install_append() {
-    install -d "${D}${sysconfdir}/init.d"
-    install -m 0755 "${WORKDIR}/init" "${D}${sysconfdir}/init.d/${INITSCRIPT_NAME}"
+    install -d "${D}${systemd_unitdir}/system/"
+    install -m 0644 "${WORKDIR}/mbl-app-update-manager.service" "${D}${systemd_unitdir}/system/"
 }
-
-FILES_${PN} += " \
-    ${sysconfdir}/init.d/${INITSCRIPT_NAME} \
-"

@@ -12,13 +12,13 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 S = "${WORKDIR}/git"
 
-# common sources for mbl-cloud-client(public) and mbl-cloud-client-internal  
+# common sources for mbl-cloud-client(public) and mbl-cloud-client-internal
 SRC_URI_COMMON = "file://yocto-toolchain.cmake \
   file://arm_update_local_config.sh \
-  file://init \
+  file://mbl-cloud-client.service \
   "
 
-# specific sources for the mbl-cloud-client public version  
+# specific sources for the mbl-cloud-client public version
 SRC_URI_MBL_CLOUD_CLIENT_PUBLIC = "${SRC_URI_MBL_CORE_REPO} \
   file://arg_too_long_fix_1.patch;patchdir=${S} \
   file://arg_too_long_fix_2.patch;patchdir=${S}/cloud-services/mbl-cloud-client/mbed-cloud-client \
@@ -36,8 +36,8 @@ RDEPENDS_${PN} = "\
     e2fsprogs-mke2fs \
     libgcc \
     libstdc++ \
-    start-stop-daemon \
     util-linux \
+    mbl-dbus-cloud \
 "
 
 # Installed packages
@@ -59,7 +59,7 @@ FILES_${PN}-dbg += "/opt/arm/.debug \
                     /usr/src/debug/mbl-cloud-client"
 
 # !!!
-# Note: currently, we use x86_x64 PC Linux PAL platform implementation that is intented 
+# Note: currently, we use x86_x64 PC Linux PAL platform implementation that is intented
 # for test purposes. That means, that we have test-quality code with possible defects
 # and other non-production code issues.
 TARGET = "x86_x64_NativeLinux_mbedtls"
@@ -73,10 +73,9 @@ RELEASE_TYPE="Debug"
 
 inherit pythonnative
 inherit cmake
+inherit systemd
 
-inherit update-rc.d
-INITSCRIPT_NAME = "mbl-cloud-client"
-INITSCRIPT_PARAMS = "defaults 90 10"
+SYSTEMD_SERVICE_${PN} = "mbl-cloud-client.service"
 
 do_setup_pal_env() {
     echo "Setup pal env"
@@ -153,8 +152,8 @@ do_install() {
     install -m 755 "${S}/cloud-services/mbl-cloud-client/mbed-cloud-client/update-client-hub/modules/pal-linux/scripts/arm_update_cmdline.sh" "${D}/opt/arm"
     install -m 755 "${WORKDIR}/arm_update_local_config.sh" "${D}/opt/arm"
 
-    install -d "${D}${sysconfdir}/init.d"
-    install -m 755 "${WORKDIR}/init" "${D}${sysconfdir}/init.d/mbl-cloud-client"
+    install -d "${D}${systemd_unitdir}/system/"
+    install -m 0644 "${WORKDIR}/mbl-cloud-client.service" "${D}${systemd_unitdir}/system/"
 }
 
 # Add a logrotate config files

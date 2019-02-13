@@ -13,9 +13,6 @@
 #
 # Note 2: the labels are important - fstab uses them and so does activate_script.
 
-# Partition 0: Raw copy of ATF FIP2 binary to sector# 2048.
-part --source rawcopy --sourceparams="file=fip2.bin" --no-table --align 1024
-
 # Partition 1: Boot partition
 part --source bootimg-partition --fstype=vfat --label boot --active --align 4096 --fixed-size 40
 

@@ -11,6 +11,14 @@ SRC_URI="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=ht
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "
 
+# Points to the codeaurora code from NXP
+# later work will import this into a landing-team repo
+SRCBRANCH_imx8mmevk-mbl = "imx_4.14.78_1.0.0_ga"
+SRCREV_imx8mmevk-mbl = "6a52487eb0ff664e4ebbd48497f0d3322844d51d"
+SRC_URI_imx8mmevk-mbl = "git://source.codeaurora.org/external/imx/imx-optee-os.git;protocol=https;branch=${SRCBRANCH} \
+file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
+"
+
 OPTEEMACHINE_imx7s-warp-mbl="imx-mx7swarp7_mbl"
 OPTEEOUTPUTMACHINE_imx7s-warp-mbl="imx"
 
@@ -19,6 +27,9 @@ OPTEEOUTPUTMACHINE_imx7d-pico-mbl="imx"
 
 OPTEEMACHINE_raspberrypi3-mbl="rpi3"
 OPTEEOUTPUTMACHINE_raspberrypi3-mbl="rpi3"
+
+OPTEEOUTPUTMACHINE_imx8mmevk-mbl="imx"
+OPTEEMACHINE_imx8mmevk-mbl="imx"
 
 OPTEE_ARCH = "arm32"
 
@@ -56,7 +67,6 @@ OPTEE_ARCH = "arm32"
 #   for more information.
 #
 EXTRA_OEMAKE = " \
-                CFG_DT=y \
                 CFG_TEE_CORE_LOG_LEVEL=1 \
                 CROSS_COMPILE_ta_arm32=${HOST_PREFIX} \
                 LDFLAGS= \
@@ -71,7 +81,8 @@ EXTRA_OEMAKE = " \
 # CFG_PAGEABLE_ADDR: Set pageable address. Note that pageable is currently not
 #                    using on WaRP7. So we set it to 0.
 # CFG_TEE_CORE_NB_CORE: Set the CPU core number information.
-EXTRA_OEMAKE_append_imx = " \
+EXTRA_OEMAKE_append_imx7 = " \
+		CFG_DT=y \
                 CFG_ARM32_core=y \
                 CFG_PAGEABLE_ADDR=0 \
                 CROSS_COMPILE_core=${HOST_PREFIX} \
@@ -93,6 +104,7 @@ EXTRA_OEMAKE_append_imx7d-pico-mbl = " \
 # CFG_ARM64_core: set OPTEE core to be in ARM64 rather than ARM32.
 # CFG_DT_ADDR: The address of the device tree.
 EXTRA_OEMAKE_append_raspberrypi3-mbl = " \
+		CFG_DT=y \
                 CROSS_COMPILE_core=aarch64-linux-gnu- \
                 CFG_DT_ADDR=0x03000000 \
                 CFG_ARM64_core=y \
@@ -100,6 +112,16 @@ EXTRA_OEMAKE_append_raspberrypi3-mbl = " \
 
 do_compile_prepend_raspberrypi3-mbl() {
    export PATH=${STAGING_DIR_NATIVE}/${bindir}/aarch64-linux-gnu/bin:$PATH
+}
+
+# Settings as defined by original IMX recipes
+EXTRA_OEMAKE_append_imx8mmevk-mbl = " \
+		CROSS_COMPILE=${HOST_PREFIX} \
+		CROSS_COMPILE64=${HOST_PREFIX} \
+	        PLATFORM_FLAVOR=mx8mmevk \
+        "
+do_deploy_append_imx8mmevk-mbl () {
+    ${TARGET_PREFIX}objcopy -O binary ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.elf ${DEPLOYDIR}/optee/tee.bin
 }
 
 # We don't want any part of optee-os ending up on the root file system. It

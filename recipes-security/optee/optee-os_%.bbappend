@@ -7,16 +7,15 @@ DEPENDS_append_raspberrypi3-mbl = " linaro-aarch64-toolchain-native "
 
 SRCREV="644e5420ae01992e59c29f1417c9fd8445fab521"
 SRCREV_imx7d-pico-mbl="89af39033471cb21ed4db18f491ffb77e30e2a68"
+SRCREV_imx8mmevk-mbl = "6a52487eb0ff664e4ebbd48497f0d3322844d51d"
 SRC_URI="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "
 
 OPTEEMACHINE_imx7s-warp-mbl="imx-mx7swarp7_mbl"
-OPTEEOUTPUTMACHINE_imx7s-warp-mbl="imx"
-
 OPTEEMACHINE_imx7d-pico-mbl="imx-mx7dpico_mbl"
-OPTEEOUTPUTMACHINE_imx7d-pico-mbl="imx"
-
+OPTEEMACHINE_imx8mmevk-mbl="imx"
+OPTEEOUTPUTMACHINE_imx="imx"
 OPTEEMACHINE_raspberrypi3-mbl="rpi3"
 OPTEEOUTPUTMACHINE_raspberrypi3-mbl="rpi3"
 
@@ -71,7 +70,7 @@ EXTRA_OEMAKE = " \
 # CFG_PAGEABLE_ADDR: Set pageable address. Note that pageable is currently not
 #                    using on WaRP7. So we set it to 0.
 # CFG_TEE_CORE_NB_CORE: Set the CPU core number information.
-EXTRA_OEMAKE_append_imx = " \
+MX7_FLAGS = " \
                 CFG_ARM32_core=y \
                 CFG_PAGEABLE_ADDR=0 \
                 CROSS_COMPILE_core=${HOST_PREFIX} \
@@ -79,10 +78,12 @@ EXTRA_OEMAKE_append_imx = " \
 	"
 
 EXTRA_OEMAKE_append_imx7s-warp-mbl = " \
+		${MX7_FLAGS}           \
                 CFG_TEE_CORE_NB_CORE=1 \
         "
 
 EXTRA_OEMAKE_append_imx7d-pico-mbl = " \
+		${MX7_FLAGS}           \
                 CFG_TEE_CORE_NB_CORE=2 \
         "
 
@@ -100,6 +101,16 @@ EXTRA_OEMAKE_append_raspberrypi3-mbl = " \
 
 do_compile_prepend_raspberrypi3-mbl() {
    export PATH=${STAGING_DIR_NATIVE}/${bindir}/aarch64-linux-gnu/bin:$PATH
+}
+
+EXTRA_OEMAKE_remove_imx8mmevk-mbl = "CFG_DT=y"
+EXTRA_OEMAKE_append_imx8mmevk-mbl = " \
+		CROSS_COMPILE=${HOST_PREFIX} \
+		CROSS_COMPILE64=${HOST_PREFIX} \
+	        PLATFORM_FLAVOR=mx8mmevk \
+        "
+do_deploy_append_imx8mmevk-mbl () {
+    ${TARGET_PREFIX}objcopy -O binary ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.elf ${DEPLOYDIR}/optee/tee.bin
 }
 
 # We don't want any part of optee-os ending up on the root file system. It

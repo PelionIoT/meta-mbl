@@ -5,12 +5,7 @@
 # The rootfs selection is done in the initramfs other kernel params are set in mmcargs
 run mmcargs
 
-# The logic of verifying the fit image is moved to u-boot config, so that fitimage
-# is verified before running any external script. So we do not verify the image
-# again here.
-
 # Extract FDT from FIT
-echo "imxtract ${bootscriptaddr}#conf@imx7d-pico.dtb fdt@imx7d-pico.dtb ${fdt_addr}"
 imxtract ${bootscriptaddr}#conf@imx7d-pico.dtb fdt@imx7d-pico.dtb ${fdt_addr}
 
 # Now boot

@@ -2,8 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-SRCREV_imx7s-warp-mbl = "c9c520b295d65cba77233fff7155e3338f5219c0"
-SRCREV_imx7d-pico-mbl = "dde0a21bcf3b9d2f038428eacf1b5533a85ac058"
+SRCREV = "218463f1bd26073cf52884682bbbd3699067e3b3"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 

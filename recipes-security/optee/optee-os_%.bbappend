@@ -102,15 +102,24 @@ EXTRA_OEMAKE_append_raspberrypi3-mbl = " \
                 CFG_ARM64_core=y \
         "
 
-do_compile_prepend_raspberrypi3-mbl() {
-   export PATH=${STAGING_DIR_NATIVE}/${bindir}/aarch64-linux-gnu/bin:$PATH
-}
-
+# CFG_DT: Remove as the OPTEE from NXP does not operate upon a DTB right now
+# CROSS_COMPILE: specify to the HOST_PREFIX as in both cases we use a 64bit
+#                cross compiler and elsewise we default to
+#                aarch64-linux-gnu-gcc
 EXTRA_OEMAKE_remove_imx8mmevk-mbl = "CFG_DT=y"
 EXTRA_OEMAKE_append_imx8mmevk-mbl = " \
 		CROSS_COMPILE=${HOST_PREFIX} \
 		CROSS_COMPILE64=${HOST_PREFIX} \
         "
+
+do_compile_prepend_raspberrypi3-mbl() {
+   export PATH=${STAGING_DIR_NATIVE}/${bindir}/aarch64-linux-gnu/bin:$PATH
+}
+
+# This is how we generate a TEE image for SPL loading
+# when we convert over to ATF and the v2 OPTEE headers
+# we will use the binaries produced by OPTEE directly
+# and this piece of the build phase can be removed.
 do_deploy_append_imx8mmevk-mbl () {
     ${TARGET_PREFIX}objcopy -O binary ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.elf ${DEPLOYDIR}/optee/tee.bin
 }

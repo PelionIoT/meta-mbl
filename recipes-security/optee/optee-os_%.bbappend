@@ -16,7 +16,7 @@ file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 
 OPTEEMACHINE_imx7s-warp-mbl="imx-mx7swarp7_mbl"
 OPTEEMACHINE_imx7d-pico-mbl="imx-mx7dpico_mbl"
-OPTEEMACHINE_imx8mmevk-mbl="imx"
+OPTEEMACHINE_imx8mmevk-mbl = "imx-mx8mmevk"
 OPTEEOUTPUTMACHINE_imx="imx"
 OPTEEMACHINE_raspberrypi3-mbl="rpi3"
 OPTEEOUTPUTMACHINE_raspberrypi3-mbl="rpi3"
@@ -110,7 +110,6 @@ EXTRA_OEMAKE_remove_imx8mmevk-mbl = "CFG_DT=y"
 EXTRA_OEMAKE_append_imx8mmevk-mbl = " \
 		CROSS_COMPILE=${HOST_PREFIX} \
 		CROSS_COMPILE64=${HOST_PREFIX} \
-	        PLATFORM_FLAVOR=mx8mmevk \
         "
 do_deploy_append_imx8mmevk-mbl () {
     ${TARGET_PREFIX}objcopy -O binary ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.elf ${DEPLOYDIR}/optee/tee.bin

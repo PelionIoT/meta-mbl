@@ -59,7 +59,6 @@ OPTEE_ARCH = "arm32"
 EXTRA_OEMAKE = " \
                 CFG_DT=y \
                 CFG_TEE_CORE_LOG_LEVEL=1 \
-                CROSS_COMPILE_ta_arm32=${HOST_PREFIX} \
                 LDFLAGS= \
                 LIBGCC_LOCATE_CFLAGS=--sysroot=${STAGING_DIR_HOST} \
                 NOWERROR=1 \
@@ -73,6 +72,7 @@ EXTRA_OEMAKE = " \
 #                    using on WaRP7. So we set it to 0.
 # CFG_TEE_CORE_NB_CORE: Set the CPU core number information.
 MX7_FLAGS = " \
+                CROSS_COMPILE_ta_arm32=${HOST_PREFIX} \
                 CFG_ARM32_core=y \
                 CFG_PAGEABLE_ADDR=0 \
                 CROSS_COMPILE_core=${HOST_PREFIX} \
@@ -96,6 +96,7 @@ EXTRA_OEMAKE_append_imx7d-pico-mbl = " \
 # CFG_ARM64_core: set OPTEE core to be in ARM64 rather than ARM32.
 # CFG_DT_ADDR: The address of the device tree.
 EXTRA_OEMAKE_append_raspberrypi3-mbl = " \
+                CROSS_COMPILE_ta_arm32=${HOST_PREFIX} \
                 CROSS_COMPILE_core=aarch64-linux-gnu- \
                 CFG_DT_ADDR=0x03000000 \
                 CFG_ARM64_core=y \

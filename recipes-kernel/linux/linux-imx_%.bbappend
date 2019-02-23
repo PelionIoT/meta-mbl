@@ -4,8 +4,8 @@
 
 S = "${WORKDIR}/git"
 
-LINUX_VERSION = "4.14.95"
-SRCREV = "7275f29bb94f9243d1428796b1ddfe1eaac9cc46"
+LINUX_VERSION = "4.14.103"
+SRCREV = "dc1c3f7a5fd722997bbc6b0159c087e9114e90ee"
 
 KBUILD_DEFCONFIG_imx8mmevk-mbl = "imx8mmevk_mbl_defconfig"
 

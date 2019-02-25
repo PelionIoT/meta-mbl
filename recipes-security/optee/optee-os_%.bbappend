@@ -5,18 +5,19 @@
 DEPENDS += " u-boot-tools-native "
 DEPENDS_append_raspberrypi3-mbl = " linaro-aarch64-toolchain-native "
 
+LICENSE = "BSD-2-Clause"
+
 SRCREV="644e5420ae01992e59c29f1417c9fd8445fab521"
 SRCREV_imx7d-pico-mbl="89af39033471cb21ed4db18f491ffb77e30e2a68"
+SRCREV_imx8mmevk-mbl = "6a52487eb0ff664e4ebbd48497f0d3322844d51d"
 SRC_URI="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "
 
 OPTEEMACHINE_imx7s-warp-mbl="imx-mx7swarp7_mbl"
-OPTEEOUTPUTMACHINE_imx7s-warp-mbl="imx"
-
 OPTEEMACHINE_imx7d-pico-mbl="imx-mx7dpico_mbl"
-OPTEEOUTPUTMACHINE_imx7d-pico-mbl="imx"
-
+OPTEEMACHINE_imx8mmevk-mbl = "imx-mx8mmevk"
+OPTEEOUTPUTMACHINE_imx="imx"
 OPTEEMACHINE_raspberrypi3-mbl="rpi3"
 OPTEEOUTPUTMACHINE_raspberrypi3-mbl="rpi3"
 
@@ -58,7 +59,6 @@ OPTEE_ARCH = "arm32"
 EXTRA_OEMAKE = " \
                 CFG_DT=y \
                 CFG_TEE_CORE_LOG_LEVEL=1 \
-                CROSS_COMPILE_ta_arm32=${HOST_PREFIX} \
                 LDFLAGS= \
                 LIBGCC_LOCATE_CFLAGS=--sysroot=${STAGING_DIR_HOST} \
                 NOWERROR=1 \
@@ -71,7 +71,8 @@ EXTRA_OEMAKE = " \
 # CFG_PAGEABLE_ADDR: Set pageable address. Note that pageable is currently not
 #                    using on WaRP7. So we set it to 0.
 # CFG_TEE_CORE_NB_CORE: Set the CPU core number information.
-EXTRA_OEMAKE_append_imx = " \
+MX7_FLAGS = " \
+                CROSS_COMPILE_ta_arm32=${HOST_PREFIX} \
                 CFG_ARM32_core=y \
                 CFG_PAGEABLE_ADDR=0 \
                 CROSS_COMPILE_core=${HOST_PREFIX} \
@@ -79,10 +80,12 @@ EXTRA_OEMAKE_append_imx = " \
 	"
 
 EXTRA_OEMAKE_append_imx7s-warp-mbl = " \
+		${MX7_FLAGS}           \
                 CFG_TEE_CORE_NB_CORE=1 \
         "
 
 EXTRA_OEMAKE_append_imx7d-pico-mbl = " \
+		${MX7_FLAGS}           \
                 CFG_TEE_CORE_NB_CORE=2 \
         "
 
@@ -93,13 +96,32 @@ EXTRA_OEMAKE_append_imx7d-pico-mbl = " \
 # CFG_ARM64_core: set OPTEE core to be in ARM64 rather than ARM32.
 # CFG_DT_ADDR: The address of the device tree.
 EXTRA_OEMAKE_append_raspberrypi3-mbl = " \
+                CROSS_COMPILE_ta_arm32=${HOST_PREFIX} \
                 CROSS_COMPILE_core=aarch64-linux-gnu- \
                 CFG_DT_ADDR=0x03000000 \
                 CFG_ARM64_core=y \
         "
 
+# CFG_DT: Remove as the OPTEE from NXP does not operate upon a DTB right now
+# CROSS_COMPILE: specify to the HOST_PREFIX as in both cases we use a 64bit
+#                cross compiler and elsewise we default to
+#                aarch64-linux-gnu-gcc
+EXTRA_OEMAKE_remove_imx8mmevk-mbl = "CFG_DT=y"
+EXTRA_OEMAKE_append_imx8mmevk-mbl = " \
+		CROSS_COMPILE=${HOST_PREFIX} \
+		CROSS_COMPILE64=${HOST_PREFIX} \
+        "
+
 do_compile_prepend_raspberrypi3-mbl() {
    export PATH=${STAGING_DIR_NATIVE}/${bindir}/aarch64-linux-gnu/bin:$PATH
+}
+
+# This is how we generate a TEE image for SPL loading
+# when we convert over to ATF and the v2 OPTEE headers
+# we will use the binaries produced by OPTEE directly
+# and this piece of the build phase can be removed.
+do_deploy_append_imx8mmevk-mbl () {
+    ${TARGET_PREFIX}objcopy -O binary ${B}/out/arm-plat-${OPTEEOUTPUTMACHINE}/core/tee.elf ${DEPLOYDIR}/optee/tee.bin
 }
 
 # We don't want any part of optee-os ending up on the root file system. It

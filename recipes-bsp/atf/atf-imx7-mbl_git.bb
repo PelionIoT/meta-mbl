@@ -4,7 +4,7 @@
 
 DEPENDS += "u-boot-tools-native"
 
-SRCREV_atf = "00332d0729b45c661c2af5e6091bb76fa4ede114"
+SRCREV_atf = "15f73461e18e4596623182fa8058416c83c055fd"
 
 require atf.inc
 

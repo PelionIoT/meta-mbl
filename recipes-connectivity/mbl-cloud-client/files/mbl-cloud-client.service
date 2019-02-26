@@ -7,7 +7,6 @@ Description=MBL Cloud Client
 After=mbl-app-update-manager.service
 
 [Service]
-Type=oneshot
 RemainAfterExit=yes
 ExecStart=/opt/arm/mbl-cloud-client
 

@@ -7,7 +7,7 @@
 # SPDX-License-Identifier: MIT
 
 LINUX_VERSION = "4.14.103"
-SRCREV = "73bb08073eafcdfd9d96086fb60037f5c949bfbc"
+SRCREV = "6ff8a9617fea437544a92122402948cd25418e41"
 
 KBUILD_DEFCONFIG_imx7s-warp-mbl ?= "warp7_mbl_defconfig"
 KBUILD_DEFCONFIG_imx7d-pico-mbl ?= "imx_v6_v7_defconfig"

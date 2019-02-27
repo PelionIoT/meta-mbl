@@ -139,12 +139,14 @@ do_compile() {
     CUR_DIR=$(pwd)
     cd "${S}/cloud-services/mbl-cloud-client/__${TARGET}"
     oe_runmake mbl-cloud-client
+    oe_runmake pelion-provisioning-util
     cd ${CUR_DIR}
 }
 
 do_install() {
     install -d "${D}/opt/arm"
     install "${S}/cloud-services/mbl-cloud-client/__${TARGET}/${RELEASE_TYPE}/mbl-cloud-client" "${D}/opt/arm"
+    install "${S}/cloud-services/mbl-cloud-client/__${TARGET}/${RELEASE_TYPE}/pelion-provisioning-util" "${D}/opt/arm"
 
     install -m 755 "${S}/cloud-services/mbl-cloud-client/scripts/arm_update_activate.sh" "${D}/opt/arm"
     install -m 755 "${S}/cloud-services/mbl-cloud-client/scripts/arm_update_active_details.sh" "${D}/opt/arm"

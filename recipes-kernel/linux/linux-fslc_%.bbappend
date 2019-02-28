@@ -1,6 +1,6 @@
 # Based on: recipes-kernel/linux/linux-warp7_4.1.bb
 # In open-source project: https://github.com/Freescale/meta-freescale-3rdparty
-# 
+#
 # Original file: Copyright (C) 2016 NXP Semiconductors
 # Modifications: Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
 #
@@ -16,6 +16,7 @@ FILESEXTRAPATHS_prepend:="${THISDIR}/files:"
 
 SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/linux.git;protocol=https;nobranch=1 \
            file://*-mbl.cfg \
+           file://0001-menuconfig-check-lxdiaglog.sh-Allow-specification-of.patch \
           "
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"

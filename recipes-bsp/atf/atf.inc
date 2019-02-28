@@ -17,7 +17,7 @@ SRC_URI = " \
 SRCREV_mbedtls = "1ab9b5714852c6810c0a0bfd8c3b5c60a9a15482"
 
 LICENSE = "BSD-3-Clause & Apache-2.0"
-LIC_FILES_CHKSUM = "file://license.rst;md5=e927e02bca647e14efd87e9e914b2443 \
+LIC_FILES_CHKSUM = "file://license.rst;md5=c709b197e22b81ede21109dbffd5f363 \
                     file://${WORKDIR}/mbedtls/apache-2.0.txt;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
 S = "${WORKDIR}/git"

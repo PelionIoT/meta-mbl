@@ -17,7 +17,7 @@ DEPENDS += "arm-aarch64-toolchain-native"
 SRCREV_atf = "cd139ee8c94143ac43215574e518ad416d7589bc"
 
 LICENSE = "BSD-3-Clause"
-LIC_FILES_CHKSUM_remove = "file://license.rst;md5=e927e02bca647e14efd87e9e914b2443"
+LIC_FILES_CHKSUM_remove = "file://license.rst;md5=c709b197e22b81ede21109dbffd5f363"
 LIC_FILES_CHKSUM_append = "file://license.rst;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
 PLATFORM = "rpi3"

@@ -4,12 +4,11 @@
 
 DEPENDS += "u-boot-tools-native"
 
-SRCREV_atf = "15f73461e18e4596623182fa8058416c83c055fd"
+SRCREV_atf = "d079f702fb167d2dbedef4e2ac7ab571268b2949"
+
+inherit mbl-artifact-names
 
 require atf.inc
-
-PLATFORM_imx7d-pico-mbl = "picopi"
-PLATFORM_imx7s-warp-mbl = "warp7"
 
 # We do not compile bl2 and fip.bin here, because we can speicify two raw images in wks file.
 MBL_UNIFIED_BIN = "bl2.bin.imx"
@@ -28,10 +27,10 @@ do_compile_append() {
 	ENTRY=`${HOST_PREFIX}readelf ${B}/${PLATFORM}/bl2/bl2.elf -h | grep "Entry" | awk '{print $4}'`
 
 	# Generate the .imx binary
-	uboot-mkimage -n ${DEPLOY_DIR_IMAGE}/u-boot.cfgout -T imximage -e ${ENTRY} -d ${B}/${PLATFORM}/bl2.bin ${B}/${PLATFORM}/bl2.bin.imx
+	uboot-mkimage -n ${DEPLOY_DIR_IMAGE}/u-boot-dtb.cfgout -T imximage -e ${ENTRY} -d ${B}/${PLATFORM}/${ATF_BL2_FILENAME} ${B}/${PLATFORM}/${MBL_UNIFIED_BIN}
 
 	# Create signed FIP image.
-	oe_runmake ${ATF_COMPILE_FLAGS} BL2=${B}/${PLATFORM}/bl2.bin BL2_AT_EL3=0 fip
+	oe_runmake ${ATF_COMPILE_FLAGS} BL2=${B}/${PLATFORM}/${ATF_BL2_FILENAME} BL2_AT_EL3=0 fip
 }
 
 do_deploy_append() {

@@ -42,6 +42,10 @@ MBL_UBOOT_CMD_FILENAME = "boot.cmd"
 # - U-Boot Flattened Image Tree (FIT) verification key.
 MBL_FIP_BIN_FILENAME = "fip.bin"
 
+# This is the default name for the ARM Trusted Firmware (ATF) Boot Loader stage 2
+# (BL2) binary name.
+ATF_BL2_FILENAME = "bl2.bin"
+
 # This is the default name for the ARM Trusted Firmware (ATF) unified
 # Firmware Image Package (FIP) binary name. Typically, this is the binary
 # run by the SoC vendor bootrom and is the first image that a third party

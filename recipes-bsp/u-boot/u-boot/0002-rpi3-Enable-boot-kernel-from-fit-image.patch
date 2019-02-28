@@ -69,7 +69,7 @@ new file mode 100644
 index 0000000..247236b
 --- /dev/null
 +++ b/configs/rpi_3_32b_signed_defconfig
-@@ -0,0 +1,42 @@
+@@ -0,0 +1,44 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_BCM283X=y
 +CONFIG_SYS_TEXT_BASE=0x11000000
@@ -112,6 +112,8 @@ index 0000000..247236b
 +CONFIG_SYS_WHITE_ON_BLACK=y
 +CONFIG_CONSOLE_SCROLL_LINES=10
 +CONFIG_PHYS_TO_BUS=y
++CONFIG_OF_LIBFDT_OVERLAY=y
++CONFIG_NET_RANDOM_ETHADDR=y
 diff --git a/include/configs/rpi.h b/include/configs/rpi.h
 index a97550b..2ac4373 100644
 --- a/include/configs/rpi.h

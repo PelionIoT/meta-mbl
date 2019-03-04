@@ -65,8 +65,6 @@ FILES_${PN}-dbg += "/opt/arm/.debug \
 TARGET = "x86_x64_NativeLinux_mbedtls"
 
 export SSH_AUTH_SOCK
-export MBED_CLOUD_IDENTITY_CERT_FILE
-export MBED_UPDATE_RESOURCE_FILE
 
 # Allowed [Debug|Release]
 RELEASE_TYPE="Debug"
@@ -102,29 +100,6 @@ do_setup_pal_env[depends] += "python-idna-native:do_populate_sysroot"
 do_configure() {
     CUR_DIR=$(pwd)
     cd "${S}/cloud-services/mbl-cloud-client/__${TARGET}"
-
-    if [ -z "${MBED_CLOUD_IDENTITY_CERT_FILE}" ]; then
-        MBED_CLOUD_IDENTITY_CERT_FILE=${TOPDIR}/mbed_cloud_dev_credentials.c
-    fi
-
-    if [ -z "${MBED_UPDATE_RESOURCE_FILE}" ]; then
-        MBED_UPDATE_RESOURCE_FILE=${TOPDIR}/update_default_resources.c
-    fi
-
-    if [ -e "${MBED_CLOUD_IDENTITY_CERT_FILE}" ]; then
-        cp ${MBED_CLOUD_IDENTITY_CERT_FILE} "${S}/cloud-services/mbl-cloud-client/mbed_cloud_dev_credentials.c"
-    else
-        echo "ERROR mbed cloud credentials file not found!!!"
-        exit 1
-    fi
-
-    if [ -e "${MBED_UPDATE_RESOURCE_FILE}" ]; then
-        cp ${MBED_UPDATE_RESOURCE_FILE} "${S}/cloud-services/mbl-cloud-client/update_default_resources.c"
-    else
-        echo "ERROR mbed update resource file not found!!!"
-        exit 1
-    fi
-
     cp "${WORKDIR}/yocto-toolchain.cmake" "${S}/cloud-services/mbl-cloud-client/pal-platform/Toolchain/GCC"
 
     cmake -G "Unix Makefiles" \

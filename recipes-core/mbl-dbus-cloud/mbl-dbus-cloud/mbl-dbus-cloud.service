@@ -3,14 +3,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 [Unit]
-Description= D-Bus MBL Cloud Client
+Description=D-Bus MBL Cloud Client
 After=dbus.service
+Requires=mbl-dbus-cloud.socket
 
 [Service]
-Type=oneshot
 RemainAfterExit=yes
-ExecStart=@bindir@/dbus-uuidgen --ensure
-ExecStart=@bindir@/dbus-daemon --config-file=@datadir@/dbus-1/mbl-dbus-cloud.conf
+ExecStart=__REPLACE_ME_WITH_bindir__/dbus-daemon --config-file=__REPLACE_ME_WITH_datadir__/dbus-1/mbl-dbus-cloud.conf --nopidfile
 
 [Install]
 WantedBy=multi-user.target

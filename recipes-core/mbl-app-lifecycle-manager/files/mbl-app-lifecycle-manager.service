@@ -7,7 +7,8 @@ Description=MBL App Lifecycle Manager
 After=mbl-cloud-client.service
 
 [Service]
-ExecStart=/opt/arm/mbl-app-lifecycle-manager-init.sh
+ExecStartPre=__REPLACE_ME_WITH_base_bindir__/echo "Run all user applications found at __REPLACE_ME_WITH_MBL_APP_DIR__..."
+ExecStart=__REPLACE_ME_WITH_bindir__/mbl-app-lifecycle-manager --verbose run-all
 
 [Install]
 WantedBy=multi-user.target

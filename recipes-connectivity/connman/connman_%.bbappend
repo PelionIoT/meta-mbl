@@ -13,7 +13,8 @@ FILES_${PN} += " \
 SRC_URI +=  " file://0005-replace-libreadline-with-libedit.patch \
               file://main.conf \                
             "
-            
+SRC_URI_append_imx7d-pico-mbl = " file://settings"
+
 #replace readline (GPLV3) with libedit (GPLV2)
 DEPENDS_remove = "readline"
 DEPENDS += " libedit"
@@ -34,4 +35,9 @@ EXTRA_OEMAKE += "\
 do_install_append() {
     install -d ${D}${MBL_NON_FACTORY_CONFIG_DIR}/connman    
     install -m 0644 ${WORKDIR}/main.conf ${D}${MBL_NON_FACTORY_CONFIG_DIR}/connman/main.conf
+}
+
+do_install_append_imx7d-pico-mbl() {
+    install -d ${D}${localstatedir}/lib/connman
+    install -m 0644 ${WORKDIR}/settings ${D}${localstatedir}/lib/connman
 }

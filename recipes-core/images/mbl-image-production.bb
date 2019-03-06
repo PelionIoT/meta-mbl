@@ -38,6 +38,10 @@ HOMEPAGE = "https://github.com/ARMmbed/meta-mbl"
 
 do_image_wic[depends] += "virtual/atf:do_deploy"
 
+
+# Convince the task that creates image_license.manifest to include atf.
+do_populate_lic_deploy[depends] += "virtual/atf:do_deploy"
+
 inherit core-image extrausers
 
 IMAGE_ROOTFS_SIZE ?= "8192"

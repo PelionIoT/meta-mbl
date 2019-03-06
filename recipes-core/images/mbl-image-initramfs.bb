@@ -27,14 +27,12 @@ inherit core-image
 IMAGE_ROOTFS_SIZE = "8192"
 IMAGE_ROOTFS_EXTRA_SPACE = "0"
 
-NO_RECOMMENDATIONS = "1"
+# Tell the "image" base class that this image does not have a dependency on the
+# kernel. Otherwise we'll end up with the kernel and some other dependencies
+# listed in the initramfs's image_license.manifest
+KERNELDEPMODDEPEND = ""
 
-# EXTRA_IMAGEDEPENDS may be set to include atf-* in the <MACIHNE>.conf file
-#  which is required for mbl-image-production. However, in the case of
-#  mbl-image-initramfs for atf-warp7 it creates an unwanted circular
-#  dependency. There EXTRA_IMAGEDEPENDS is therefore cleared in mbl-image-initramfs
-#  to stop this circular dependency being formed.
-EXTRA_IMAGEDEPENDS = ""
+NO_RECOMMENDATIONS = "1"
 
 # No GPLv3 allowed anywhere in this image
 IMAGE_LICENSE_CHECKER_NON_ROOTFS_BLACKLIST = "GPL-3.0 LGPL-3.0 AGPL-3.0"

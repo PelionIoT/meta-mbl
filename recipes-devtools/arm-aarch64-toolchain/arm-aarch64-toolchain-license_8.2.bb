@@ -2,10 +2,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-#todo:
-#- This recipe should be renamed to arm-aarch64-toolchain_8.2.bb
-
-
 DESCRIPTION = "ARM AArch64 toolchain source license checking."
 LICENSE  = "BSD-3-Clause & BSD-3-Clause-With-Intel-Modifications & BSD-Prior & BSL-1.0 & bzip2"
 LICENSE += " & GPL-2.0 & GPL-3.0 & GPL-3.0-with-GCC-exception"

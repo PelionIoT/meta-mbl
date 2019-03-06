@@ -26,7 +26,8 @@ exit_with_usage() {
 
 do_start() {
     echo "Starting ${name}..." 1>&2
-    start-stop-daemon --start --quiet --exec "$daemon"
+    # inform mbl-cloud-client to which D-Bus to connect by passing DBUS_SESSION_BUS_ADDRESS
+    DBUS_SESSION_BUS_ADDRESS=unix:path=/var/run/dbus/mbl_cloud_bus_socket start-stop-daemon --start --quiet --exec "$daemon"
     case "$?" in
         0)
             echo "${name} started" 1>&2

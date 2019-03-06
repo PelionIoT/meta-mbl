@@ -1,17 +1,17 @@
-From d57cd13bb938c0e2cf2b24c4ad2c7fe41c14d533 Mon Sep 17 00:00:00 2001
-From: "Ying-Chun Liu (PaulLiu)" <paulliu@debian.org>
-Date: Thu, 14 Jun 2018 00:28:30 +0800
+From 3bf6b109ea6ea27c6a854082e1f31a683e59ba61 Mon Sep 17 00:00:00 2001
+From: Hugues Kamba <hugues.kamba@arm.com>
+Date: Tue, 5 Mar 2019 12:44:34 +0000
 Subject: [PATCH] rpi3: Change u-boot loading address
 
-Signed-off-by: Ying-Chun Liu (PaulLiu) <paulliu@debian.org>
+Signed-off-by: Hugues Kamba <hugues.kamba@arm.com>
 ---
  configs/rpi_3_32b_defconfig | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: git/configs/rpi_3_32b_defconfig
-===================================================================
---- git.orig/configs/rpi_3_32b_defconfig	2018-06-19 14:20:43.107538068 +0800
-+++ git/configs/rpi_3_32b_defconfig	2018-06-19 14:22:05.606190619 +0800
+diff --git a/configs/rpi_3_32b_defconfig b/configs/rpi_3_32b_defconfig
+index bbf902b..f48c79f 100644
+--- a/configs/rpi_3_32b_defconfig
++++ b/configs/rpi_3_32b_defconfig
 @@ -1,6 +1,6 @@
  CONFIG_ARM=y
  CONFIG_ARCH_BCM283X=y
@@ -19,4 +19,7 @@ Index: git/configs/rpi_3_32b_defconfig
 +CONFIG_SYS_TEXT_BASE=0x11000000
  CONFIG_TARGET_RPI_3_32B=y
  CONFIG_SYS_MALLOC_F_LEN=0x2000
- CONFIG_DEFAULT_DEVICE_TREE="bcm2837-rpi-3-b"
+ CONFIG_DISTRO_DEFAULTS=y
+-- 
+2.7.4
+

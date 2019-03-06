@@ -1,0 +1,17 @@
+# Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+[Unit]
+Description=Service to persist the usb gadget ethernet mac address across reboots
+ConditionPathExists=/sys/class/net/__REPLACE_ME_WITH_MBL_DEBUG_INTERFACE__/address
+ConditionPathNotExists=__REPLACE_ME_WITH_MBL_NON_FACTORY_CONFIG_DIR__/usb-gether-mac-addr-set
+After=systemd-modules-load.service
+Before=systemd-networkd.service
+
+[Service]
+ExecStart=__REPLACE_ME_WITH_base_bindir__/sh -c 'sed -i \'s|@mac_addr@|\'$(cat /sys/class/net/__REPLACE_ME_WITH_MBL_DEBUG_INTERFACE__/address)\'|\' __REPLACE_ME_WITH_systemd_unitdir__/network/10-debug-interface.link'
+ExecStartPost=__REPLACE_ME_WITH_base_bindir__/touch __REPLACE_ME_WITH_MBL_NON_FACTORY_CONFIG_DIR__/usb-gether-mac-addr-set
+
+[Install]
+WantedBy=basic.target

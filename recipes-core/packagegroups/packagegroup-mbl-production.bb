@@ -29,6 +29,8 @@ PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ${PYTEST_DEPENDENCIES}"
 #     - kernel-modules. Required by iptables related modules (e.g. netfilter
 #       connection tracking.
 #     - optee-client. If the machine supports optee include the client.
+#     - systemd-net-conf. Systemd related network configuration files (e.g.
+#       hostname setup).
 ###############################################################################
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " avahi-autoipd"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ca-certificates"
@@ -53,18 +55,6 @@ PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " mbl-cloud-client"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " optee-client"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " connman"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " connman-client"
-PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " systemd-network-conf"
-
-##########################################################################################
-# Packages added when the MACHINE and DISTRO have specific features
-#     - systemd-network-conf-usb-gether - bring up the usb0 network interface during boot
-##########################################################################################
-PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ${@bb.utils.contains('COMBINED_FEATURES', 'usbgadget', 'systemd-network-conf-usb-gether', '', d)}"
-
-##########################################################################################
-# Packages added when the MACHINE have specific features
-#     - systemd-network-conf-usb-gether - bring up the eth* network interface during boot
-##########################################################################################
-PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ${@bb.utils.contains('MACHINE_FEATURES', 'ethernet', 'systemd-network-conf-eth', '', d)}"
+PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " systemd-net-conf"
 
 RDEPENDS_packagegroup-mbl-production += "${PACKAGEGROUP_MBL_PRODUCTION_PKGS}"

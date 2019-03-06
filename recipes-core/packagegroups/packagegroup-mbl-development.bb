@@ -12,6 +12,10 @@ inherit packagegroup
 # Packages added irrespective of the MACHINE
 #     - dropbear. To support ssh during development and test.
 #     - optee-test. Include the optee test suite.
+#     - systemd-net-conf-dbg-iface. Systemd related network configuration
+#       files for debug interface (e.g. usbgadget and usb-to-ethernet adapter).
+#       This package should only be installed if MBL_DEBUG_INTERFACE variable
+#       is set in the machine conf file.
 ###############################################################################
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " dropbear"
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " dropbear-ssh-dns-sd"
@@ -26,6 +30,7 @@ PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " memtester"
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " strace"
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " optee-test"
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " openssh-sftp-server"
+PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " ${@ "systemd-net-conf-dbg-iface" if d.getVar('MBL_DEBUG_INTERFACE') else "" }"
 
 
 ###############################################################################

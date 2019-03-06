@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 [Match]
-Name=eth*
+Name=__REPLACE_ME_WITH_MBL_DEBUG_INTERFACE__
 
 [Network]
 DHCP=ipv4

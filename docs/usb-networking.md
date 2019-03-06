@@ -3,40 +3,43 @@
 Copyright © 2018 Arm Limited.
 
 ### Introduction
-An Mbed Linux OS IoT device with suitable hardware supports 
+An Mbed Linux OS IoT device with suitable hardware supports
 networking over USB by using the Mbed Linux OS kernel's appropriate driver mechanism.
 
 ### USB peripheral and USB host port types
 
-When a device with USB host port(s) is used (such as a Raspberry Pi 3), communication between 
-the device and a development PC can be established via a peripheral Ethernet-to-USB adapter 
-plugged into one of the available USB host ports on the device. The Linux kernel's CDC 
-Ethernet driver is used on the device for supporting this kind of communication. 
+When a device with USB host port(s) is used (such as a Raspberry Pi 3), communication between
+the device and a development PC can be established via a peripheral Ethernet-to-USB adapter
+plugged into one of the available USB host ports on the device. The Linux kernel's CDC
+Ethernet driver is used on the device for supporting this kind of communication.
 
-When a device with USB peripheral port(s) is used (such as a WaRP7), communication between 
-the device and the development PC can be established by connecting the device 
-directly to the development PC with a USB cable. The Linux kernel's USB Gadget 
+When a device with USB peripheral port(s) is used (such as a WaRP7), communication between
+the device and the development PC can be established by connecting the device
+directly to the development PC with a USB cable. The Linux kernel's USB Gadget
 driver is used on the device in this case.
 
-* When running on WaRP7, the Mbed Linux OS kernel's USB Gadget driver mechanism creates 
-  a `usb0` network interface on the IoT device and makes the IoT device itself appear 
-  as a network interface to another device connected via USB (e.g. a development PC). 
+* When running on WaRP7, the Mbed Linux OS kernel's USB Gadget driver mechanism creates
+  a `usb0` network interface on the IoT device and makes the IoT device itself appear
+  as a network interface to another device connected via USB (e.g. a development PC). The debug
+  interface is set via MBL_DEBUG_INTERFACE variable assigned in imx7s-warp-mbl.conf machine conf
+  file (e.g. MBL_DEBUG_INTERFACE="usb0").
 
 * When Mbed Linux OS is installed on Raspberry Pi 3, the kernel's USB Gadget driver is not installed due to
-  hardware limitations of the board, and the `usb0` interface does not exist. There are two Ethernet network 
-  interfaces in Mbed Linux OS when installed on Raspberry Pi 3: `eth0`, which belongs to the wired 
-  Ethernet port, and `eth1` which is created by the CDC Ethernet driver, once appropriate hardware 
-  has been connected.  
-  An Ethernet-to-USB hardware adapter is required in order to support USB networking on an IoT 
-  device based on a Raspberry Pi 3 board. 
-  Once an Ethernet-to-USB adapter's USB "male" connector is inserted into any of the four type-A 
-  USB ports of the Raspberry Pi 3 board, the Mbed Linux OS kernel's CDC Ethernet driver mechanism creates an `eth1` 
-  network interface. This makes it possible for another device to establish communication with the IoT device. 
-  In order to establish communication with the development PC, the Ethernet cable of the 
-  adapter should be connected to an available Ethernet port on the development PC. 
+  hardware limitations of the board, and the `usb0` interface does not exist. There are two Ethernet network
+  interfaces in Mbed Linux OS when installed on Raspberry Pi 3: `eth0`, which belongs to the wired
+  Ethernet port, and `eth1` which is created by the CDC Ethernet driver, once appropriate hardware
+  has been connected.The debug interface is set via MBL_DEBUG_INTERFACE variable assigned in
+  raspberrypi3-mbl.conf machine conf file (e.g. MBL_DEBUG_INTERFACE="eth1").
+  An Ethernet-to-USB hardware adapter is required in order to support USB networking on an IoT
+  device based on a Raspberry Pi 3 board.
+  Once an Ethernet-to-USB adapter's USB "male" connector is inserted into any of the four type-A
+  USB ports of the Raspberry Pi 3 board, the Mbed Linux OS kernel's CDC Ethernet driver mechanism creates an `eth1`
+  network interface. This makes it possible for another device to establish communication with the IoT device.
+  In order to establish communication with the development PC, the Ethernet cable of the
+  adapter should be connected to an available Ethernet port on the development PC.
 
-By default, Mbed Linux OS attempts to obtain an IPv4 address for the `usb0` interface on WaRP7 
-or the `eth1` interface on Raspberry Pi 3 using DHCP and falls back to assigning a link-local IPv4 
+By default, Mbed Linux OS attempts to obtain an IPv4 address for the `usb0` interface on WaRP7
+or the `eth1` interface on Raspberry Pi 3 using DHCP and falls back to assigning a link-local IPv4
 address if a DHCP server can't be found.
 
 #### Connecting a WaRP7 IoT device to a PC
@@ -53,59 +56,59 @@ perform the following steps:
 
 For example, on an Ubuntu 16.04 PC, do the following:
 
-Use `ifconfig -a` to list available network interfaces. Once the IoT device 
+Use `ifconfig -a` to list available network interfaces. Once the IoT device
 has been connected to the development PC, the PC kernel will
 instantiate the ethernet net_device for the USB network interface. This is shown
-in the following listing, which shows the interface is present but has not yet 
+in the following listing, which shows the interface is present but has not yet
 been assigned an IP address:
 
   ```
   $ ifconfig -a
   < ... lines deleted to save space >
 
-  enp0s20u5u4u4 Link encap:Ethernet  HWaddr ee:a9:74:68:fe:69  
+  enp0s20u5u4u4 Link encap:Ethernet  HWaddr ee:a9:74:68:fe:69
             UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
             RX packets:136 errors:0 dropped:0 overruns:0 frame:0
             TX packets:322 errors:0 dropped:0 overruns:0 carrier:0
-            collisions:0 txqueuelen:1000 
+            collisions:0 txqueuelen:1000
             RX bytes:37211 (37.2 KB)  TX bytes:57393 (57.3 KB)
 
   < ... lines deleted to save space >
-  ```  
+  ```
 
 #### Connecting a Raspberry Pi 3 IoT device to a PC
 To connect a PC to an Mbed Linux OS IoT Raspberry Pi 3 device using an Ethernet-to-USB adapter,
 perform the following steps:
 
-1. Connect an Ethernet-to-USB adapter's USB "male" connector into any of 
-   the four type-A USB ports of the Raspberry Pi 3 board, and the Ethernet 
+1. Connect an Ethernet-to-USB adapter's USB "male" connector into any of
+   the four type-A USB ports of the Raspberry Pi 3 board, and the Ethernet
    cable of the adapter into an available Ethernet port on the development PC.
-2. Check which network interface belongs to the port that is connected to the 
+2. Check which network interface belongs to the port that is connected to the
    Raspberry Pi 3 device.
 3. Configure the PC to use link-local IPv4 addressing for the interface and
    determine the address assigned to the interface.
 
-For example, on an Ubuntu 16.04 PC and a Raspberry Pi 3 device connected to an 
+For example, on an Ubuntu 16.04 PC and a Raspberry Pi 3 device connected to an
 RTL8153 Gigabit Ethernet-to-USB adapter, do the following:
 
-Connect the Raspberry Pi 3 device to the PC and use `ifconfig -a` to identify the network interface. 
-  
+Connect the Raspberry Pi 3 device to the PC and use `ifconfig -a` to identify the network interface.
+
   ```
   $ ifconfig -a
   < ... lines deleted to save space >
 
-  eno0 Link encap:Ethernet  HWaddr 6c:0b:84:67:18:f5  
+  eno0 Link encap:Ethernet  HWaddr 6c:0b:84:67:18:f5
         UP BROADCAST MULTICAST  MTU:1500  Metric:1
         RX packets:5463 errors:0 dropped:0 overruns:0 frame:0
         TX packets:2839 errors:0 dropped:0 overruns:0 carrier:0
-        collisions:0 txqueuelen:1000 
+        collisions:0 txqueuelen:1000
         RX bytes:3149461 (3.1 MB)  TX bytes:900468 (900.4 KB)
-        Memory:fb100000-fb17ffff 
+        Memory:fb100000-fb17ffff
 
   < ... lines deleted to save space >
-  ```  
+  ```
 
-  Note, that an IP address was not assigned yet to the `eno0` network interface. 
+  Note, that an IP address was not assigned yet to the `eno0` network interface.
 
 #### Assigning an IP address to the network interface on a PC
 
@@ -116,17 +119,17 @@ interface with the `link-local` IPv4 addressing method using the NetworkManager'
 
     ```
     $ sudo nmcli connection add ifname <interace-name-on-pc> con-name mbl-ipv4ll type ethernet -- ipv4.method link-local
-    ```  
+    ```
 
     where `<interface-name-on-pc>` is the name of the network interface on the
     PC that connects to the IoT device.
-    
+
     * For example, if using a WaRP7 and the name of the interface on the PC for the WaRP7 connection is `enp0s20u5u4u4`:
       ```
       $ sudo nmcli connection add ifname enp0s20u5u4u4 con-name mbl-ipv4ll type ethernet -- ipv4.method link-local
       Connection 'mbl-ipv4ll' (0076a29f-6892-45bb-8338-2879b863efdf) successfully added.
       ```
-      
+
     * If using a Raspberry Pi 3 connected to the PC's `eno0` interface:
       ```
       $ sudo nmcli connection add ifname eno0 con-name mbl-ipv4ll type ethernet -- ipv4.method link-local
@@ -141,31 +144,31 @@ interface with the `link-local` IPv4 addressing method using the NetworkManager'
     * If this command finishes with the error
       `Error: Connection activation failed: No suitable device found for this connection.`
       verify that the device is managed by NetworkManager (that the field `managed` is set to `true` in the
-      `/etc/NetworkManager/NetworkManager.conf` configuration file on the Linux development PC).   
+      `/etc/NetworkManager/NetworkManager.conf` configuration file on the Linux development PC).
 
 1. The NetworkManager connection has now been created and can be inspected using the `nmcli connection show` command.
     * For example, when using a WaRP7 based IoT device:
       ```
       $ sudo nmcli connection show
-      NAME                UUID                                  TYPE            DEVICE        
+      NAME                UUID                                  TYPE            DEVICE
       mbl-ipv4ll          0076a29f-6892-45bb-8338-2879b863efdf  802-3-ethernet  enp0s20u5u4u4
-      Wired connection 1  99cf6de7-2297-3607-923a-4286fdbf357a  802-3-ethernet  --          
-      ```     
+      Wired connection 1  99cf6de7-2297-3607-923a-4286fdbf357a  802-3-ethernet  --
+      ```
 
     * When using a Raspberry Pi 3 based IoT device:
       ```
       $ sudo nmcli connection show
-      NAME                UUID                                  TYPE            DEVICE     
-      eno1                a815455d-8f18-4f25-a8d1-39f0f89fc022  802-3-ethernet  eno1    
+      NAME                UUID                                  TYPE            DEVICE
+      eno1                a815455d-8f18-4f25-a8d1-39f0f89fc022  802-3-ethernet  eno1
       mbl-ipv4ll          475ebfb1-d67e-47e9-afd2-8f2cf8a16cdd  802-3-ethernet  eno0
-      ```     
-     
-    The PC's network interface (that communicates with an IoT device) should now have been 
+      ```
+
+    The PC's network interface (that communicates with an IoT device) should now have been
     allocated an IPv4 link-local (169.254.x.y) address:
     * For example, when using a WaRP7 based IoT device:
       ```
       $ sudo ifconfig enp0s20u5u4u4
-      enp0s20u5u4u4 Link encap:Ethernet  HWaddr ba:77:68:c0:73:df  
+      enp0s20u5u4u4 Link encap:Ethernet  HWaddr ba:77:68:c0:73:df
               inet addr:169.254.131.167  Bcast:169.254.255.255  Mask:255.255.0.0
               inet6 addr: fe80::b418:c138:20f0:57c7/64 Scope:Link
               UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
@@ -179,7 +182,7 @@ interface with the `link-local` IPv4 addressing method using the NetworkManager'
 
       ```
       $ sudo ifconfig eno0
-      eno0 Link encap:Ethernet  HWaddr 6c:0b:84:67:18:f5  
+      eno0 Link encap:Ethernet  HWaddr 6c:0b:84:67:18:f5
           inet addr:169.254.4.179  Bcast:169.254.255.255  Mask:255.255.0.0
           inet6 addr: fe80::3714:e5ad:7eb2:c3a5/64 Scope:Link
           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
@@ -190,10 +193,10 @@ interface with the `link-local` IPv4 addressing method using the NetworkManager'
           Memory:fb100000-fb17ffff
       ```
 
-Note, that network interface names (like `enp0s20u5u4u4`, `eno0` etc.) and connection's UUID values 
+Note, that network interface names (like `enp0s20u5u4u4`, `eno0` etc.) and connection's UUID values
 can be different on other development PCs.
 
-An alternative to using the NetworkManager command line interface is to use the `nm-connection-editor` GUI to configure the interface. 
+An alternative to using the NetworkManager command line interface is to use the `nm-connection-editor` GUI to configure the interface.
 
 See the [`nmcli` man page][nmcli-manpage] for more information.
 

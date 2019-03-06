@@ -12,7 +12,7 @@ require atf.inc
 #   The TF-A secure monitor changes to 32-bit mode before running U-Boot.
 # - The recipe imports mbedtls into the ATF build directory to build libmbedtls.a
 #   and incorporated into the firmware.
-DEPENDS += "linaro-aarch64-toolchain-native"
+DEPENDS += "arm-aarch64-toolchain-native"
 
 SRCREV_atf = "cd139ee8c94143ac43215574e518ad416d7589bc"
 

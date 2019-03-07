@@ -4,11 +4,15 @@
 
 [Unit]
 Description=MBL Hostname Setup
-After=systemd-hostnamed.service
-Before=systemd-networkd.service
+Before=avahi-daemon.service
+ConditionPathExists=/config
+Wants=network-pre.target
+Before=network-pre.target
 
 [Service]
+Type=oneshot
 ExecStart=/opt/arm/mbl-hostname.sh
+RemainAfterExit=yes
 
 [Install]
-WantedBy=basic.target
+WantedBy=network.target

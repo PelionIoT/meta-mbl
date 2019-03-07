@@ -26,3 +26,6 @@ do_install() {
 FILES_${PN} = " \
         /opt/arm/mbl-hostname.sh \
 "
+
+MBL_VAR_PLACEHOLDER_FILES = "${D}/opt/arm/mbl-hostname.sh"
+inherit mbl-var-placeholders

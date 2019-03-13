@@ -14,7 +14,7 @@ require atf.inc
 #   and incorporated into the firmware.
 DEPENDS += "arm-aarch64-toolchain-native"
 
-SRCREV_atf = "cd139ee8c94143ac43215574e518ad416d7589bc"
+SRCREV_atf = "a84c7ff236053688c3a692012534cd1c1050ce6c"
 
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM_remove = "file://license.rst;md5=c709b197e22b81ede21109dbffd5f363"

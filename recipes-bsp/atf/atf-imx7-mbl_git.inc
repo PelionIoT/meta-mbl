@@ -4,7 +4,7 @@
 
 DEPENDS += "u-boot-tools-native"
 
-SRCREV_atf = "d079f702fb167d2dbedef4e2ac7ab571268b2949"
+SRCREV_atf = "6a80c8bbc961ab55a562e0030247419e363286f7"
 
 inherit mbl-artifact-names
 

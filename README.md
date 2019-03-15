@@ -14,10 +14,10 @@ The main components of the layer are:
 
 Please see:
 
-* The [release note][mbl-release-note] for information about this release.
-* The [introduction][mbl-introduction] for an overview of Mbed Linux OS and its features.
-* The [getting started guide][mbl-start-guide] to jump right in and get started.
+* The [release note][mbl-release-note] for information about the current release.
+* The [website][mbl-documentation] for the documentation about Mbed Linux OS.
 * Other technical and reference documentation can be found in this repository in the docs folder.
+  * Please refer to the docs on the correct release branch - see the [release note][mbl-release-note].
 
 
 ## License
@@ -33,7 +33,6 @@ Please see the [Contributing][mbl-contributing] document for more information.
 [mbl-license]: LICENSE.md
 [mbl-contributing]: CONTRIBUTING.md
 [mbl-release-note]: docs/release_note.md
-[mbl-start-guide]: https://os.mbed.com/docs/linux-os/latest/getting-started/index.html
-[mbl-introduction]: https://os.mbed.com/docs/linux-os/latest/welcome/index.html
+[mbl-documentation]: https://os.mbed.com/docs/mbed-linux-os/latest/welcome/index.html
 
 [openembedded-homepage]: http://www.openembedded.org

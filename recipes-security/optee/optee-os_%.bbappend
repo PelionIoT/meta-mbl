@@ -71,6 +71,7 @@ EXTRA_OEMAKE = " \
 # CFG_PAGEABLE_ADDR: Set pageable address. Note that pageable is currently not
 #                    using on WaRP7. So we set it to 0.
 # CFG_TEE_CORE_NB_CORE: Set the CPU core number information.
+# CFG_BOOT_SECONDARY_REQUEST: Enables OP-TEE to respond to SMP boot request
 MX7_FLAGS = " \
                 CROSS_COMPILE_ta_arm32=${HOST_PREFIX} \
                 CFG_ARM32_core=y \
@@ -87,6 +88,7 @@ EXTRA_OEMAKE_append_imx7s-warp-mbl = " \
 EXTRA_OEMAKE_append_imx7d-pico-mbl = " \
 		${MX7_FLAGS}           \
                 CFG_TEE_CORE_NB_CORE=2 \
+		CFG_BOOT_SECONDARY_REQUEST=y \
         "
 
 # CROSS_COMPILE_core: Set the cross-compiler for OPTEE core. On RPi3 it should

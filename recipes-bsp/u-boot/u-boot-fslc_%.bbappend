@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-SRCREV = "218463f1bd26073cf52884682bbbd3699067e3b3"
+SRCREV = "c0c4ee5fce01ec0818c4f27ce029d9b16c8849ad"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 

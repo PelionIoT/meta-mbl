@@ -16,6 +16,7 @@ S = "${WORKDIR}/git"
 SRC_URI_COMMON = "file://yocto-toolchain.cmake \
   file://arm_update_local_config.sh \
   file://init \
+  file://com.mbed.Pelion1.Connect.xml \
   "
 
 # specific sources for the mbl-cloud-client public version  
@@ -51,6 +52,7 @@ FILES_${PN} += "\
     /opt/arm/arm_update_common.sh \
     /opt/arm/arm_update_local_config.sh \
     ${sysconfdir}/logrotate.d/mbl-cloud-client-logrotate.conf \
+    ${datadir}/dbus-1/interfaces/com.mbed.Pelion1.Connect.xml \
 "
 
 FILES_${PN}-staticdev += "\
@@ -155,6 +157,9 @@ do_install() {
     install -m 755 "${S}/cloud-services/mbl-cloud-client/scripts/arm_update_common.sh" "${D}/opt/arm"
     install -m 755 "${S}/cloud-services/mbl-cloud-client/mbed-cloud-client/update-client-hub/modules/pal-linux/scripts/arm_update_cmdline.sh" "${D}/opt/arm"
     install -m 755 "${WORKDIR}/arm_update_local_config.sh" "${D}/opt/arm"
+
+    install -d ${D}${datadir}/dbus-1/interfaces
+    install -m 755 "${WORKDIR}/com.mbed.Pelion1.Connect.xml" "${D}/${datadir}/dbus-1/interfaces/com.mbed.Pelion1.Connect.xml"
 
     install -d "${D}${sysconfdir}/init.d"
     install -m 755 "${WORKDIR}/init" "${D}${sysconfdir}/init.d/mbl-cloud-client"

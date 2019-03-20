@@ -1,0 +1,117 @@
+ <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+ <interface name="org.freedesktop.DBus.Peer">
+  <method name="Ping"/>
+  <method name="GetMachineId">
+   <arg type="s" name="machine_uuid" direction="out"/>
+  </method>
+ </interface>
+ <interface name="org.freedesktop.DBus.Introspectable">
+  <method name="Introspect">
+   <arg name="data" type="s" direction="out"/>
+  </method>
+ </interface>
+ <interface name="org.freedesktop.DBus.Properties">
+  <method name="Get">
+   <arg name="interface" direction="in" type="s"/>
+   <arg name="property" direction="in" type="s"/>
+   <arg name="value" direction="out" type="v"/>
+  </method>
+  <method name="GetAll">
+   <arg name="interface" direction="in" type="s"/>
+   <arg name="properties" direction="out" type="a{sv}"/>
+  </method>
+  <method name="Set">
+   <arg name="interface" direction="in" type="s"/>
+   <arg name="property" direction="in" type="s"/>
+   <arg name="value" direction="in" type="v"/>
+  </method>
+  <signal name="PropertiesChanged">
+   <arg type="s" name="interface"/>
+   <arg type="a{sv}" name="changed_properties"/>
+   <arg type="as" name="invalidated_properties"/>
+  </signal>
+ </interface>
+
+
+<!-- com.mbed.Pelion1.Connect interface -->  
+ <interface name="com.mbed.Pelion1.Connect">
+
+  <annotation name="org.gtk.GDBus.DocString" value="Interface that allows 
+   registering and managing LwM2M resources in the Pelion portal."/>
+
+  <annotation name="org.gtk.GDBus.DocString.Short"
+   value="Interface for managing LwM2M resources in the Pelion portal"/>
+
+
+<!-- com.mbed.Pelion1.Connect.RegisterResources method -->  
+  <method name="RegisterResources">
+   <annotation name="org.gtk.GDBus.DocString" 
+    value="Starts asynchronous LwM2M resource set registration request   
+           in the Pelion."/> 
+
+   <arg type="s" name="app_resource_definition" direction="in">
+    <annotation name="org.gtk.GDBus.DocString" 
+     value="Application LwM2M resource definition JSON string 
+            describing resources for registeration (encoded UTF-8)."/>
+   </arg>
+
+   <arg type="s" name="access_token" direction="out">
+    <annotation name="org.gtk.GDBus.DocString" 
+     value="Access token which allows other interface methods 
+            to access registered LwM2M resources set."/>
+   </arg>
+  </method>
+
+
+<!-- com.mbed.Pelion1.Connect.SetResourcesValues method -->  
+  <method name="SetResourcesValues">
+   <annotation name="org.gtk.GDBus.DocString" 
+    value="Set values of multiple LwM2M resources."/>
+
+   <arg type="s" name="access_token" direction="in">
+    <annotation name="org.gtk.GDBus.DocString" 
+     value="Access token which is returned by @RegisterResources
+            method."/>
+   </arg>
+
+   <arg type="a(sv)" name="set_operation_input" direction="in">
+    <annotation name="org.gtk.GDBus.DocString" 
+     value="Set operation data array. Each entry of this array 
+            contains path of the LwM2M resource, and 
+            resource value. Currently the allowed size of the 
+            array is 1 element."/>
+   </arg>
+  </method>
+
+
+<!-- com.mbed.Pelion1.Connect.GetResourcesValues method -->  
+  <method name="GetResourcesValues">
+   <annotation name="org.gtk.GDBus.DocString" 
+    value="Request to get values from multiple LwM2M resources."/>
+
+   <arg type="s" name="access_token" direction="in">
+    <annotation name="org.gtk.GDBus.DocString"
+     value="Access token which is returned by @RegisterResources
+            method."/>
+   </arg>
+
+   <arg type="a(sy)" name="get_operation_input" direction="in">
+    <annotation name="org.gtk.GDBus.DocString" 
+     value="Get operation data array. Each entry of this array 
+            contains path of the LwM2M resource and 
+            type of the resource value. Currently the 
+            allowed size of the array is 1 element."/>
+   </arg>
+
+   <arg type="a(yv)" name="get_operation_output" direction="out">
+    <annotation name="org.gtk.GDBus.DocString" 
+     value="Get operation output data array. Each entry of this array 
+            contains LwM2M resource data type and resource value.
+            The size of this @get_operation_output array equals to the 
+            size of the @get_operation_input array"/>
+   </arg>
+  </method>
+ </interface>
+</node>

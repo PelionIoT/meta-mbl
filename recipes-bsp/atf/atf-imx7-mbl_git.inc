@@ -8,7 +8,7 @@ SRCREV_atf = "6a80c8bbc961ab55a562e0030247419e363286f7"
 
 inherit mbl-artifact-names
 
-require atf.inc
+require recipes-bsp/atf/atf.inc
 
 # We do not compile bl2 and fip.bin here, because we can speicify two raw images in wks file.
 MBL_UNIFIED_BIN = "bl2.bin.imx"

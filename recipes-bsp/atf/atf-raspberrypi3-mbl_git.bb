@@ -4,7 +4,7 @@
 
 inherit mbl-artifact-names
 
-require atf.inc
+require recipes-bsp/atf/atf.inc
 
 # This recipe builds the ARM Trusted Firmware for RaspberryPi3.
 # - TF-A and OPTEE as 64-bit (aarch64) are built with the aarch64 toolchain

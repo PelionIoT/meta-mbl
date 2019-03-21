@@ -20,16 +20,13 @@ driver is used on the device in this case.
 
 * When running on WaRP7, the Mbed Linux OS kernel's USB Gadget driver mechanism creates
   a `usb0` network interface on the IoT device and makes the IoT device itself appear
-  as a network interface to another device connected via USB (e.g. a development PC). The debug
-  interface is set via MBL_DEBUG_INTERFACE variable assigned in imx7s-warp-mbl.conf machine conf
-  file (e.g. MBL_DEBUG_INTERFACE="usb0").
+  as a network interface to another device connected via USB (e.g. a development PC).
 
 * When Mbed Linux OS is installed on Raspberry Pi 3, the kernel's USB Gadget driver is not installed due to
   hardware limitations of the board, and the `usb0` interface does not exist. There are two Ethernet network
   interfaces in Mbed Linux OS when installed on Raspberry Pi 3: `eth0`, which belongs to the wired
   Ethernet port, and `eth1` which is created by the CDC Ethernet driver, once appropriate hardware
-  has been connected.The debug interface is set via MBL_DEBUG_INTERFACE variable assigned in
-  raspberrypi3-mbl.conf machine conf file (e.g. MBL_DEBUG_INTERFACE="eth1").
+  has been connected.
   An Ethernet-to-USB hardware adapter is required in order to support USB networking on an IoT
   device based on a Raspberry Pi 3 board.
   Once an Ethernet-to-USB adapter's USB "male" connector is inserted into any of the four type-A

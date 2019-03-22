@@ -11,9 +11,10 @@ FILES_${PN} += " \
 "
 
 SRC_URI +=  " file://0005-replace-libreadline-with-libedit.patch \
-              file://main.conf \                
+              file://main.conf \
+              file://settings \
             "
-            
+
 #replace readline (GPLV3) with libedit (GPLV2)
 DEPENDS_remove = "readline"
 DEPENDS += " libedit"
@@ -32,6 +33,7 @@ EXTRA_OEMAKE += "\
 "
 
 do_install_append() {
-    install -d ${D}${MBL_NON_FACTORY_CONFIG_DIR}/connman    
+    install -d ${D}${MBL_NON_FACTORY_CONFIG_DIR}/connman
     install -m 0644 ${WORKDIR}/main.conf ${D}${MBL_NON_FACTORY_CONFIG_DIR}/connman/main.conf
+    install -m 0644 ${WORKDIR}/settings ${D}${MBL_NON_FACTORY_CONFIG_DIR}/connman/settings
 }

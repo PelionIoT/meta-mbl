@@ -7,10 +7,10 @@
 # SPDX-License-Identifier: MIT
 
 LINUX_VERSION = "4.14.103"
-SRCREV = "73bb08073eafcdfd9d96086fb60037f5c949bfbc"
+SRCREV = "9bc65ff1b120ccf1f31e6f3db2acd403270e9b3e"
 
 KBUILD_DEFCONFIG_imx7s-warp-mbl ?= "warp7_mbl_defconfig"
-KBUILD_DEFCONFIG_imx7d-pico-mbl ?= "imx_v6_v7_defconfig"
+KBUILD_DEFCONFIG_imx7d-pico-mbl ?= "imx7d-pico_defconfig"
 
 FILESEXTRAPATHS_prepend:="${THISDIR}/files:"
 

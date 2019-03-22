@@ -21,5 +21,4 @@ do_preconfigure_prepend() {
 	cp ${S}/arch/arm64/configs/${KBUILD_DEFCONFIG} ${WORKDIR}/defconfig
 }
 
-INITRAMFS_IMAGE = "mbl-image-initramfs"
 INITRAMFS_IMAGE_BUNDLE = "1"

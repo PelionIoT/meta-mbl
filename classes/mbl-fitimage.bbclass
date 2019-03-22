@@ -322,3 +322,14 @@ kernel_do_deploy_append() {
         fi
     fi
 }
+
+# If we create a FIT image containing the initramfs image, make sure we
+# generate an initramfs image license manifest.
+python __anonymous() {
+    if d.getVar('INITRAMFS_IMAGE'):
+        d.appendVarFlag(
+            'do_assemble_fitimage',
+            'depends',
+            ' ${INITRAMFS_IMAGE}:do_populate_lic_deploy'
+        )
+}

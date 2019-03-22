@@ -38,7 +38,6 @@ HOMEPAGE = "https://github.com/ARMmbed/meta-mbl"
 
 do_image_wic[depends] += "virtual/atf:do_deploy"
 
-
 # Convince the task that creates image_license.manifest to include atf.
 do_populate_lic_deploy[depends] += "virtual/atf:do_deploy"
 
@@ -55,3 +54,13 @@ IMAGE_LICENSE_CHECKER_NON_ROOTFS_BLACKLIST = "GPL-3.0 LGPL-3.0 AGPL-3.0"
 inherit image-license-checker
 
 inherit image-signing image-verity key-generation mbl-firmware-update-header
+
+# Make sure we generate an initramfs image license manifest.
+python __anonymous() {
+    if d.getVar("INITRAMFS_IMAGE"):
+        d.appendVarFlag(
+            'do_populate_lic_deploy',
+            'depends',
+            ' ${INITRAMFS_IMAGE}:do_populate_lic_deploy'
+        )
+}

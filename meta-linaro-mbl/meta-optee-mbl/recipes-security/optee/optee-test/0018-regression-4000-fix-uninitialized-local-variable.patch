@@ -1,0 +1,40 @@
+From 481c66092368d46de2b044b598e7279fa6c73bcd Mon Sep 17 00:00:00 2001
+From: Etienne Carriere <etienne.carriere@linaro.org>
+Date: Tue, 22 Jan 2019 13:27:26 +0100
+Subject: [PATCH 18/30] regression 4000: fix uninitialized local variable
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Reported by GCC 8.2.0 with trace:
+
+.../build/optee_test/host/xtest/regression_4000.c:4090:24: error: ‘ptx_hash_size’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
+     if (!ADBG_EXPECT_TEEC_SUCCESS(c,
+                        ^~~~~~~~~~~~~
+.../build/optee_test/host/xtest/regression_4000.c:3658:9: note: ‘ptx_hash_size’ was declared here
+  size_t ptx_hash_size;
+         ^~~~~~~~~~~~~
+
+Signed-off-by: Etienne Carriere <etienne.carriere@linaro.org>
+Acked-by: Jens Wiklander <jens.wiklander@linaro.org>
+Reviewed-by: Joakim Bech <joakim.bech@linaro.org>
+---
+ host/xtest/regression_4000.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/host/xtest/regression_4000.c b/host/xtest/regression_4000.c
+index 8fc12c4..6e67120 100644
+--- a/host/xtest/regression_4000.c
++++ b/host/xtest/regression_4000.c
+@@ -3655,7 +3655,7 @@ static void xtest_tee_test_4006(ADBG_Case_t *c)
+ 	uint8_t out_enc[512];
+ 	size_t out_enc_size;
+ 	uint8_t ptx_hash[TEE_MAX_HASH_SIZE];
+-	size_t ptx_hash_size;
++	size_t ptx_hash_size = 0;
+ 	size_t max_key_size;
+ 	size_t num_key_attrs;
+ 	uint32_t ret_orig;
+-- 
+2.20.1
+

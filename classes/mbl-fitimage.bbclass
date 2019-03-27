@@ -322,3 +322,7 @@ kernel_do_deploy_append() {
         fi
     fi
 }
+
+# If we create a FIT image containing the initramfs image, make sure we
+# generate an initramfs image license manifest.
+do_assemble_fitimage[depends] += "${@ "${INITRAMFS_IMAGE}:do_populate_lic_deploy" if d.getVar('INITRAMFS_IMAGE') else "" }"

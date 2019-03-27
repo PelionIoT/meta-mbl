@@ -42,5 +42,3 @@ do_preconfigure() {
 		printf "%s%s" +g $head > ${S}/.scmversion
 	fi
 }
-
-INITRAMFS_IMAGE = "mbl-image-initramfs"

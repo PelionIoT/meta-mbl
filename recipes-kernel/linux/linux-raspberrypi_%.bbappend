@@ -15,8 +15,6 @@ LINUX_RPI_BRANCH = "rpi-4.14.y"
 
 SRCREV = "83b36f98e1a48d143f0b466fcf9f8c4e382c9a1c"
 
-INITRAMFS_IMAGE = "mbl-image-initramfs"
-
 FILESEXTRAPATHS_prepend:="${THISDIR}/files:${THISDIR}/linux-raspberrypi:"
 
 SRC_URI += "file://*-mbl.cfg \

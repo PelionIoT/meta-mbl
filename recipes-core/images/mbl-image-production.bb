@@ -38,9 +38,11 @@ HOMEPAGE = "https://github.com/ARMmbed/meta-mbl"
 
 do_image_wic[depends] += "virtual/atf:do_deploy"
 
-
 # Convince the task that creates image_license.manifest to include atf.
 do_populate_lic_deploy[depends] += "virtual/atf:do_deploy"
+
+# Make sure we generate an initramfs image license manifest.
+do_populate_lic_deploy[depends] += "${@ "${INITRAMFS_IMAGE}:do_populate_lic_deploy" if d.getVar('INITRAMFS_IMAGE') else "" }"
 
 inherit core-image extrausers
 

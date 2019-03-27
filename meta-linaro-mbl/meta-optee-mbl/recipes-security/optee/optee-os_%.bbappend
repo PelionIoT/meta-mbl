@@ -7,13 +7,14 @@ DEPENDS_append_raspberrypi3-mbl = " arm-aarch64-toolchain-native "
 
 LICENSE = "BSD-2-Clause"
 
-SRCREV="644e5420ae01992e59c29f1417c9fd8445fab521"
-SRCREV_imx7d-pico-mbl="89af39033471cb21ed4db18f491ffb77e30e2a68"
+SRCREV="2976273f390e0654fb95928838ed0e251be8451f"
 SRCREV_imx8mmevk-mbl = "6a52487eb0ff664e4ebbd48497f0d3322844d51d"
 SRC_URI="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "
 
+LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=c1f21c4f72f372ef38a5a4aee55ec173"
+LIC_FILES_CHKSUM_imx8mmevk-mbl = "file://${S}/LICENSE;md5=69663ab153298557a59c67a60a743e5b"
 OPTEEMACHINE_imx7s-warp-mbl="imx-mx7swarp7_mbl"
 OPTEEMACHINE_imx7d-pico-mbl="imx-mx7dpico_mbl"
 OPTEEMACHINE_imx8mmevk-mbl = "imx-mx8mmevk"

@@ -9,7 +9,9 @@ usb gadget ethernet interface when the usbgadget COMBINED_FEATURE is present."
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-SRC_URI = "file://mbl-usb-gether-mac-addr.service"
+SRC_URI = "file://mbl-usb-gether-mac-addr.service \
+           file://mbl-usb-gether-mac-addr.sh \
+          "
 
 inherit systemd
 
@@ -25,7 +27,12 @@ do_configure() {
 do_install() {
     install -d ${D}${systemd_unitdir}/system
     install -m 0644 ${WORKDIR}/mbl-usb-gether-mac-addr.service ${D}${systemd_unitdir}/system/
+
+    install -d ${D}/opt/arm/
+    install -m 0744 ${WORKDIR}/mbl-usb-gether-mac-addr.sh ${D}/opt/arm/mbl-usb-gether-mac-addr.sh
 }
 
-MBL_VAR_PLACEHOLDER_FILES = "${D}${systemd_unitdir}/system/mbl-usb-gether-mac-addr.service"
+FILES_${PN} = "/opt/arm/mbl-usb-gether-mac-addr.sh"
+
+MBL_VAR_PLACEHOLDER_FILES = "${D}/opt/arm/mbl-usb-gether-mac-addr.sh"
 inherit mbl-var-placeholders

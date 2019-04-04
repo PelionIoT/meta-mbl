@@ -1,0 +1,22 @@
+From 45547b0081099076d4bc9d80c43e160ca469cc2f Mon Sep 17 00:00:00 2001
+From: Diego Sueiro <diego.sueiro@arm.com>
+Date: Thu, 4 Apr 2019 14:47:05 +0100
+Subject: [PATCH] Avahi disable ipv4 mDNS
+
+---
+ avahi-daemon/avahi-daemon.conf | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/avahi-daemon/avahi-daemon.conf b/avahi-daemon/avahi-daemon.conf
+index ff9a4c5..eb06c55 100644
+--- a/avahi-daemon/avahi-daemon.conf
++++ b/avahi-daemon/avahi-daemon.conf
+@@ -22,7 +22,7 @@
+ #host-name=foo
+ #domain-name=local
+ #browse-domains=0pointer.de, zeroconf.org
+-use-ipv4=yes
++use-ipv4=no
+ use-ipv6=yes
+ #allow-interfaces=eth0
+ #deny-interfaces=eth1

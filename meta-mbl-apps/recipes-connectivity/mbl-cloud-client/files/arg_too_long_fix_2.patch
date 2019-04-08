@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index b90269e..08b8f3e 100644
+index 2719b40..314b4e2 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -25,13 +25,18 @@ add_definitions(-DMBED_CONF_MBED_CLIENT_SN_COAP_DUPLICATION_MAX_MSGS_COUNT=4)
@@ -35,9 +35,8 @@ index b90269e..08b8f3e 100644
  ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-coap/mbed-coap)
  ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-coap/source/include)
  ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace)
--ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace/mbed-trace)
+ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace/mbed-trace)
 -ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-client-randlib)
-+# ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace/mbed-trace)
 +# ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-client-randlib)
  ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-client-randlib/mbed-client-randlib)
  ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-client-randlib/mbed-client-randlib/platform)
@@ -100,30 +99,3 @@ index b90269e..08b8f3e 100644
  include_directories(${FACTORY_CLIENT_SOURCE_DIR}/fcc-output-info-handler/fcc-output-info-handler)
  
  # Certificate Enrollment Client
-@@ -142,13 +147,13 @@ ADD_GLOBALDIR(${UPDATE_SOURCE_DIR})
- ADD_GLOBALDIR(${UPDATE_SOURCE_DIR}/modules/common)
- 
- include_directories(${UPDATE_SOURCE_DIR})
--include_directories(${UPDATE_SOURCE_DIR}/update-client-hub)
-+# include_directories(${UPDATE_SOURCE_DIR}/update-client-hub)
- include_directories(${UPDATE_SOURCE_DIR}/modules/atomic-queue)
- include_directories(${UPDATE_SOURCE_DIR}/modules/atomic-queue/atomic-queue)
- include_directories(${UPDATE_SOURCE_DIR}/modules/common)
- include_directories(${UPDATE_SOURCE_DIR}/modules/common/update-client-common)
- include_directories(${UPDATE_SOURCE_DIR}/modules/resume-engine)
--include_directories(${UPDATE_SOURCE_DIR}/modules/resume-engine/resume-engine)
-+# include_directories(${UPDATE_SOURCE_DIR}/modules/resume-engine/resume-engine)
- include_directories(${UPDATE_SOURCE_DIR}/modules/control-center)
- include_directories(${UPDATE_SOURCE_DIR}/modules/control-center/update-client-control-center)
- include_directories(${UPDATE_SOURCE_DIR}/modules/device-identity)
-@@ -162,8 +167,8 @@ include_directories(${UPDATE_SOURCE_DIR}/modules/manifest-manager/update-client-
- include_directories(${UPDATE_SOURCE_DIR}/modules/manifest-manager/source)
- include_directories(${UPDATE_SOURCE_DIR}/modules/monitor)
- include_directories(${UPDATE_SOURCE_DIR}/modules/monitor/update-client-monitor)
--include_directories(${UPDATE_SOURCE_DIR}/modules/paal-update-api)
--include_directories(${UPDATE_SOURCE_DIR}/modules/paal-update-api/paal-update-api)
-+# include_directories(${UPDATE_SOURCE_DIR}/modules/paal-update-api)
-+# include_directories(${UPDATE_SOURCE_DIR}/modules/paal-update-api/paal-update-api)
- include_directories(${UPDATE_SOURCE_DIR}/modules/source)
- include_directories(${UPDATE_SOURCE_DIR}/modules/source/update-client-source)
- include_directories(${UPDATE_SOURCE_DIR}/modules/source-http)

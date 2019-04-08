@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-DEPENDS += " u-boot-tools-native "
+DEPENDS += " u-boot-mkimage-native "
 DEPENDS_append_raspberrypi3-mbl = " arm-aarch64-toolchain-native "
 
 LICENSE = "BSD-2-Clause"

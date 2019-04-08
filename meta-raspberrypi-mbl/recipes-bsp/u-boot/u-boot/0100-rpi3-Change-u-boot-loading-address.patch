@@ -1,9 +1,10 @@
-From 3bf6b109ea6ea27c6a854082e1f31a683e59ba61 Mon Sep 17 00:00:00 2001
+From 2f3ff622340d9ef6eae96d7c1d09b52ea4ce9caf Mon Sep 17 00:00:00 2001
 From: Hugues Kamba <hugues.kamba@arm.com>
 Date: Tue, 5 Mar 2019 12:44:34 +0000
 Subject: [PATCH] rpi3: Change u-boot loading address
 
 Signed-off-by: Hugues Kamba <hugues.kamba@arm.com>
+
 ---
  configs/rpi_3_32b_defconfig | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
@@ -20,6 +21,3 @@ index bbf902b..f48c79f 100644
  CONFIG_TARGET_RPI_3_32B=y
  CONFIG_SYS_MALLOC_F_LEN=0x2000
  CONFIG_DISTRO_DEFAULTS=y
--- 
-2.7.4
-

@@ -296,17 +296,10 @@ fitimage_assemble() {
     # Step 8: Sign the image and add public key to U-Boot dtb
     #
     if [ "x${UBOOT_SIGN_ENABLE}" = "x1" ] ; then
-        add_key_to_u_boot=""
-        if [ -n "${UBOOT_DTB_BINARY}" ]; then
-            # The u-boot.dtb is a symlink to UBOOT_DTB_IMAGE, so we need copy
-            # both of them, and don't dereference the symlink.
-            cp -P ${STAGING_DATADIR}/u-boot*.dtb ${B}
-            add_key_to_u_boot="-K ${B}/${UBOOT_DTB_BINARY}"
-        fi
         uboot-mkimage \
             ${@'-D "${UBOOT_MKIMAGE_DTCOPTS}"' if len('${UBOOT_MKIMAGE_DTCOPTS}') else ''} \
             -F -k "${UBOOT_SIGN_KEYDIR}" \
-            $add_key_to_u_boot \
+            ${@'-K "${DEPLOY_DIR_IMAGE}/${UBOOT_DTB_BINARY}"' if len('${UBOOT_DTB_BINARY}') else ''} \
             -r arch/${ARCH}/boot/${2}
     fi
 }
@@ -326,3 +319,5 @@ kernel_do_deploy_append() {
 # If we create a FIT image containing the initramfs image, make sure we
 # generate an initramfs image license manifest.
 do_assemble_fitimage[depends] += "${@ "${INITRAMFS_IMAGE}:do_populate_lic_deploy" if d.getVar('INITRAMFS_IMAGE') else "" }"
+
+do_assemble_fitimage[depends] += "dtc-native:do_populate_sysroot"

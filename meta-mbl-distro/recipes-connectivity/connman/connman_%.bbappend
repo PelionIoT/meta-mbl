@@ -8,11 +8,13 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 FILES_${PN} += " \
     ${MBL_NON_FACTORY_CONFIG_DIR} \
     ${MBL_NON_FACTORY_CONFIG_DIR}/main.conf \
+    ${sysconfdir}/systemd/system/connman.service.d/10-mbl-connman.service.conf \
 "
 
 SRC_URI +=  " file://0005-replace-libreadline-with-libedit.patch \
               file://main.conf \
               file://settings \
+              file://10-mbl-connman.service.conf \
             "
 
 #replace readline (GPLV3) with libedit (GPLV2)
@@ -36,4 +38,7 @@ do_install_append() {
     install -d ${D}${MBL_NON_FACTORY_CONFIG_DIR}/connman
     install -m 0644 ${WORKDIR}/main.conf ${D}${MBL_NON_FACTORY_CONFIG_DIR}/connman/main.conf
     install -m 0644 ${WORKDIR}/settings ${D}${MBL_NON_FACTORY_CONFIG_DIR}/connman/settings
+
+    install -d ${D}${sysconfdir}/systemd/system/connman.service.d/
+    install -m 0644 ${WORKDIR}/10-mbl-connman.service.conf ${D}${sysconfdir}/systemd/system/connman.service.d/10-mbl-connman-service.conf
 }

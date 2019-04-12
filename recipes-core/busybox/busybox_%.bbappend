@@ -18,3 +18,7 @@ SRC_URI += "file://busybox-udhcpc-fix-IPv6-support-when-using-udhcpc.patch;patch
 # if_updown_ext_dhcp.cfg unsets CONFIG_FEATURE_IFUPDOWN_EXTERNAL_DHCP.
 # This means busybox ifup/ifdown will ignore an external managers such as ConnMan.
 SRC_URI += "file://if_updown_ext_dhcp.cfg"
+
+# Enable dd ibs and obs support so that it is possible to run the Qualcomm
+# firmware package.
+SRC_URI += "file://dd_ibs_obs.cfg"

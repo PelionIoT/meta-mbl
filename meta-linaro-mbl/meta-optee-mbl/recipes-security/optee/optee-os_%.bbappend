@@ -9,14 +9,14 @@ LICENSE = "BSD-2-Clause"
 
 SRCREV="644e5420ae01992e59c29f1417c9fd8445fab521"
 SRCREV_imx7d-pico-mbl="89af39033471cb21ed4db18f491ffb77e30e2a68"
-SRCREV_imx8mmevk-mbl = "6a52487eb0ff664e4ebbd48497f0d3322844d51d"
+SRCREV_imx8mmevk-mbl = "230e2d697800dcb7070e924577c7a6069c866477"
 SRC_URI="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "
 
 OPTEEMACHINE_imx7s-warp-mbl="imx-mx7swarp7_mbl"
 OPTEEMACHINE_imx7d-pico-mbl="imx-mx7dpico_mbl"
-OPTEEMACHINE_imx8mmevk-mbl = "imx-mx8mmevk"
+OPTEEMACHINE_imx8mmevk-mbl = "imx-mx8mmevk_mbl"
 OPTEEOUTPUTMACHINE_imx="imx"
 OPTEEMACHINE_raspberrypi3-mbl="rpi3"
 OPTEEOUTPUTMACHINE_raspberrypi3-mbl="rpi3"

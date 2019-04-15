@@ -18,6 +18,8 @@ PROVIDES += "virtual/atf"
 
 SRCBRANCH = "imx_4.14.78_1.0.0_ga"
 SRCREV = "d6451cc1e162eff89b03dd63e86d55b9baa8885b"
+SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/arm-trusted-firmware.git;protocol=https;nobranch=1;"
+
 
 # This option tells ATF to use optee for runtime SPD instead of internal ATF code.
 EXTRA_OEMAKE += " SPD=opteed "

@@ -42,7 +42,7 @@ The supporting repositories are:
 
 ### Documentation
 
-The main documentation is on the [website][mbl-introduction]. There are some supporting reference and technical documentation in [meta-mbl/docs][mbl-extra-docs].
+The main documentation is on the [website][mbl-introduction]. There are some supporting references and technical documentation in [meta-mbl/docs][mbl-extra-docs].
 
 
 [mbl-linux-release]: https://github.com/ARMmbed/mbl-manifest/releases/tag/mbl-os-0.6.1

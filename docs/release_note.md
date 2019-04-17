@@ -2,7 +2,7 @@
 
 Copyright © 2018-2019 Arm Limited.
 
-We are pleased to announce that [Mbed Linux OS 0.6.0][mbl-linux-release] is now available as a restricted preview release.
+We are pleased to announce that [Mbed Linux OS 0.6.1][mbl-linux-release] is now available as a restricted preview release.
 
 ## Summary
 
@@ -13,6 +13,10 @@ For more information about the the features and product vision, please see the [
 ## Known issues
 
 Please refer to the [list of issues][mbl-issues] for all the main and supporting Mbed Linux OS repositories.
+
+## Resolved issues in mbl-os-0.6.1
+
+Please refer to the [list of closed issues][mbl-issues-0.6.1] for all the main and supporting Mbed Linux OS repositories.
 
 ## Using this release
 
@@ -41,12 +45,13 @@ The supporting repositories are:
 Thhe main documentation is on the [website][mbl-introduction]. There are some supporting reference and technical documentation in [meta-mbl/docs][mbl-extra-docs].
 
 
-[mbl-linux-release]: https://github.com/ARMmbed/mbl-manifest/releases/tag/mbl-os-0.6.0
+[mbl-linux-release]: https://github.com/ARMmbed/mbl-manifest/releases/tag/mbl-os-0.6.1
 [mbl-extra-docs]: https://github.com/ARMmbed/meta-mbl/tree/mbl-os-0.6/docs
 [mbl-start-guide]: https://os.mbed.com/docs/mbed-linux-os/v0.6/welcome/index.html#getting-started
 [mbl-introduction]: https://os.mbed.com/docs/mbed-linux-os/v0.6/welcome/index.html
 [mbed-email]: mailto:support@mbed.com
 [mbl-issues]: https://github.com/issues?q=is%3Aissue+archived%3Afalse+repo%3AARMmbed%2Fmbl-tools+repo%3AARMmbed%2Fmeta-mbl+repo%3AARMmbed%2Fmbl-manifest+repo%3AARMmbed%2Fmbl-core+repo%3AARMmbed%2Fmbl-cli+repo%3AARMmbed%2Fmbl-config+is%3Aopen
+[mbl-issues-0.6.1]: https://github.com/issues?utf8=%E2%9C%93&q=is%3Aissue+archived%3Afalse+repo%3AARMmbed%2Fmbl-tools+repo%3AARMmbed%2Fmeta-mbl+repo%3AARMmbed%2Fmbl-manifest+repo%3AARMmbed%2Fmbl-core+repo%3AARMmbed%2Fmbl-cli+repo%3AARMmbed%2Fmbl-config+milestone%3Ambl-os-0.6.1
 
 [meta-mbl]: https://github.com/ARMmbed/meta-mbl/tree/mbl-os-0.6
 [mbl-core]: https://github.com/ARMmbed/mbl-core/tree/mbl-os-0.6

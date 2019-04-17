@@ -12,5 +12,5 @@ SRC_URI_append_raspberrypi3-mbl = " file://0100-rpi3-Change-u-boot-loading-addre
 "
 
 do_deploy_append() {
-	install -m 0644 ${B}/${UBOOT_NODTB_BINARY} ${DEPLOYDIR}/u-boot-nodtb.bin
+    ln -sf ${UBOOT_NODTB_IMAGE}  ${DEPLOYDIR}/${UBOOT_NODTB_BINARY}
 }

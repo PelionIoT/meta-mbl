@@ -18,11 +18,11 @@ LICENSE += " & Zlib"
 # build the toolchain has been tagged with "gcc-8_2_0-release", and the
 # commit for this tag is specified at SRCREV_${TOOLCHAIN_NAME} below.
 TOOLCHAIN_NAME = "gcc"
-SRC_URI = "git://git@github.com/gcc-mirror/gcc.git;nobranch=1;name=${TOOLCHAIN_NAME};destsuffix=git/${TOOLCHAIN_NAME}"
+SRC_URI = "git://github.com/gcc-mirror/gcc.git;nobranch=1;name=${TOOLCHAIN_NAME};destsuffix=git/${TOOLCHAIN_NAME}"
 SRCREV_${TOOLCHAIN_NAME} = "9fb89fa845c1b2e0a18d85ada0b077c84508ab78"
 
 # For detailed information on licenses check here: https://spdx.org/licenses.
-# The methodology is to check all licenses found, and to check a representative license 
+# The methodology is to check all licenses found, and to check a representative license
 # in every subdirectory. When the toolchain is updated, this has a reasonable
 # chance of detecting changes.
 # Licenses found in the sources include the following:
@@ -39,8 +39,8 @@ SRCREV_${TOOLCHAIN_NAME} = "9fb89fa845c1b2e0a18d85ada0b077c84508ab78"
 #   - <srcdir>/include: GPLv2 | GPLv3.
 #   - <srcdir>/INSTALL: obsolete and therefore not checked.
 #   - <srcdir>/intl: GPLv2, based on the gettext sources.
-#   - <srcdir>/libada/Makfile.in: GPLv3. 
-#   - <srcdir>/libatomic/libatomic_i.h: GPLv3. 
+#   - <srcdir>/libada/Makfile.in: GPLv3.
+#   - <srcdir>/libatomic/libatomic_i.h: GPLv3.
 #   - <srcdir>/libbacktrace/backtrace.h/c: BSD-3-Clause.
 #   - <srcdir>/libcc1/libcc1.cc: GPLv3.
 #   - <srcdir>/libccp/libccp/cpplib.h: GPLv3.

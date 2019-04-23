@@ -6,7 +6,7 @@ We are pleased to announce that [Mbed Linux OS 0.6.1][mbl-linux-release] is now 
 
 ## Summary
 
-This preview release is an incremental improvement over Mbed Linux OS 0.6, but it still intended for limited distribution to enable customers to continue to validate the foundations of the Mbed Linux operating system. This release is built upon the OpenEmbedded build automation framework and uses versions of OpenEmbedded and Third Party IP that are pinned for this release.
+This is a "minor bug-fix" release of Mbed Linux OS 0.6, but it still intended for limited distribution to enable customers to continue to validate the foundations of the Mbed Linux operating system. This release is built upon the OpenEmbedded build automation framework and uses versions of OpenEmbedded and Third Party IP that are pinned for this release.
 
 For more information about the the features and product vision, please see the [introduction on our website][mbl-introduction].
 

@@ -1,4 +1,4 @@
-# mbl-os-0.6
+# mbl-os-0.6.1
 
 Copyright © 2018-2019 Arm Limited.
 
@@ -6,7 +6,7 @@ We are pleased to announce that [Mbed Linux OS 0.6.1][mbl-linux-release] is now 
 
 ## Summary
 
-This preview release is an incremental improvement over Mbed Linux OS 0.5, but it still intended for limited distribution to enable customers to continue to validate the foundations of the Mbed Linux operating system. This release is built upon the OpenEmbedded build automation framework and uses versions of OpenEmbedded and Third Party IP that are pinned for this release.
+This preview release is an incremental improvement over Mbed Linux OS 0.6, but it still intended for limited distribution to enable customers to continue to validate the foundations of the Mbed Linux operating system. This release is built upon the OpenEmbedded build automation framework and uses versions of OpenEmbedded and Third Party IP that are pinned for this release.
 
 For more information about the the features and product vision, please see the [introduction on our website][mbl-introduction].
 
@@ -14,7 +14,7 @@ For more information about the the features and product vision, please see the [
 
 Please refer to the [list of issues][mbl-issues] for all the main and supporting Mbed Linux OS repositories.
 
-## Resolved issues in mbl-os-0.6.1
+## Resolved issues since mbl-os-0.6
 
 Please refer to the [list of closed issues][mbl-issues-0.6.1] for all the main and supporting Mbed Linux OS repositories.
 

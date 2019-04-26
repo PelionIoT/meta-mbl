@@ -16,7 +16,6 @@ SRC_URI +=  " file://0005-replace-libreadline-with-libedit.patch \
               file://settings \
               file://10-mbl-connman.service.conf \
             "
-
 #replace readline (GPLV3) with libedit (GPLV2)
 DEPENDS_remove = "readline"
 DEPENDS += " libedit"
@@ -41,4 +40,8 @@ do_install_append() {
 
     install -d ${D}${sysconfdir}/systemd/system/connman.service.d/
     install -m 0644 ${WORKDIR}/10-mbl-connman.service.conf ${D}${sysconfdir}/systemd/system/connman.service.d/10-mbl-connman-service.conf
+
+    # Fix wrong symlink creation in the main recipe
+    rm -rf ${D}${sysconfdir}/resolv-conf.connman
+    ln -sf ..${MBL_NON_FACTORY_CONFIG_DIR}/run/connman/resolv.conf ${D}${sysconfdir}/resolv-conf.connman
 }

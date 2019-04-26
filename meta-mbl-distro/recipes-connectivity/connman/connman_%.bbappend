@@ -16,6 +16,9 @@ SRC_URI +=  " file://0005-replace-libreadline-with-libedit.patch \
               file://settings \
               file://10-mbl-connman.service.conf \
             "
+# Let systemd-resolved run to use it to deal with mDNS requests
+SRC_URI_remove = "file://0001-connman.service-stop-systemd-resolved-when-we-use-co.patch"
+
 #replace readline (GPLV3) with libedit (GPLV2)
 DEPENDS_remove = "readline"
 DEPENDS += " libedit"

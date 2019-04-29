@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-[Network]
-LinkLocalAddressing=ipv6
-MulticastDNS=yes
+[Service]
+Name=%H
+Type=_ssh._tcp
+Port=22
+TxtText=mblos

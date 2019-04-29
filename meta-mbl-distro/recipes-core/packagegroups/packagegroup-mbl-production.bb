@@ -32,7 +32,6 @@ PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ${PYTEST_DEPENDENCIES}"
 #     - systemd-net-conf. Systemd related network configuration files (e.g.
 #       hostname setup).
 ###############################################################################
-PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " avahi-autoipd"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ca-certificates"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " runc-opencontainers"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " iptables"

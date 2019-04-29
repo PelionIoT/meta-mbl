@@ -17,7 +17,6 @@ inherit packagegroup
 #       if usbgadget is in the COMBINED_FEATURES.
 ###############################################################################
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " dropbear"
-PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " dropbear-ssh-dns-sd"
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " python3 python3-pip"
 # glib-2.0, python3-pygobject and gobject-introspection are included because
 # pydbus requires them.

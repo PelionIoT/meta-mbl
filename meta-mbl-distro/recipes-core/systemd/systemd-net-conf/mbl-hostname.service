@@ -4,7 +4,7 @@
 
 [Unit]
 Description=MBL Hostname Setup
-Before=avahi-daemon.service
+Before=systemd-resolved.service
 ConditionPathExists=/config
 Wants=network-pre.target
 Before=network-pre.target

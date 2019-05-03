@@ -38,3 +38,6 @@ NO_RECOMMENDATIONS = "1"
 IMAGE_LICENSE_CHECKER_NON_ROOTFS_BLACKLIST = "GPL-3.0 LGPL-3.0 AGPL-3.0"
 IMAGE_LICENSE_CHECKER_ROOTFS_BLACKLIST = "GPL-3.0 LGPL-3.0 AGPL-3.0"
 inherit image-license-checker
+
+# Temporary workaround to fix do_image "systemctl: not found" error
+do_image[depends] += "systemd-systemctl-native:do_populate_sysroot"

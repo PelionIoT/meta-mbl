@@ -2,9 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
-SRCBRANCH = "imx_v2018.03_4.14.78_1.0.0_ga-mbl"
-SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1"
-SRCREV = "336522718c23e6adb1fe206fc0beab4465d5ecda"
+SRCBRANCH = "imx_v2018.03_4.14.78_1.0.0_ga"
+SRCREV = "654088cc211e021387b04a8c33420739da40ebbe"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/u-boot-imx:"
 

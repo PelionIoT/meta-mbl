@@ -36,9 +36,8 @@ do_compile_append() {
 	dd if=${B}/${PLATFORM}/fip.bin of=${B}/${PLATFORM}/${MBL_UNIFIED_BIN} skip=33 bs=4k oflag=append conv=notrunc
 }
 
-# We need to fullfill the dependencies that imx-boot-tools has on the location
-# of the bl31 binary, in this case it wants the binary placed in ${DEPLOYDIR}/imx-boot-tools
+# We need to over-ride the default do_deploy with a NOP here.
+# When we switch on FIP images signing we will need to do_deploy_append
 do_deploy() {
-	install -d ${DEPLOYDIR}/imx-boot-tools
-	install -D -p -m 0644 ${B}/${PLATFORM}/${MBL_UNIFIED_BIN} ${DEPLOYDIR}/imx-boot-tools
+	:
 }

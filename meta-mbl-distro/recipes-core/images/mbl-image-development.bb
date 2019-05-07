@@ -31,6 +31,7 @@ IMAGE_INSTALL += " \
 
 # No GPLv3 allowed in the non-rootfs parts of the image
 IMAGE_LICENSE_CHECKER_NON_ROOTFS_BLACKLIST = "GPL-3.0 LGPL-3.0 AGPL-3.0"
+inherit license-json
 inherit image-license-checker
 
 # Temporary workaround to fix do_image "systemctl: not found" error

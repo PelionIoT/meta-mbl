@@ -19,8 +19,6 @@ FILESEXTRAPATHS_prepend:="${THISDIR}/files:${THISDIR}/linux-raspberrypi:"
 
 SRC_URI += "file://*-mbl.cfg \
 "
-SRC_URI += "file://0001-rpi3-optee-update-DTS.patch \
-"
 
 # LOADADDR is 0x00080000 by default. But we need to put FIP between
 # 0x00020000 ~ 0x00200000. Thus we move kernel to another address.

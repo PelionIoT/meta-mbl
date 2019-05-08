@@ -14,7 +14,11 @@ require recipes-bsp/atf/atf.inc
 #   and incorporated into the firmware.
 DEPENDS += "arm-aarch64-toolchain-native"
 
-SRCREV_atf = "a84c7ff236053688c3a692012534cd1c1050ce6c"
+SRCREV_atf = "c48d02bade88b07fa7f43aa44e5217f68e5d047f"
+
+FILESEXTRAPATHS_prepend := "${THISDIR}/atf-raspberrypi3-mbl:"
+SRC_URI_append_raspberrypi3-mbl = " file://0001-rpi3-Use-mmc-driver-to-load-FIP-from-raw-sectors.patch \
+"
 
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM_remove = "file://license.rst;md5=c709b197e22b81ede21109dbffd5f363"

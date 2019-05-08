@@ -1,0 +1,200 @@
+From a84c7ff236053688c3a692012534cd1c1050ce6c Mon Sep 17 00:00:00 2001
+From: "Ying-Chun Liu (PaulLiu)" <paulliu@debian.org>
+Date: Tue, 4 Dec 2018 14:27:15 +0800
+Subject: [PATCH] rpi3: Use mmc driver to load FIP from raw sectors.
+
+FIP is located at sector 2048 (sector size 512).
+
+Signed-off-by: Ying-Chun Liu (PaulLiu) <paulliu@debian.org>
+---
+ plat/rpi3/include/platform_def.h |  1 +
+ plat/rpi3/rpi3_common.c          |  2 +-
+ plat/rpi3/rpi3_io_storage.c      | 73 ++++++++++++++++++++++++++++++++++++++--
+ 3 files changed, 73 insertions(+), 3 deletions(-)
+
+diff --git a/plat/rpi3/include/platform_def.h b/plat/rpi3/include/platform_def.h
+index 4d902225..170430eb 100644
+--- a/plat/rpi3/include/platform_def.h
++++ b/plat/rpi3/include/platform_def.h
+@@ -88,6 +88,7 @@
+ /* FIP placed after ROM to append it to BL1 with very little padding. */
+ #define PLAT_RPI3_FIP_BASE		ULL(0x00020000)
+ #define PLAT_RPI3_FIP_MAX_SIZE		ULL(0x001E0000)
++#define PLAT_RPI3_FIP_MMC_BASE          (1024 * 1024)
+ 
+ /* We have 16M of memory reserved starting at 256M */
+ #define SEC_SRAM_BASE			ULL(0x10000000)
+diff --git a/plat/rpi3/rpi3_common.c b/plat/rpi3/rpi3_common.c
+index 9b10974a..590503d0 100644
+--- a/plat/rpi3/rpi3_common.c
++++ b/plat/rpi3/rpi3_common.c
+@@ -37,7 +37,7 @@
+ 
+ #define MAP_FIP		MAP_REGION_FLAT(PLAT_RPI3_FIP_BASE,		\
+ 					PLAT_RPI3_FIP_MAX_SIZE,		\
+-					MT_MEMORY | MT_RO | MT_NS)
++					MT_MEMORY | MT_RW | MT_NS)
+ 
+ #define MAP_BL32_MEM	MAP_REGION_FLAT(BL32_MEM_BASE, BL32_MEM_SIZE,	\
+ 					MT_MEMORY | MT_RW | MT_SECURE)
+diff --git a/plat/rpi3/rpi3_io_storage.c b/plat/rpi3/rpi3_io_storage.c
+index 49c6a760..acdc4386 100644
+--- a/plat/rpi3/rpi3_io_storage.c
++++ b/plat/rpi3/rpi3_io_storage.c
+@@ -4,6 +4,10 @@
+  * SPDX-License-Identifier: BSD-3-Clause
+  */
+ 
++#ifndef IMAGE_BL1
++#define USE_FIP_FROM_MMC
++#endif
++
+ #include <assert.h>
+ #include <string.h>
+ 
+@@ -11,9 +15,15 @@
+ 
+ #include <common/bl_common.h>
+ #include <common/debug.h>
++#ifdef USE_FIP_FROM_MMC
++#include <drivers/mmc.h>
++#endif
+ #include <drivers/io/io_driver.h>
+ #include <drivers/io/io_fip.h>
+ #include <drivers/io/io_memmap.h>
++#ifdef USE_FIP_FROM_MMC
++#include <drivers/io/io_block.h>
++#endif
+ #include <tools_share/firmware_image_package.h>
+ 
+ /* Semihosting filenames */
+@@ -36,13 +46,37 @@
+ /* IO devices */
+ static const io_dev_connector_t *fip_dev_con;
+ static uintptr_t fip_dev_handle;
++#ifndef USE_FIP_FROM_MMC
+ static const io_dev_connector_t *memmap_dev_con;
+ static uintptr_t memmap_dev_handle;
++#else
++static const io_dev_connector_t *mmc_dev_con;
++static uintptr_t mmc_dev_handle;
++#endif
+ 
++#ifndef USE_FIP_FROM_MMC
+ static const io_block_spec_t fip_block_spec = {
+ 	.offset = PLAT_RPI3_FIP_BASE,
+ 	.length = PLAT_RPI3_FIP_MAX_SIZE
+ };
++#else
++static const io_block_spec_t mmc_fip_spec = {
++	.offset = PLAT_RPI3_FIP_MMC_BASE,
++        .length = PLAT_RPI3_FIP_MAX_SIZE
++};
++
++static const io_block_dev_spec_t mmc_dev_spec = {
++	.buffer         = {
++		.offset = PLAT_RPI3_FIP_BASE,
++		.length = PLAT_RPI3_FIP_MAX_SIZE
++	},
++	.ops            = {
++		.read   = mmc_read_blocks,
++		.write  = mmc_write_blocks,
++	},
++	.block_size     = MMC_BLOCK_SIZE
++};
++#endif
+ 
+ static const io_uuid_spec_t bl2_uuid_spec = {
+ 	.uuid = UUID_TRUSTED_BOOT_FIRMWARE_BL2,
+@@ -103,7 +137,11 @@ static const io_uuid_spec_t nt_fw_cert_uuid_spec = {
+ #endif /* TRUSTED_BOARD_BOOT */
+ 
+ static int open_fip(const uintptr_t spec);
++#ifndef USE_FIP_FROM_MMC
+ static int open_memmap(const uintptr_t spec);
++#else
++static int open_mmc(const uintptr_t spec);
++#endif
+ 
+ struct plat_io_policy {
+ 	uintptr_t *dev_handle;
+@@ -113,11 +151,19 @@ struct plat_io_policy {
+ 
+ /* By default, load images from the FIP */
+ static const struct plat_io_policy policies[] = {
++#ifndef USE_FIP_FROM_MMC
+ 	[FIP_IMAGE_ID] = {
+ 		&memmap_dev_handle,
+ 		(uintptr_t)&fip_block_spec,
+ 		open_memmap
+ 	},
++#else
++	[FIP_IMAGE_ID] = {
++		&mmc_dev_handle,
++		(uintptr_t)&mmc_fip_spec,
++		open_mmc
++	},
++#endif
+ 	[BL2_IMAGE_ID] = {
+ 		&fip_dev_handle,
+ 		(uintptr_t)&bl2_uuid_spec,
+@@ -209,6 +255,7 @@ static int open_fip(const uintptr_t spec)
+ 	return result;
+ }
+ 
++#ifndef USE_FIP_FROM_MMC
+ static int open_memmap(const uintptr_t spec)
+ {
+ 	int result;
+@@ -224,6 +271,21 @@ static int open_memmap(const uintptr_t spec)
+ 	}
+ 	return result;
+ }
++#else
++static int open_mmc(const uintptr_t spec)
++{
++	int result;
++	uintptr_t local_handle;
++
++	result = io_dev_init(mmc_dev_handle, (uintptr_t)NULL);
++	if (result == 0) {
++		result = io_open(mmc_dev_handle, spec, &local_handle);
++		if (result == 0)
++			io_close(local_handle);
++	}
++	return result;
++}
++#endif
+ 
+ void plat_rpi3_io_setup(void)
+ {
+@@ -231,17 +293,24 @@ void plat_rpi3_io_setup(void)
+ 
+ 	io_result = register_io_dev_fip(&fip_dev_con);
+ 	assert(io_result == 0);
+-
++#ifndef USE_FIP_FROM_MMC
+ 	io_result = register_io_dev_memmap(&memmap_dev_con);
++#else
++	io_result = register_io_dev_block(&mmc_dev_con);
++#endif
+ 	assert(io_result == 0);
+-
+ 	/* Open connections to devices and cache the handles */
+ 	io_result = io_dev_open(fip_dev_con, (uintptr_t)NULL,
+ 				&fip_dev_handle);
+ 	assert(io_result == 0);
+ 
++#ifndef USE_FIP_FROM_MMC
+ 	io_result = io_dev_open(memmap_dev_con, (uintptr_t)NULL,
+ 				&memmap_dev_handle);
++#else
++	io_result = io_dev_open(mmc_dev_con, (uintptr_t)&mmc_dev_spec,
++				&mmc_dev_handle);
++#endif
+ 	assert(io_result == 0);
+ 
+ 	/* Ignore improbable errors in release builds */
+-- 
+2.11.0
+

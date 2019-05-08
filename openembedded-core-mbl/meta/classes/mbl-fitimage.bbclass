@@ -254,6 +254,15 @@ fitimage_assemble() {
         bberror 'Cannot find u-boot command file: ${MBL_UBOOT_CMD_FILENAME}.'
     fi
 
+    #
+    # Step 6: Insert dtbo
+    if [ -d ${DEPLOY_DIR_IMAGE}/devicetree ]; then
+        for DTBO in ${DEPLOY_DIR_IMAGE}/devicetree/*.dtbo; do
+            DTB=`basename ${DTBO}`
+            fitimage_emit_section_dtb ${1} ${DTB} ${DTBO}
+        done
+    fi
+
     fitimage_emit_section_maint ${1} sectend
 
     # Force the first Kernel and DTB in the default config
@@ -263,7 +272,7 @@ fitimage_assemble() {
     fi
 
     #
-    # Step 6: Prepare a configurations section
+    # Step 7: Prepare a configurations section
     #
     fitimage_emit_section_maint ${1} confstart
 
@@ -285,7 +294,7 @@ fitimage_assemble() {
     fitimage_emit_section_maint ${1} fitend
 
     #
-    # Step 7: Assemble the image
+    # Step 8: Assemble the image
     #
     uboot-mkimage \
         ${@'-D "${UBOOT_MKIMAGE_DTCOPTS}"' if len('${UBOOT_MKIMAGE_DTCOPTS}') else ''} \
@@ -293,7 +302,7 @@ fitimage_assemble() {
         arch/${ARCH}/boot/${2}
 
     #
-    # Step 8: Sign the image and add public key to U-Boot dtb
+    # Step 9: Sign the image and add public key to U-Boot dtb
     #
     if [ "x${UBOOT_SIGN_ENABLE}" = "x1" ] ; then
         uboot-mkimage \

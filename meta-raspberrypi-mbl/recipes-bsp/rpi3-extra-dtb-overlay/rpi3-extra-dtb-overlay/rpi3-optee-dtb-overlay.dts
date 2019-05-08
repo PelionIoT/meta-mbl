@@ -1,0 +1,45 @@
+/*
+Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+*/
+/dts-v1/;
+/plugin/;
+
+/{
+   fragment@0 {
+       target-path="/";
+       __overlay__ {
+           firmware {
+	       optee {
+	           compatible = "linaro,optee-tz";
+	           method = "smc";
+	       };
+	   };
+	   
+	   psci {
+	       compatible = "arm,psci-0.2";
+	       method = "smc";
+	   };
+       };
+   };
+   fragment@1 {
+       target-path="/";
+       __overlay__ {
+           reserved-memory {
+               #address-cells = <1>;
+               #size-cells = <1>;
+               ranges;
+
+               optee_a@0 {
+                   reg = <0x00000000 0x00200000>;
+                   no-map;
+               };
+               optee_shm@0x08000000 {
+                   reg = <0x08000000 0x02000000>;
+                   no-map;
+               };
+           };
+       };
+   };
+};

@@ -16,7 +16,6 @@ inherit packagegroup
 PYTEST_DEPENDENCIES = " \
     python3-debugger \
     python3-doctest \
-    python3-ntpath \
     python3-pathlib \
 "
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ${PYTEST_DEPENDENCIES}"

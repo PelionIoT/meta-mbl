@@ -14,10 +14,9 @@ KBUILD_DEFCONFIG_imx7d-pico-mbl ?= "imx7d-pico_defconfig"
 
 FILESEXTRAPATHS_prepend:="${THISDIR}/files:"
 
-SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/linux.git;protocol=https;nobranch=1 \
-           file://*-mbl.cfg \
-           file://0001-menuconfig-check-lxdiaglog.sh-Allow-specification-of.patch \
-          "
+SRC_URI += "git://git.linaro.org/landing-teams/working/mbl/linux.git;protocol=https;nobranch=1 \
+            file://0001-menuconfig-check-lxdiaglog.sh-Allow-specification-of.patch \
+           "
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
 

@@ -8,3 +8,5 @@
 # This recipe adds the files directory to FILESEXTRAPATHS.
 ##############################################################################
 FILESEXTRAPATHS_append := "${THISDIR}/files:"
+
+SRC_URI += "file://*-mbl.cfg"

@@ -6,8 +6,8 @@ FILESEXTRAPATHS_prepend:="${THISDIR}/files:"
 
 S = "${WORKDIR}/git"
 
-LINUX_VERSION = "4.14.103"
-SRCREV = "a71c476381803789482c8897b28c4a4463b11e3b"
+LINUX_VERSION = "4.14.112"
+SRCREV = "345ccb0b8bbe26f1040c4b8d54ed5e2e999e0588"
 
 KBUILD_DEFCONFIG_imx8mmevk-mbl = "imx8mmevk_mbl_defconfig"
 

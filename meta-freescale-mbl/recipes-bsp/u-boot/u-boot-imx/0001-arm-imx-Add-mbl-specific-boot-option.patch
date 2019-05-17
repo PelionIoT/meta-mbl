@@ -1,0 +1,56 @@
+From 2d0ce3fb708bed59ed5332f107bea7047f71052b Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Wed, 17 Apr 2019 16:04:52 +0800
+Subject: [PATCH] arm: imx: Add mbl specific boot option
+
+Add mbl specific boot option
+ - Enable fit image signature config
+ - Boot from boot script that embedded in fit image
+ - increase CONFIG_SYS_BOOTM_LEN for unzip space
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+---
+ configs/imx8mm_evk_defconfig | 2 ++
+ include/configs/imx8mm_evk.h | 5 ++++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/configs/imx8mm_evk_defconfig b/configs/imx8mm_evk_defconfig
+index 529ed44..b84708d 100644
+--- a/configs/imx8mm_evk_defconfig
++++ b/configs/imx8mm_evk_defconfig
+@@ -6,6 +6,8 @@ CONFIG_USB_TCPC=y
+ CONFIG_TARGET_IMX8MM_EVK=y
+ CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=arch/arm/mach-imx/spl_sd.cfg,SPL_TEXT_BASE=0x7E1000"
+ CONFIG_FIT=y
++CONFIG_FIT_SIGNATURE=y
++CONFIG_FIT_VERBOSE=y
+ CONFIG_SPL_LOAD_FIT=y
+ CONFIG_ARCH_MISC_INIT=y
+ CONFIG_SPL=y
+diff --git a/include/configs/imx8mm_evk.h b/include/configs/imx8mm_evk.h
+index 10e1a46..1b9eca2 100644
+--- a/include/configs/imx8mm_evk.h
++++ b/include/configs/imx8mm_evk.h
+@@ -111,6 +111,8 @@
+ #define CONFIG_PHY_ATHEROS
+ #endif
+ 
++#define CONFIG_SYS_BOOTM_LEN         SZ_64M
++
+ /*
+  * Another approach is add the clocks for inmates into clks_init_on
+  * in clk-imx8mm.c, then clk_ingore_unused could be removed.
+@@ -170,8 +172,9 @@
+ 	"mmcautodetect=yes\0" \
+ 	"mmcargs=setenv bootargs ${jh_clk} console=${console} root=${mmcroot}\0 " \
+ 	"loadbootscript=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
++	"bootscr_fitimage_name=bootscr\0" \
+ 	"bootscript=echo Running bootscript from mmc ...; " \
+-		"source\0" \
++		"source ${loadaddr}:${bootscr_fitimage_name}\0" \
+ 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
+ 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+ 	"mmcboot=echo Booting from mmc ...; " \
+-- 
+2.7.4
+

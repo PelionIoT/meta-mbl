@@ -1,16 +1,32 @@
 # Pull Request Guidelines
 
-Copyright © 2018 Arm Limited.
+Copyright © 2018-2019 Arm Limited.
 
 Before you create a pull request from a branch, each commit on the branch
-should be a logically self contained change and each commit message should
-have:
+should be a logically self-contained change and must not break a build or any
+functionality. You must not add unrelated changes in the same commit.
+
+Each commit message should have:
 * A subject and body conforming to [these guidelines][commit-message-guidelines].
-* References for any relevant bugs, issues or tickets.
+* The subject **must not** contain any references to Arm internal IDs like: issue
+  tracking, requirement, documentation, continuous integration and automated
+  test job(s).
+* The commit message body should contain the following references to Arm internal
+  IDs when applicable: issue tracking, requirement and documentation.
 
 When you create a pull request, please provide the following additional
 information in the PR description or in a comment:
-* A description of any testing that you have done.
+* The subject **must not** contain any references to Arm internal IDs like: issue
+  tracking, requirement, documentation, continuous integration and automated
+  test job(s).
+* The description should contain a summary about the changes/commits that are
+  included and any testing that you have done to validate the changes. If the PR
+  has a dependency on another open PR, it should be mentioned. And if it needs to
+  be synced with another PR from another repository, add the relevant PR link and
+  the "SYNCHRONIZE MERGES" label.
+* The description should contain the following information when applicable:
+  issue tracking, requirement, documentation, continuous integration and
+  automated test job(s) results.
 
 Once a pull request has been made, it must be reviewed before being accepted.
 If a reviewer requests changes to a pull request, they will probably do so
@@ -24,6 +40,11 @@ lines of code. Please:
   you have actually pushed that change to the pull request branch.
 * Do not make additional changes that are not related to the original purpose
   of the PR.
+  
+Once a PR has been approved by all reviewers who requested changes, it is the
+responsibility of the PR's author to merge it to the target branch. In the
+case of lack of permission to merge, it is the responsibility of the last
+reviewer who approved the PR, to merge it.
 
 To make changes to a pull request branch we have two allowed processes:
 
@@ -60,8 +81,7 @@ When there is initially only one commit in a pull request:
 
 ### 2. Force Push Flow: When the pull request initially contains multiple commits
 
-This should be the less common case (we prefer small pull requests) and is
-strongly discouraged.
+This should be the less common case.
 
 If there are initially multiple commits in a pull request that shouldn't be
 squashed, and it makes more sense to have one pull request rather than

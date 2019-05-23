@@ -2,12 +2,12 @@
 #
 # SPDX-License-Identifier: MIT
 
-# Use of this imx-atf_1.5.0.bb(append) is a temporary measure
+# Use of this imx-atf_2.0.bb(append) is a temporary measure
 # for importing the imx8mmevk BSP as-is from the vendor.
 # It will be removed when the BSP adopts the generic ATF
 # recipe structure (i.e. adopting atf.inc).
 #
-# NOTE: imx-atf_1.5.0.bb does the following
+# NOTE: imx-atf_2.0.bb does the following
 # - Uses the imx-atf repository at codeaurora here: git://source.codeaurora.org/external/imx/imx-atf.git
 # - checks the BSD-3-Clause license in the openembedded-core layer, rather than checking the
 #   license.rst in the source repo.

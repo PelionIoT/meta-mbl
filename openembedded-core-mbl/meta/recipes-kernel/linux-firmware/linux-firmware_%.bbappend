@@ -8,12 +8,13 @@
 # meta-raspberrypi linux-firmware is BBMASKed on imx7s-warp-mbl
 
 LIC_FILES_CHKSUM_remove = "\
-    file://WHENCE;md5=ef36d3383becd18f36ce32d84109386f \
+    file://WHENCE;md5=b6e44adf71bc37e5f26ebfe5a08b5490 \
     file://LICENSE.amd-ucode;md5=3c5399dc9148d7f0e1f41e34b69cf14f \
     file://LICENCE.cypress;md5=48cd9436c763bf873961f9ed7b5c147b  \
     file://LICENSE.amdgpu;md5=ab515ef6495ab5c5a3b08ab2db62df11 \
     file://LICENCE.cadence;md5=009f46816f6956cfb75ede13d3e1cee0 \
     file://LICENCE.mediatek;md5=7c1976b63217d76ce47d0a11d8a79cf2 \
+    file://LICENSE.amlogic_vdec;md5=dc44f59bf64a81643e500ad3f39a468a \
 "
 
 

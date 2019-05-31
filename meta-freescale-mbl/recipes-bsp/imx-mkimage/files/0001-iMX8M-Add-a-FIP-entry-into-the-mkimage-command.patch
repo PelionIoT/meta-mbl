@@ -1,0 +1,53 @@
+From 7111e7450806e50482a0289708e77988ff52329b Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Fri, 17 May 2019 15:46:48 +0000
+Subject: [PATCH] iMX8M: Add a FIP entry into the mkimage command
+
+This patch adds a FIP into the mkimage script. We apply the patch as
+part of the bitbake process to ensure the FIP entry is applied at the
+appropriate point in the build/compile process.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ iMX8M/mkimage_fit_atf.sh | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/iMX8M/mkimage_fit_atf.sh b/iMX8M/mkimage_fit_atf.sh
+index e1ba1e3..0b535bd 100755
+--- a/iMX8M/mkimage_fit_atf.sh
++++ b/iMX8M/mkimage_fit_atf.sh
+@@ -49,6 +49,7 @@ do
+ 	ls -lct $dtname | awk '{print $5}' >&2
+ done
+ 
++FIP="fip.bin"
+ 
+ cat << __HEADER_EOF
+ /dts-v1/;
+@@ -74,6 +75,14 @@ cat << __HEADER_EOF
+ 			load = <$ATF_LOAD_ADDR>;
+ 			entry = <$ATF_LOAD_ADDR>;
+ 		};
++		fip@1 {
++			description = "ARM Trusted Firmware FIP";
++			data = /incbin/("$FIP");
++			type = "firmware";
++			arch = "arm64";
++			compression = "none";
++			load = <0x40310000>;
++		};
+ __HEADER_EOF
+ 
+ if [ -f $BL32 ]; then
+@@ -119,7 +128,7 @@ cat << __CONF_SECTION_EOF
+ 		config@$cnt {
+ 			description = "$(basename $dtname .dtb)";
+ 			firmware = "uboot@1";
+-			loadables = "atf@1", "tee@1";
++			loadables = "atf@1", "tee@1", "fip@1";
+ 			fdt = "fdt@$cnt";
+ 		};
+ __CONF_SECTION_EOF
+-- 
+2.7.4
+

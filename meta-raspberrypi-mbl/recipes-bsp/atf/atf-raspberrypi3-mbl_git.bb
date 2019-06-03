@@ -14,6 +14,8 @@ require recipes-bsp/atf/atf.inc
 #   and incorporated into the firmware.
 DEPENDS += "arm-aarch64-toolchain-native"
 
+# MBL_ATF_VERSION should be updated to match version pointed to by SRCREV
+MBL_ATF_VERSION = "2.0"
 SRCREV_atf = "c48d02bade88b07fa7f43aa44e5217f68e5d047f"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/atf-raspberrypi3-mbl:"

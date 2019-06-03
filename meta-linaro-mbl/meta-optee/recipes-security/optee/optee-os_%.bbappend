@@ -7,6 +7,10 @@ DEPENDS_append_raspberrypi3-mbl = " arm-aarch64-toolchain-native "
 
 LICENSE = "BSD-2-Clause"
 
+# MBL_OPTEE_VERSION should be updated to match version pointed to by SRCREV
+MBL_OPTEE_VERSION = "3.4.0"
+MBL_OPTEE_VERSION_imx8mmevk-mbl = "3.2.0"
+
 SRCREV="2976273f390e0654fb95928838ed0e251be8451f"
 SRCREV_imx8mmevk-mbl = "230e2d697800dcb7070e924577c7a6069c866477"
 SRC_URI="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=https;nobranch=1 \

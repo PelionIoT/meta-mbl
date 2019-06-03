@@ -6,6 +6,7 @@ FILESEXTRAPATHS_prepend:="${THISDIR}/files:"
 
 S = "${WORKDIR}/git"
 
+PV = "${LINUX_VERSION}+git${SRCPV}"
 LINUX_VERSION = "4.14.112"
 SRCREV = "345ccb0b8bbe26f1040c4b8d54ed5e2e999e0588"
 

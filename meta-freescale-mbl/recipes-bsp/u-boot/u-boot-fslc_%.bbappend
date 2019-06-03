@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: MIT
 
+# MBL_UBOOT_VERSION should be updated to match version pointed to by SRCREV
+MBL_UBOOT_VERSION = "2018.11-rc1"
+
 SRCREV = "c0c4ee5fce01ec0818c4f27ce029d9b16c8849ad"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"

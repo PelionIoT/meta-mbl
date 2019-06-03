@@ -6,6 +6,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+PV = "${LINUX_VERSION}+git${SRCPV}"
 LINUX_VERSION = "4.14.112"
 SRCREV = "f7f7fda5baff4fb4525ed82ec210c9cb9169a134"
 

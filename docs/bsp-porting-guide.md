@@ -301,21 +301,21 @@ Once an MBL workspace has been created and the environment initialised, the `bbl
 
     layer                   path                                              priority
     ==================================================================================
-    meta-mbl-distro         <ws>/layers/meta-mbl/meta-mbl-distro                    14
-    meta-mbl-apps           <ws>/layers/meta-mbl/meta-mbl-apps                      5
+    meta-mbl-distro         <ws>/layers/meta-mbl/meta-mbl-distro                    10
+    meta-mbl-apps           <ws>/layers/meta-mbl/meta-mbl-apps                      7
     meta-filesystems        <ws>/layers/meta-openembedded/meta-filesystems          6
     meta-networking         <ws>/layers/meta-openembedded/meta-networking           5
     meta-oe                 <ws>/layers/meta-openembedded/meta-oe                   6
     meta-python             <ws>/layers/meta-openembedded/meta-python               7
+    meta-virtualization-mbl <ws>/layers/meta-mbl/meta-virtualization-mbl            9
     meta-virtualization     <ws>/layers/meta-virtualization                         8
-    meta-virtualization-mbl <ws>/layers/meta-mbl/meta-virtualization-mbl            5
-    meta-mbl-bsp-common     <ws>/layers/meta-mbl/meta-mbl-bsp-common                14
+    meta-mbl-bsp-common     <ws>/layers/meta-mbl/meta-mbl-bsp-common                10
+    meta-raspberrypi-mbl    <ws>/layers/meta-mbl/meta-raspberrypi-mbl               11
     meta-raspberrypi        <ws>/layers/meta-raspberrypi                            9
-    meta-raspberrypi-mbl    <ws>/layers/meta-mbl/meta-raspberrypi-mbl               5
+    meta-optee              <ws>/layers/meta-mbl/meta-linaro-mbl/meta-optee         9
     meta-optee              <ws>/layers/meta-linaro/meta-optee                      8
-    meta-optee              <ws>/layers/meta-mbl/meta-linaro-mbl/meta-optee         8
+    meta                    <ws>/layers/meta-mbl/openembedded-core-mbl/meta         6
     meta                    <ws>/layers/openembedded-core/meta                      5
-    meta                    <ws>/layers/meta-mbl/openembedded-core-mbl/meta         8
 
 **Table 3.2.1: The table shows the output of `bitbake-layers show-layers` for `MACHINE=raspberrypi3-mbl`**.
 
@@ -382,26 +382,27 @@ For the community layer `meta-raspberrypi`, the `meta-mbl` repository contains t
 
 | Layer | Type | Source | Description |
 | --- | --- | --- | --- |
-| meta                          | General   | Community | Openembedded core recipe library support for building images. |
-| meta-bsp                      | BSP       | Community | BSP layer containing Qualcomm qca9377 kernel module recipe and imx8 firmware blobs used by some NXP targets. |
-| meta-filesystems              | General   | Community | Filesystem subsystems meta-layer. |
-| meta-freescale                | BSP       | Community | This is the Freescale NXP maintained BSP layer for i.MX8 target containing `imx8mmevk.conf`. |
-| meta-freescale-mbl            | BSP       | MBL       | MBL BSP staging layer containing `imx8mmevk-mbl.conf`, `u-boot*.bbappend` and `linux*.bbappend` recipe customisations. |
-| meta-freescale-3rdparty       | BSP       | Community | The Freescale NXP community has established this low-friction alternative for upstreaming third party originated recipes. i.MX7 targets including `imx7s-warp.conf` and `imx7d-pico.conf` are hosted in this layer. |
-| meta-freescale-3rdparty-mbl   | BSP       | MBL       | MBL BSP staging layer containing `imx7*-mbl.conf`, `u-boot*.bbappend` and `linux*.bbappend` recipe customisations. |
-| meta                          | General   | MBL       | MBL staging layer for `openembedded-core/meta` customisations. |
-| meta-mbl-apps                 | General   | MBL       | MBL applications e.g. `mbl-cloud-client`. |
-| meta-mbl-bsp-common           | BSP       | MBL       | MBL layer for BSP meta-data commonly used by more than one target BSP. |
-| meta-mbl-distro               | Distro    | MBL       | MBL distribution layer including image recipes containing `mbl.conf`, `mbl-image*.bb` recipes and `*.wks` files. |
-| meta-networking               | General   | Community | Networking subsystems meta-layer. |
-| meta-oe                       | General   | Community | Open Embedded layer for distribution tools & applications. |
-| meta-linaro/meta-optee        | BSP       | Community | Linaro provided layer for OP-TEE |
-| meta-linaro-mbl/meta-optee    | BSP       | MBL       | MBL staging layer for `meta-optee` customisations or related meta-data. |
-| meta-python                   | General   | Community | Layer to build the Python runtime for the target. |
-| meta-raspberrypi              | BSP       | Community | RaspberryPi provided BSP layer containing `raspberrypi3.conf`. |
-| meta-raspberrypi-mbl          | BSP       | MBL       | MBL staging layer for `meta-raspberrypi` customisations. |
-| meta-virtualization           | General   | Community | Layer to provide support for constructing OE-based virtualized solutions. |
-| meta-virtualization-mbl       | General   | MBL       | MBL staging layer for Docker virtualisation customisations. |
+| openembedded-core/meta                    | General   | Community | Openembedded core recipe library support for building images. |
+| openmebedded-core-mbl/meta                | General   | MBL       | MBL staging layer for `openembedded-core/meta` customisations. |
+| meta-filesystems                          | General   | Community | Filesystem subsystems meta-layer. |
+| meta-freescale                            | BSP       | Community | This is the Freescale NXP maintained BSP layer for i.MX8 target containing `imx8mmevk.conf`. |
+| meta-freescale-mbl                        | BSP       | MBL       | MBL BSP staging layer containing `imx8mmevk-mbl.conf`, `u-boot*.bbappend` and `linux*.bbappend` recipe customisations. |
+| meta-freescale-3rdparty                   | BSP       | Community | The Freescale NXP community has established this low-friction alternative for upstreaming third party originated recipes. i.MX7 targets including `imx7s-warp.conf` and `imx7d-pico.conf` are hosted in this layer. |
+| meta-freescale-3rdparty-mbl               | BSP       | MBL       | MBL BSP staging layer containing `imx7*-mbl.conf`, `u-boot*.bbappend` and `linux*.bbappend` recipe customisations. |
+| meta-fsl-bsp-release-mbl/imx/meta-bsp     | BSP       | MBL       | MBL BSP staging layer containing Qualcomm qca9377 firmware installation script and imx8 firmware blobs recipe customisation. |
+| meta-fsl-bsp-release/imx/meta-bsp         | BSP       | Community | BSP layer containing Qualcomm qca9377 firmware and kernel module recipes and imx8 firmware blobs used by some NXP targets and qcom qca9377 firmware and kernel modules. |
+| meta-linaro/meta-optee                    | BSP       | Community | Linaro provided layer for OP-TEE |
+| meta-linaro-mbl/meta-optee                | BSP       | MBL       | MBL staging layer for `meta-optee` customisations or related meta-data. |
+| meta-mbl-apps                             | General   | MBL       | MBL applications e.g. `mbl-cloud-client`. |
+| meta-mbl-bsp-common                       | BSP       | MBL       | MBL layer for BSP meta-data commonly used by more than one target BSP. |
+| meta-mbl-distro                           | Distro    | MBL       | MBL distribution layer including image recipes containing `mbl.conf`, `mbl-image*.bb` recipes and `*.wks` files. |
+| meta-networking                           | General   | Community | Networking subsystems meta-layer. |
+| meta-oe                                   | General   | Community | Open Embedded layer for distribution tools & applications. |
+| meta-python                               | General   | Community | Layer to build the Python runtime for the target. |
+| meta-raspberrypi                          | BSP       | Community | RaspberryPi provided BSP layer containing `raspberrypi3.conf`. |
+| meta-raspberrypi-mbl                      | BSP       | MBL       | MBL staging layer for `meta-raspberrypi` customisations. |
+| meta-virtualization                       | General   | Community | Layer to provide support for constructing OE-based virtualized solutions. |
+| meta-virtualization-mbl                   | General   | MBL       | MBL staging layer for Docker virtualisation customisations. |
 
 **Table 3.2.2: The table describes each of the meta-layers that appear in the MBL workspace**.
 
@@ -421,13 +422,14 @@ Refer to [Section 3.2](#section-3-2) for more details of the layers.
 
 <a name="Table-3-3-1"></a>
 
-    layer                       path                                                priority
-    ========================================================================================
-    meta-freescale              <ws>/layers/meta-freescale                          5
-    meta-freescale-mbl          <ws>/layers/meta-mbl/meta-freescale-mbl             6
-    meta-freescale-3rdparty     <ws>/layers/meta-freescale-3rdparty                 4
-    meta-freescale-3rdparty-mbl <ws>/layers/meta-mbl/meta-freescale-3rdparty-mbl    6
-    meta-bsp                    <ws>/layers/meta-fsl-bsp-release/imx/meta-bsp       8
+    layer                       path                                                        priority
+    ================================================================================================
+    meta-freescale-mbl          <ws>/layers/meta-mbl/meta-freescale-mbl                     11
+    meta-freescale              <ws>/layers/meta-freescale                                  5
+    meta-freescale-3rdparty-mbl <ws>/layers/meta-mbl/meta-freescale-3rdparty-mbl            11
+    meta-freescale-3rdparty     <ws>/layers/meta-freescale-3rdparty                         4
+    meta-bsp                    <ws>/layers/meta-mbl/meta-fsl-bsp-release-mbl/imx/meta-bsp  9
+    meta-bsp                    <ws>/layers/meta-fsl-bsp-release/imx/meta-bsp               8
 
 **Table 3.3.1: The table shows the BSP layers output from `bitbake-layers show-layers` for `MACHINE=imx7d-pico-mbl`**.
 
@@ -442,10 +444,10 @@ Refer to [Section 3.2](#section-3-2) for more details of the layers.
 
     layer                   path                                                    priority
     ========================================================================================
+    meta-freescale-mbl          <ws>/layers/meta-mbl/meta-freescale-mbl             11
     meta-freescale              <ws>/layers/meta-freescale                          5
-    meta-freescale-mbl          <ws>/layers/meta-mbl/meta-freescale-mbl             6
+    meta-freescale-3rdparty-mbl <ws>/layers/meta-mbl/meta-freescale-3rdparty-mbl    11
     meta-freescale-3rdparty     <ws>/layers/meta-freescale-3rdparty                 4
-    meta-freescale-3rdparty-mbl <ws>/layers/meta-mbl/meta-freescale-3rdparty-mbl    6
 
 **Table 3.4.1: The table shows the BSP layers output from `bitbake-layers show-layers` for `MACHINE=imx7s-warp-mbl`**.
 
@@ -458,11 +460,12 @@ Refer to [Section 3.2](#section-3-2) for more details of the layers.
 
 <a name="Table-3-5-1"></a>
 
-    layer                   path                                                        priority
-    ============================================================================================
-    meta-freescale        <ws>/layers/meta-freescale                                    5
-    meta-freescale-mbl    <ws>/layers/meta-mbl/meta-freescale-mbl                       6
-    meta-bsp              <ws>/layers/meta-mbl/meta-fsl-bsp-release-mbl/imx/meta-bsp    8
+    layer                    path                                                        priority
+    =============================================================================================
+    meta-freescale-mbl       <ws>/layers/meta-mbl/meta-freescale-mbl                     11
+    meta-freescale           <ws>/layers/meta-freescale                                  5
+    meta-bsp                 <ws>/layers/meta-mbl/meta-fsl-bsp-release-mbl/imx/meta-bsp  9
+    meta-bsp                 <ws>/layers/meta-fsl-bsp-release/imx/meta-bsp               8
 
 **Table 3.5.1: The table shows the BSP layers output from `bitbake-layers show-layers` for `MACHINE=imx8mmevk-mbl`**.
 

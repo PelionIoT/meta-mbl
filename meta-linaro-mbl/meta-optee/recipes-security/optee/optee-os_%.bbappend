@@ -9,19 +9,19 @@ LICENSE = "BSD-2-Clause"
 
 # MBL_OPTEE_VERSION should be updated to match version pointed to by SRCREV
 MBL_OPTEE_VERSION = "3.4.0"
-MBL_OPTEE_VERSION_imx8mmevk-mbl = "3.2.0"
 
 SRCREV="2976273f390e0654fb95928838ed0e251be8451f"
-SRCREV_imx8mmevk-mbl = "230e2d697800dcb7070e924577c7a6069c866477"
 SRC_URI="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
+file://0001-core-kernel_generic_entry_a64.S-support-CFG_DT_ADDR.patch \
 "
 
+FILESEXTRAPATHS_prepend := "${THISDIR}/optee-os:"
+
 LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=c1f21c4f72f372ef38a5a4aee55ec173"
-LIC_FILES_CHKSUM_imx8mmevk-mbl = "file://${S}/LICENSE;md5=69663ab153298557a59c67a60a743e5b"
 OPTEEMACHINE_imx7s-warp-mbl="imx-mx7swarp7_mbl"
 OPTEEMACHINE_imx7d-pico-mbl="imx-mx7dpico_mbl"
-OPTEEMACHINE_imx8mmevk-mbl = "imx-mx8mmevk_mbl"
+OPTEEMACHINE_imx8mmevk-mbl = "imx-imx8mmevk"
 OPTEEOUTPUTMACHINE_imx="imx"
 OPTEEMACHINE_raspberrypi3-mbl="rpi3"
 OPTEEOUTPUTMACHINE_raspberrypi3-mbl="rpi3"
@@ -109,14 +109,14 @@ EXTRA_OEMAKE_append_raspberrypi3-mbl = " \
                 CFG_ARM64_core=y \
         "
 
-# CFG_DT: Remove as the OPTEE from NXP does not operate upon a DTB right now
 # CROSS_COMPILE: specify to the HOST_PREFIX as in both cases we use a 64bit
 #                cross compiler and elsewise we default to
 #                aarch64-linux-gnu-gcc
-EXTRA_OEMAKE_remove_imx8mmevk-mbl = "CFG_DT=y"
 EXTRA_OEMAKE_append_imx8mmevk-mbl = " \
 		CROSS_COMPILE=${HOST_PREFIX} \
 		CROSS_COMPILE64=${HOST_PREFIX} \
+		CFG_EXTERNAL_DTB_OVERLAY=y \
+		CFG_DT_ADDR=0x44000000 \
         "
 
 do_compile_prepend_raspberrypi3-mbl() {

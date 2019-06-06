@@ -26,6 +26,19 @@ Please see:
 * Other technical and reference documentation can be found in this repository in the docs folder.
   * Please refer to the docs on the correct release branch - see the [release note][mbl-release-note].
 
+## Branches
+
+We recommend you use the latest release branches - `mbl-os-*` - of all Mbed Linux OS repositories when working with Mbed Linux OS.
+The [release note][mbl-release-note] and [website][mbl-documentation] will cover how to work with the latest release.
+
+Alternatively, you can use the latest development version by using the `warrior-dev` branches of the Mbed Linux OS repositories.
+These branches are based on the stable Yocto release `warrior`, but include our on-going development changes.
+Replace the release branch name of `mbl-os-*` with `warrior-dev` when using the above documentation.
+
+Our `master` branches of the Mbed Linux OS repositories are tracking the upstream Yocto master branches.
+There is no guarantee that these branches will build or run correctly, and they may not contain the same features as `warrior-dev`.
+We do not advise that you work with the `master` branches, and instead please use our releases or `warrior-dev`.
+
 
 ## License
 

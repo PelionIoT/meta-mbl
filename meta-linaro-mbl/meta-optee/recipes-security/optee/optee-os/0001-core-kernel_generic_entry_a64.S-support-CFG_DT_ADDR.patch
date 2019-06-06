@@ -1,0 +1,32 @@
+From 14cbfca5d9d9a8871d5494ff81d854a90a0ad692 Mon Sep 17 00:00:00 2001
+From: "Ying-Chun Liu (PaulLiu)" <paulliu@debian.org>
+Date: Fri, 12 Apr 2019 17:04:32 +0800
+Subject: [PATCH] core: kernel_generic_entry_a64.S: support CFG_DT_ADDR
+
+Add CFG_DT_ADDR for a64 to override the DT address passing
+through arg2.
+
+Signed-off-by: Ying-Chun Liu (PaulLiu) <paulliu@debian.org>
+---
+ core/arch/arm/kernel/generic_entry_a64.S | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/core/arch/arm/kernel/generic_entry_a64.S b/core/arch/arm/kernel/generic_entry_a64.S
+index 8005cca2..54cc25a9 100644
+--- a/core/arch/arm/kernel/generic_entry_a64.S
++++ b/core/arch/arm/kernel/generic_entry_a64.S
+@@ -54,7 +54,11 @@
+ 
+ FUNC _start , :
+ 	mov	x19, x0		/* Save pagable part address */
++#if defined(CFG_DT_ADDR)
++	ldr     x20, =CFG_DT_ADDR
++#else
+ 	mov	x20, x2		/* Save DT address */
++#endif
+ 
+ 	adr	x0, reset_vect_table
+ 	msr	vbar_el1, x0
+-- 
+2.20.1
+

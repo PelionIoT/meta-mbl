@@ -21,3 +21,8 @@ LOCALVERSION = "mbl"
 do_preconfigure_prepend() {
 	cp ${S}/arch/arm64/configs/${KBUILD_DEFCONFIG} ${WORKDIR}/defconfig
 }
+
+# TO-BE-REMOVED: workaround until the following upstream patch
+# gets merged and adapted to warrior-dev branch
+# https://patchwork.openembedded.org/patch/161618/
+do_clean[depends] += "make-mod-scripts:do_clean"

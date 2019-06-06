@@ -47,3 +47,8 @@ do_preconfigure() {
 		printf "%s%s" +g $head > ${S}/.scmversion
 	fi
 }
+
+# TO-BE-REMOVED: workaround until the following upstream patch
+# gets merged and adapted to warrior-dev branch
+# https://patchwork.openembedded.org/patch/161618/
+do_clean[depends] += "make-mod-scripts:do_clean"

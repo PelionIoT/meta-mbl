@@ -9,10 +9,12 @@
 PV = "${LINUX_VERSION}+git${SRCPV}"
 LINUX_VERSION = "4.14.112"
 SRCREV = "45bad79852d5a7f6c6097f54cee064f92e7d7647"
+SRCREV_imx6ul-des0258-mbl = "83d967e82fe285635be7845c6b578fee2c441996"
 
 KBUILD_DEFCONFIG_imx7s-warp-mbl ?= "warp7_mbl_defconfig"
 KBUILD_DEFCONFIG_imx7d-pico-mbl ?= "pico_mbl_mx6_mx7_defconfig"
 KBUILD_DEFCONFIG_imx6ul-pico-mbl ?= "pico_mbl_mx6_mx7_defconfig"
+KBUILD_DEFCONFIG_imx6ul-des0258-mbl ?= "imx6ul_des0258_defconfig"
 
 FILESEXTRAPATHS_prepend:="${THISDIR}/files:"
 

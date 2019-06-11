@@ -22,6 +22,7 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=c1f21c4f72f372ef38a5a4aee55ec173"
 OPTEEMACHINE_imx7s-warp-mbl="imx-mx7swarp7_mbl"
 OPTEEMACHINE_imx7d-pico-mbl="imx-mx7dpico_mbl"
 OPTEEMACHINE_imx8mmevk-mbl = "imx-imx8mmevk"
+OPTEEMACHINE_imx6ul-pico-mbl = "imx-mx6ulevk"
 OPTEEOUTPUTMACHINE_imx="imx"
 OPTEEMACHINE_raspberrypi3-mbl="rpi3"
 OPTEEOUTPUTMACHINE_raspberrypi3-mbl="rpi3"
@@ -94,6 +95,11 @@ EXTRA_OEMAKE_append_imx7d-pico-mbl = " \
 		${MX7_FLAGS}           \
                 CFG_TEE_CORE_NB_CORE=2 \
 		CFG_BOOT_SECONDARY_REQUEST=y \
+        "
+
+EXTRA_OEMAKE_append_imx6ul-pico-mbl = " \
+		${MX7_FLAGS}           \
+                CFG_TEE_CORE_NB_CORE=1 \
         "
 
 # CROSS_COMPILE_core: Set the cross-compiler for OPTEE core. On RPi3 it should

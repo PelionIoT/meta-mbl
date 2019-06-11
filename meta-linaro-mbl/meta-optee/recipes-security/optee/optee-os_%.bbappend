@@ -23,6 +23,7 @@ OPTEEMACHINE_imx7s-warp-mbl="imx-mx7swarp7_mbl"
 OPTEEMACHINE_imx7d-pico-mbl="imx-mx7dpico_mbl"
 OPTEEMACHINE_imx8mmevk-mbl = "imx-imx8mmevk"
 OPTEEMACHINE_imx6ul-pico-mbl = "imx-mx6ulevk"
+OPTEEMACHINE_imx6ul-des0258-mbl = "imx-mx6ulevk"
 OPTEEOUTPUTMACHINE_imx="imx"
 OPTEEMACHINE_raspberrypi3-mbl="rpi3"
 OPTEEOUTPUTMACHINE_raspberrypi3-mbl="rpi3"
@@ -98,6 +99,10 @@ EXTRA_OEMAKE_append_imx7d-pico-mbl = " \
         "
 
 EXTRA_OEMAKE_append_imx6ul-pico-mbl = " \
+		${MX7_FLAGS}           \
+                CFG_TEE_CORE_NB_CORE=1 \
+        "
+EXTRA_OEMAKE_append_imx6ul-des0258-mbl = " \
 		${MX7_FLAGS}           \
                 CFG_TEE_CORE_NB_CORE=1 \
         "

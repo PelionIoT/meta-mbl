@@ -29,9 +29,15 @@ do_compile_append_imx7s-warp-mbl() {
 DCD_FILE_PATH_imx7s-warp-mbl = "${B}"
 DCD_FILE_PATH_imx7d-pico-mbl = "${WORKDIR}"
 DCD_FILE_PATH_imx6ul-pico-mbl = "${B}"
+DCD_FILE_PATH_imx6ul-des0258-mbl = "${B}"
 
 do_deploy_prepend_imx6ul-pico-mbl() {
 	cp ${B}/pico-pi-imx6ul_defconfig/spl/u-boot-spl.cfgout ${B}/u-boot-dtb.cfgout
+}
+
+# Temporary prepend to create u-boot-dtb.cfgout
+do_deploy_prepend_imx6ul-des0258-mbl() {
+	cp ${B}/mx6ul_14x14_evk_config/spl/u-boot-spl.cfgout ${B}/u-boot-dtb.cfgout
 }
 
 do_deploy_append() {

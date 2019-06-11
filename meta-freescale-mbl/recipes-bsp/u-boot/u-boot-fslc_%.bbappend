@@ -5,7 +5,7 @@
 # MBL_UBOOT_VERSION should be updated to match version pointed to by SRCREV
 MBL_UBOOT_VERSION = "2018.11-rc1"
 
-SRCREV = "c0c4ee5fce01ec0818c4f27ce029d9b16c8849ad"
+SRCREV = "7623c668847f17fb333304756260c61766de7b16"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
@@ -20,6 +20,11 @@ do_compile_append_imx7s-warp-mbl() {
 	ln -snf ${B}/dts/dt.dtb ${B}/${UBOOT_DTB_BINARY}
 	# Generate u-boot-dtb.cfgout for board early initlization.
 	oe_runmake u-boot-dtb.imx
+}
+
+# Temporary prepend to create u-boot-dtb.cfgout
+do_deploy_prepend_imx6ul-pico-mbl() {
+	cp ${B}/pico-pi-imx6ul_defconfig/spl/u-boot-spl.cfgout ${B}/u-boot-dtb.cfgout
 }
 
 do_deploy_append() {

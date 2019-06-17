@@ -14,21 +14,14 @@ SRC_URI = " \
     git://github.com/ARMmbed/mbedtls.git;protocol=https;branch=development;name=mbedtls;destsuffix=mbedtls \
 "
 
-# MBL_ATF_VERSION should be updated to match version pointed to by SRCREV
-MBL_ATF_VERSION = "2.1"
-SRCREV_atf = "5d6615bbeca52d2b368c9d5f1186d44c4febc999"
 SRCREV_mbedtls = "1ab9b5714852c6810c0a0bfd8c3b5c60a9a15482"
 
 LICENSE = "BSD-3-Clause & Apache-2.0"
-LIC_FILES_CHKSUM = "file://license.rst;md5=90153916317c204fade8b8df15739cde \
+LIC_FILES_CHKSUM = "file://license.rst;md5=c709b197e22b81ede21109dbffd5f363 \
                     file://${WORKDIR}/mbedtls/apache-2.0.txt;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
-
-SRCREV_FORMAT = "kernel"
-PACKAGE_ARCH = "${MACHINE_ARCH}"
-PV = "${MBL_ATF_VERSION}+git${SRCPV}"
 
 # The ATF makefiles don't support parallel make
 PARALLEL_MAKE=""

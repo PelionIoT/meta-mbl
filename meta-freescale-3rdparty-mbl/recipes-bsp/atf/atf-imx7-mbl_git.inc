@@ -8,6 +8,10 @@ inherit mbl-artifact-names
 
 require recipes-bsp/atf/atf.inc
 
+# MBL_ATF_VERSION should be updated to match version pointed to by SRCREV
+MBL_ATF_VERSION = "2.0"
+SRCREV_atf = "6a80c8bbc961ab55a562e0030247419e363286f7"
+
 # We do not compile bl2 and fip.bin here, because we can speicify two raw images in wks file.
 MBL_UNIFIED_BIN = "bl2.bin.imx"
 

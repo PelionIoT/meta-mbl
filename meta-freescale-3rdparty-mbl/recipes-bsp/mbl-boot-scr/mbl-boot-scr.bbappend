@@ -14,3 +14,11 @@ HOMEPAGE = "https://github.com/ARMmbed/meta-mbl"
 FILESEXTRAPATHS_append := "${THISDIR}/files:"
 
 inherit noinstall
+
+do_compile_append_imx6ul-pico-mbl() {
+    mkimage -A arm -T script -C none -n "Boot script" -d "${WORKDIR}/boot.cmd" boot.scr
+}
+
+do_deploy_append_imx6ul-pico-mbl() {
+    install -m 0644 boot.scr ${DEPLOY_DIR_IMAGE}
+}

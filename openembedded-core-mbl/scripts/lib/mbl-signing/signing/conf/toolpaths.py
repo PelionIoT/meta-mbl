@@ -14,3 +14,4 @@ class ToolPaths:
     # Default assumes fiptool is installed with the package.
     # This can be changed by binding this variable to a different path.
     FIPTOOL_BIN = str(pathlib.Path(__file__).parent.parent / "fiptool")
+    MKIMAGE_BIN = "mkimage"

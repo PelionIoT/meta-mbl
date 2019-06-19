@@ -119,6 +119,11 @@ EXTRA_OEMAKE_append_imx8mmevk-mbl = " \
 		CFG_DT_ADDR=0x44000000 \
         "
 
+# MBL_TA_SIGN_KEY: specify a private 2048 rsa key to override default_key.pem in
+# optee for certificating ta.
+MBL_TA_SIGN_KEY ?= ''
+EXTRA_OEMAKE += "${@oe.utils.ifelse('${MBL_TA_SIGN_KEY}' == '', '', 'TA_SIGN_KEY=${MBL_TA_SIGN_KEY}')}"
+
 do_compile_prepend_raspberrypi3-mbl() {
    export PATH=${STAGING_DIR_NATIVE}/${bindir}/aarch64-linux-gnu/bin:$PATH
 }

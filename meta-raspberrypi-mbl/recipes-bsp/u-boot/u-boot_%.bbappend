@@ -12,6 +12,7 @@ SRC_URI_append_raspberrypi3-mbl = " \
 		file://change-text-base-mbl.cfg \
 		file://enable-fit-mbl.cfg \
 		file://enable-random-macaddr-mbl.cfg \
+		file://enable-fastboot.cfg \
 "
 
 # Merge our cfg changes to .config

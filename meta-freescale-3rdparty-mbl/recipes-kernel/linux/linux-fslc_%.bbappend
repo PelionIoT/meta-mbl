@@ -36,6 +36,20 @@ do_preconfigure() {
 	kernel_conf_variable LOCALVERSION "\"${LOCALVERSION}\""
 	kernel_conf_variable LOCALVERSION_AUTO y
 
+	kernel_conf_variable EXPERIMENTAL y
+	kernel_conf_variable KEYS y
+	kernel_conf_variable CRYPTO y
+	kernel_conf_variable CRYPTO_ALGAPI y
+	kernel_conf_variable CRYPTO_BLKCIPHER y
+	kernel_conf_variable CRYPTO_HASH y
+	kernel_conf_variable CRYPTO_MANAGER y
+	kernel_conf_variable CRYPTO_MD5 y
+	kernel_conf_variable CRYPTO_ECB y
+	kernel_conf_variable CRYPTO_CBC y
+	kernel_conf_variable CRYPTO_AES y
+	kernel_conf_variable ECRYPT_FS y
+
+
 	sed -e "${CONF_SED_SCRIPT}" < '${S}/arch/arm/configs/${KBUILD_DEFCONFIG}' >> '${B}/.config'
 
 	cfgs=`find ${WORKDIR}/ -maxdepth 1 -name '*-mbl.cfg' | wc -l`;
@@ -48,6 +62,8 @@ do_preconfigure() {
 		head=`git --git-dir=${S}/.git rev-parse --verify --short HEAD 2> /dev/null`
 		printf "%s%s" +g $head > ${S}/.scmversion
 	fi
+
+
 }
 
 # TO-BE-REMOVED: workaround until the following upstream patch

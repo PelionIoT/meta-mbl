@@ -1,0 +1,37 @@
+From 86e59304a4e110440286aab9f5550114f3985eab Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Mon, 8 Jul 2019 15:28:25 +0800
+Subject: [PATCH 2/2] core: clear original dtb data in special case
+
+clear original dtb data if CFG_DT_ADDR is specified and
+CFG_DT_OVERLAY is not enabled. Because we do not need any
+dtb data from previous stage in this case.
+
+Otherwise there may be residue dtb data in DRAM after reboot.
+Bug happens after many times reboot in u-boot because
+dtb overlay data is added to residue dtb data for many times
+and memory is exhausted by dtb overlay data.
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+---
+ core/arch/arm/kernel/generic_entry_a64.S | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/core/arch/arm/kernel/generic_entry_a64.S b/core/arch/arm/kernel/generic_entry_a64.S
+index 54cc25a..9835c1a 100644
+--- a/core/arch/arm/kernel/generic_entry_a64.S
++++ b/core/arch/arm/kernel/generic_entry_a64.S
+@@ -56,6 +56,10 @@ FUNC _start , :
+ 	mov	x19, x0		/* Save pagable part address */
+ #if defined(CFG_DT_ADDR)
+ 	ldr     x20, =CFG_DT_ADDR
++#ifndef CFG_DT_OVERLAY
++	mov	x14, #0x0       /* clear dtb magic value */
++	str	x14, [x20]
++#endif
+ #else
+ 	mov	x20, x2		/* Save DT address */
+ #endif
+-- 
+2.7.4
+

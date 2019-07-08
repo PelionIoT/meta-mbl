@@ -15,6 +15,7 @@ SRC_URI="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=ht
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 file://0001-core-kernel_generic_entry_a64.S-support-CFG_DT_ADDR.patch \
 "
+SRC_URI_append_imx8mmevk-mbl = " file://0002-core-clear-original-dtb-data-in-special-case.patch"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/optee-os:"
 

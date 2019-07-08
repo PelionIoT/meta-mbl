@@ -16,6 +16,7 @@ SRCREV="f398d4923da875370149ffee45c963d7adb41495"
 SRC_URI="git://github.com/OP-TEE/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "
+SRC_URI_append_imx8mmevk-mbl = " file://0001-generic_boot-init-new-dtb-if-CFG_DT_ADDR-defined.patch"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/optee-os:"
 

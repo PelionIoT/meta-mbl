@@ -31,7 +31,8 @@ SRC_URI = "${SRC_URI_COMMON} ${SRC_URI_MBL_CLOUD_CLIENT_PUBLIC}"
 
 SRCREV = "${SRCREV_MBL_CORE_REPO}"
 
-DEPENDS = " glibc jsoncpp"
+DEPENDS = " glibc jsoncpp xz util-linux"
+RDEPENDS_${PN} += "${PN}-update"
 
 RDEPENDS_${PN} = "\
     e2fsprogs-mke2fs \
@@ -42,18 +43,18 @@ RDEPENDS_${PN} = "\
 "
 
 # Installed packages
-PACKAGES = "${PN}-dbg ${PN}"
+PACKAGES = "${PN}-dbg ${PN} ${PN}-update"
 
 FILES_${PN} += "\
-    /opt \
-    /opt/arm \
     /opt/arm/mbl-cloud-client \
+    ${sysconfdir}/logrotate.d/mbl-cloud-client-logrotate.conf \
+"
+FILES_${PN}-update = "\
     /opt/arm/arm_update_activate.sh \
     /opt/arm/arm_update_active_details.sh \
     /opt/arm/arm_update_cmdline.sh \
     /opt/arm/arm_update_common.sh \
     /opt/arm/arm_update_local_config.sh \
-    ${sysconfdir}/logrotate.d/mbl-cloud-client-logrotate.conf \
 "
 
 FILES_${PN}-dbg += "/opt/arm/.debug \

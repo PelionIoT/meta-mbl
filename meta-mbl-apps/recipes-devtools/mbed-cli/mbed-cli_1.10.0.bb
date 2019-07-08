@@ -7,14 +7,18 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=4336ad26bb93846e47581adc44c4514d"
 
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
-SRC_URI += " file://mbed-wrapper "
 
-SRC_URI[md5sum] = "2f708ca555151133afb8bf7267be6df6"
+
+SRC_URI += " file://mbed-wrapper "
+SRC_URI[md5sum] = "cd1094890b5fe6bb314bb3ea8addff37"
+SRC_URI[sha256sum] = "b09931da80d00f13f450c411b1f34eb584eea7542ece7eab5d2f19b92141c38b"
 
 PYPI_PACKAGE = "mbed-cli"
-PYPI_PACKAGE_EXT = "zip"
+PYPI_PACKAGE_EXT = "tar.gz"
+
 
 inherit setuptools pypi
+
 
 NONWRAPPED_MBED_PATH = "${bindir}/mbed"
 WRAPPED_MBED_PATH = "${bindir}/wrapped_mbed"

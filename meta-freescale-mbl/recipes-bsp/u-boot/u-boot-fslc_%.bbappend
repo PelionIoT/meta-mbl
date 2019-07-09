@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2019 Arm Limited and Contributors. All rights reserved.
+# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: MIT
 
@@ -6,14 +6,10 @@
 MBL_UBOOT_VERSION = "2018.11-rc1"
 
 SRCREV = "c0c4ee5fce01ec0818c4f27ce029d9b16c8849ad"
-SRCREV_imx7d-pico-mbl = "c72a23701bd9b15dab35e0d43c468ab051739af3"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1 "
-SRC_URI_imx7d-pico-mbl = "git://gitlab.denx.de/u-boot.git"
-
-SRC_URI_append_imx7d-pico-mbl = " file://u-boot-dtb.cfgout"
 
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=30503fd321432fc713238f582193b78e"
 
@@ -27,7 +23,7 @@ do_compile_append_imx7s-warp-mbl() {
 }
 
 DCD_FILE_PATH_imx7s-warp-mbl = "${B}"
-DCD_FILE_PATH_imx7d-pico-mbl = "${WORKDIR}"
+DCD_FILE_PATH_imx7d-pico-mbl = "${B}"
 DCD_FILE_PATH_imx6ul-pico-mbl = "${B}"
 DCD_FILE_PATH_imx6ul-des0258-mbl = "${B}"
 

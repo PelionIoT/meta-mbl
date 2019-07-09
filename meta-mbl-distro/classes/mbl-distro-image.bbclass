@@ -42,9 +42,6 @@ EXTRA_USERS_PARAMS = "useradd -p '' root;"
 inherit core-image
 inherit mbl-secure-boot-image
 inherit extrausers
-inherit image-signing
-inherit image-verity
-inherit key-generation
 inherit mbl-firmware-update-header
 inherit image-license-checker
 inherit license-json

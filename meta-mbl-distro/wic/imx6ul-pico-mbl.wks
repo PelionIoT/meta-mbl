@@ -48,13 +48,7 @@ part --fstype=ext4 --label log --fixed-size 20
 # Partition 9: Scratch partition
 part --source rootfs-subdir --sourceparams subdir=scratch --fstype=ext4 --label scratch --fixed-size 500
 
-# Partition 10: First rootfs verity hash partition
-part --source non-rootfs-subdir --sourceparams subdir=verity_hash --fstype=ext4 --label rootfs1_ver_hash --fixed-size 20
-
-# Partition 11: Second rootfs verity hash partition
-part --fstype=ext4 --label rootfs2_ver_hash --fixed-size 20
-
-# Partition 12: Home partition
+# Partition 10: Home partition
 part --source rootfs-subdir --sourceparams subdir=home --fstype=ext4 --label home --fixed-size 450
 
 bootloader --ptable msdos

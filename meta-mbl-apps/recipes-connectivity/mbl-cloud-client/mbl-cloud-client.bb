@@ -47,6 +47,7 @@ PACKAGES = "${PN}-dbg ${PN} ${PN}-update"
 
 FILES_${PN} += "\
     /opt/arm/mbl-cloud-client \
+    /opt/arm/pelion-provisioning-util \
     ${sysconfdir}/logrotate.d/mbl-cloud-client-logrotate.conf \
 "
 FILES_${PN}-update = "\

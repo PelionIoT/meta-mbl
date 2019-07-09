@@ -38,7 +38,6 @@ This section outlines the terminology used throughout the document:
 
 #### References
 
-* REF1: DM Verity project: https://gitlab.com/cryptsetup/cryptsetup/wikis/DMVerity
 * REF2: Trusted Base System Architecture CLIENT2 (TBSA-CLIENT2), Document number: ARM DEN 0021A-6, Copyright ARM Limited 2011-2013
 * REF3: Trusted Board Boot Requirements CLIENT (TBBR-CLIENT), Document number: ARM DEN0006C-1, Copyright ARM Limited 2011-2015
 * REF4: mkimage tool source code: https://github.com/lentinj/u-boot/blob/master/tools/mkimage.c
@@ -59,7 +58,6 @@ This is a summary of the secure boot requirements for MBL:
 *    U-Boot to verify the Linux kernel, device tree and normal world boot script using Verified Boot, as used in Chrome OS.
 *    The TEE must be initialized early on in the boot sequence to reduce the probability of its integrity being compromised.
 *    Boot time verification can be limited to verifying all steps up to and including the Linux Kernel.
-*    dm-verity (REF1) should be used to check the integrity of the read-only root FS.
 *    A flow for device firmware development must be provided.
 *    Development images should only be allowed to run on development devices.
 *    It must not be possible to run a development image on a production device.
@@ -154,13 +152,7 @@ These will require the Trusted OS to have an application interface for providing
 
 ### Integrity Checking
 
-The boot flow described above provides secure verification of all components in the boot chain, up to and including the Linux kernel.  It does not verify the read-only root file system or any other mounted file system that may hold executables or configuration data.  An additional solution will be required to check the integrity of read-only files.  The chosen solution will be:
-
-#### dm-verity
-
-Verified Boot, used in Chrome OS, relies on integrity checking of read-only block devices, performed before blocks are read.  This relies on the dm-verity kernel feature (REF1), which provides transparent checking of block devices.  The dm-verity feature scans block devices on demand and checks that block hashes match the expected hash, generated when the image file was created.  Access will be blocked if a mismatch is detected.   Use of block level intergrity checking will require block oriented firmware updates of a read-only device.  This is needed to ensure that block content hashes over the whole block device match the expected hashes.
-
-### Image Signing
+The boot flow described above provides secure verification of all components in the boot chain, up to and including the Linux kernel.  It does not verify the read-only root file system or any other mounted file system that may hold executables or configuration data.  An additional solution will be required to check the integrity of read-only files.
 
 The following diagram illustrates how image signing tools are used to sign different boot components:
 

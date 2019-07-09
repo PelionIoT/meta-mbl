@@ -8,8 +8,7 @@
 
 DESCRIPTION = "Small image capable of booting a device. The kernel includes \
 the Minimal RAM-based Initial Root Filesystem (initramfs). This image includes \
-initramfs script for switching to rootfs. Later on we will use this script to \
-verify signatures and activating dm-verity."
+initramfs script for switching to rootfs."
 
 PACKAGE_INSTALL = "mbl-initramfs-init util-linux-findfs busybox"
 

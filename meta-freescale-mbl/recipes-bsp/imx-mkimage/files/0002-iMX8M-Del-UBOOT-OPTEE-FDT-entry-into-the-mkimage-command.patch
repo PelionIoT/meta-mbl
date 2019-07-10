@@ -1,0 +1,85 @@
+From 7111e7450806e50482a0289708e77988ff52329b Mon Sep 17 00:00:00 2001
+From: Ying-Chun Liu (PaulLiu) <paul.liu@linaro.org>
+Date: Wed, 10 Jul 2019 16:30:20 +0000
+Subject: [PATCH] iMX8M: Del UBOOT OPTEE FDT entry into the mkimage command
+
+This patch dels UBOOT OPTEE FDT into the mkimage script. We apply the patch as
+part of the bitbake process to ensure the FIP entry is applied at the
+appropriate point in the build/compile process.
+
+Signed-off-by: Ying-Chun Liu (PaulLiu) <paul.liu@linaro.org>
+---
+ iMX8M/mkimage_fit_atf.sh | 39 -------------------------------------+-
+ 1 file changed, 1 insertion(+), 38 deletions(-)
+
+diff --git a/iMX8M/mkimage_fit_atf.sh b/iMX8M/mkimage_fit_atf.sh
+index e1ba1e3..7111e74 100755
+--- a/iMX8M/mkimage_fit_atf.sh	2019-07-10 08:20:45.236518899 +0000
++++ b/iMX8M/mkimage_fit_atf.sh	2019-07-10 08:24:53.990161831 +0000
+@@ -58,14 +58,6 @@
+ 	description = "Configuration to load ATF before U-Boot";
+ 
+ 	images {
+-		uboot@1 {
+-			description = "U-Boot (64-bit)";
+-			data = /incbin/("$BL33");
+-			type = "standalone";
+-			arch = "arm64";
+-			compression = "none";
+-			load = <0x40200000>;
+-		};
+ 		atf@1 {
+ 			description = "ARM Trusted Firmware";
+ 			data = /incbin/("$BL31");
+@@ -85,33 +77,6 @@
+ 		};
+ __HEADER_EOF
+ 
+-if [ -f $BL32 ]; then
+-cat << __HEADER_EOF
+-		tee@1 {
+-			description = "TEE firmware";
+-			data = /incbin/("$BL32");
+-			type = "firmware";
+-			arch = "arm64";
+-			compression = "none";
+-			load = <$TEE_LOAD_ADDR>;
+-			entry = <$TEE_LOAD_ADDR>;
+-		};
+-__HEADER_EOF
+-fi
+-
+-cnt=1
+-for dtname in $*
+-do
+-	cat << __FDT_IMAGE_EOF
+-		fdt@$cnt {
+-			description = "$(basename $dtname .dtb)";
+-			data = /incbin/("$dtname");
+-			type = "flat_dt";
+-			compression = "none";
+-		};
+-__FDT_IMAGE_EOF
+-cnt=$((cnt+1))
+-done
+ 
+ cat << __CONF_HEADER_EOF
+ 	};
+@@ -128,8 +93,7 @@
+ 		config@$cnt {
+ 			description = "$(basename $dtname .dtb)";
+ 			firmware = "uboot@1";
+-			loadables = "atf@1", "tee@1", "fip@1";
+-			fdt = "fdt@$cnt";
++			loadables = "atf@1", "fip@1";
+ 		};
+ __CONF_SECTION_EOF
+ else
+@@ -138,7 +102,6 @@
+ 			description = "$(basename $dtname .dtb)";
+ 			firmware = "uboot@1";
+ 			loadables = "atf@1";
+-			fdt = "fdt@$cnt";
+ 		};
+ __CONF_SECTION1_EOF
+ fi

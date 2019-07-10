@@ -13,7 +13,9 @@ do_compile[depends] += " firmware-imx-8m:do_deploy"
 ATF_MACHINE_NAME_mx8mm = "bl2-${MACHINE}.bin"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files/:"
-SRC_URI += "file://0001-iMX8M-Add-a-FIP-entry-into-the-mkimage-command.patch"
+SRC_URI += "file://0001-iMX8M-Add-a-FIP-entry-into-the-mkimage-command.patch \
+	    file://0002-iMX8M-Del-UBOOT-OPTEE-FDT-entry-into-the-mkimage-command.patch \
+"
 
 do_compile_prepend() {
     install -m 0644 ${DEPLOY_DIR_IMAGE}/optee/tee.bin ${BOOT_STAGING}

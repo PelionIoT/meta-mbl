@@ -1,33 +1,35 @@
-From 0142df58e2c12d40df7d46cdec11ae76cd135fed Mon Sep 17 00:00:00 2001
+From 267ab711f8a6c2696372e3991529afe6296049b9 Mon Sep 17 00:00:00 2001
 From: Jun Nie <jun.nie@linaro.org>
 Date: Fri, 27 Jul 2018 09:15:15 +0800
-Subject: [PATCH 2/2] rpi3: Enable boot kernel from fit image
+Subject: [PATCH] rpi3: Enable boot kernel from fit image
 
 Enable booting kernel from fit image with select configs
-and specify boot script image node in fit image, bootscr
-node in mbl case.
+and specify boot script image node in fit image, the fit
+image is verified before it is run.
 
-Code that reusing dtb in firmware is disabled.
+Code that reusing dtb in firmware is disabled, so that
+the dtb with pubic key packed in u-boot.bin can be used
+to verify the signature of next stage FIT image.
 
 Signed-off-by: Jun Nie <jun.nie@linaro.org>
 ---
- board/raspberrypi/rpi/rpi.c        |  6 ++++++
- include/configs/rpi.h              |  8 ++++++--
- 2 files changed, 12 insertions(+), 2 deletions(-)
+ board/raspberrypi/rpi/rpi.c |  6 ++++++
+ include/configs/rpi.h       | 15 ++++++++++++++-
+ 2 files changed, 20 insertions(+), 1 deletion(-)
 
 diff --git a/board/raspberrypi/rpi/rpi.c b/board/raspberrypi/rpi/rpi.c
-index 35f5939..aaaa8d9 100644
+index 617c892..950ee84 100644
 --- a/board/raspberrypi/rpi/rpi.c
 +++ b/board/raspberrypi/rpi/rpi.c
-@@ -284,6 +284,7 @@ int dram_init(void)
- 	return 0;
+@@ -297,6 +297,7 @@ static void set_fdtfile(void)
+ 	env_set("fdtfile", fdtfile);
  }
  
 +#ifndef CONFIG_FIT_SIGNATURE
- static void set_fdtfile(void)
- {
- 	const char *fdtfile;
-@@ -309,6 +310,7 @@ static void set_fdt_addr(void)
+ /*
+  * If the firmware provided a valid FDT at boot time, let's expose it in
+  * ${fdt_addr} so it may be passed unmodified to the kernel.
+@@ -311,6 +312,7 @@ static void set_fdt_addr(void)
  
  	env_set_hex("fdt_addr", fw_dtb_pointer);
  }
@@ -35,18 +37,17 @@ index 35f5939..aaaa8d9 100644
  
  /*
   * Prevent relocation from stomping on a firmware provided FDT blob.
-@@ -391,8 +393,10 @@ static void set_serial_number(void)
+@@ -393,7 +395,9 @@ static void set_serial_number(void)
  
  int misc_init_r(void)
  {
 +#ifndef CONFIG_FIT_SIGNATURE
  	set_fdt_addr();
- 	set_fdtfile();
 +#endif
+ 	set_fdtfile();
  	set_usbethaddr();
  #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
- 	set_board_info();
-@@ -468,6 +472,7 @@ int board_init(void)
+@@ -470,6 +474,7 @@ int board_init(void)
  	return bcm2835_power_on_module(BCM2835_MBOX_POWER_DEVID_USB_HCD);
  }
  
@@ -54,7 +55,7 @@ index 35f5939..aaaa8d9 100644
  /*
   * If the firmware passed a device tree use it for U-Boot.
   */
-@@ -477,6 +482,7 @@ void *board_fdt_blob_setup(void)
+@@ -479,6 +484,7 @@ void *board_fdt_blob_setup(void)
  		return NULL;
  	return (void *)fw_dtb_pointer;
  }
@@ -63,28 +64,33 @@ index 35f5939..aaaa8d9 100644
  int ft_board_setup(void *blob, bd_t *bd)
  {
 diff --git a/include/configs/rpi.h b/include/configs/rpi.h
-index a97550b..2ac4373 100644
+index f76c7d1..ba91205 100644
 --- a/include/configs/rpi.h
 +++ b/include/configs/rpi.h
-@@ -15,6 +15,7 @@
+@@ -180,11 +180,24 @@
  
- /* Architecture, CPU, etc.*/
- #define CONFIG_ARCH_CPU_INIT
-+#define CONFIG_GZIP_COMPRESSED
+ #include <config_distro_bootcmd.h>
  
- /* Use SoC timer for AArch32, but architected timer for AArch64 */
- #ifndef CONFIG_ARM64
-@@ -159,7 +160,10 @@
++#ifdef CONFIG_FIT_SIGNATURE
++#define FIT_BOOT_CMD							\
++	"boot_a_script="						\
++		"load ${devtype} ${devnum}:${distro_bootpart} "		\
++			"${scriptaddr} ${prefix}${script}; "		\
++		"iminfo ${scriptaddr};" 				\
++		"if test $? -eq 1; then reset; fi;"			\
++		"source ${scriptaddr}:bootscr\0"
++#else
++#define FIT_BOOT_CMD	""
++#endif
++
+ #define CONFIG_EXTRA_ENV_SETTINGS \
  	"dhcpuboot=usb start; dhcp u-boot.uimg; bootm\0" \
  	ENV_DEVICE_SETTINGS \
  	ENV_MEM_LAYOUT_SETTINGS \
 -	BOOTENV
--
 +	BOOTENV \
-+	"boot_a_script="                                                  \
-+		"load ${devtype} ${devnum}:${distro_bootpart} "           \
-+			"${scriptaddr} ${prefix}${script}; "              \
-+		"source ${scriptaddr}:bootscr\0"
++	FIT_BOOT_CMD
+ 
  
  #endif
 -- 

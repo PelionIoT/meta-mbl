@@ -15,6 +15,7 @@ SRC_URI = "\
     https://launchpad.net/ecryptfs/trunk/${PV}/+download/${BPN}_${PV}.orig.tar.gz \
     file://ecryptfs-utils-CVE-2016-6224.patch \
     file://ecryptfs.service \
+    file://ecryptfs-init.sh \
     "
 
 SRC_URI[md5sum] = "83513228984f671930752c3518cac6fd"
@@ -59,10 +60,12 @@ do_install_append() {
     sed -i -e "s: ${base_sbindir}/cryptsetup: ${sbindir}/cryptsetup:" ${D}${bindir}/ecryptfs-setup-swap
     if ${@bb.utils.contains('DISTRO_FEATURES','systemd','true','false',d)}; then
         install -D -m 0644 ${WORKDIR}/ecryptfs.service ${D}${systemd_system_unitdir}/ecryptfs.service
+        install -D -m 0755 ${WORKDIR}/ecryptfs-init.sh ${D}${bindir}/ecryptfs-init.sh
     fi
 }
 
 FILES_${PN} += "${base_libdir}/security/* ${base_libdir}/ecryptfs/*"
 
 RDEPENDS_${PN} += "cryptsetup"
+RDEPENDS_${PN} += "bash"
 RRECOMMENDS_${PN} = "gettext-runtime"

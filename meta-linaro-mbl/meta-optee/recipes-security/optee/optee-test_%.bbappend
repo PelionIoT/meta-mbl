@@ -4,8 +4,8 @@
 
 SRC_URI = "git://github.com/OP-TEE/optee_test.git"
 
-# Tip of tree @ Version 3.4 for imx7 and rpi
-SRCREV="e4f6f76b4cb5763112f4722981f84a26f4ac7e55"
+# Tip of tree @ Version 3.6 for imx7 and rpi
+SRCREV="40aacb6dc33bbf6ee329f40274bfe7bb438bbf53"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/optee-test:"
 

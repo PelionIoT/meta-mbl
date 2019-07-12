@@ -23,6 +23,7 @@ SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/linux.git;protocol=htt
            file://mqueue-mbl.cfg \
            file://cgroups-mbl.cfg \
            file://namespaces-mbl.cfg \
+           file://ecryptfs-mbl.cfg \
            "
 
 
@@ -35,21 +36,6 @@ do_preconfigure() {
 
 	kernel_conf_variable LOCALVERSION "\"${LOCALVERSION}\""
 	kernel_conf_variable LOCALVERSION_AUTO y
-
-	kernel_conf_variable EXPERIMENTAL y
-	kernel_conf_variable KEYS y
-	kernel_conf_variable CRYPTO y
-	kernel_conf_variable CRYPTO_ALGAPI y
-	kernel_conf_variable CRYPTO_BLKCIPHER y
-	kernel_conf_variable CRYPTO_HASH y
-	kernel_conf_variable CRYPTO_MANAGER y
-	kernel_conf_variable CRYPTO_MD5 y
-	kernel_conf_variable CRYPTO_ECB y
-	kernel_conf_variable CRYPTO_CBC y
-	kernel_conf_variable CRYPTO_AES y
-	kernel_conf_variable ECRYPT_FS y
-	kernel_conf_variable ECRYPT_FS_MESSAGING y
-
 
 	sed -e "${CONF_SED_SCRIPT}" < '${S}/arch/arm/configs/${KBUILD_DEFCONFIG}' >> '${B}/.config'
 

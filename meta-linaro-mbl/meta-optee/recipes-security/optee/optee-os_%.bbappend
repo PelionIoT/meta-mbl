@@ -2,18 +2,19 @@
 #
 # SPDX-License-Identifier: MIT
 
-DEPENDS += " u-boot-tools-native "
+DEPENDS += " u-boot-tools-native python3-pyelftools-native "
 DEPENDS_append_raspberrypi3-mbl = " arm-aarch64-toolchain-native "
+
+inherit python3native
 
 LICENSE = "BSD-2-Clause"
 
 # MBL_OPTEE_VERSION should be updated to match version pointed to by SRCREV
-MBL_OPTEE_VERSION = "3.4.0"
+MBL_OPTEE_VERSION = "3.6.0"
 
-SRCREV="2976273f390e0654fb95928838ed0e251be8451f"
-SRC_URI="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=https;nobranch=1 \
+SRCREV="f398d4923da875370149ffee45c963d7adb41495"
+SRC_URI="git://github.com/OP-TEE/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
-file://0001-core-kernel_generic_entry_a64.S-support-CFG_DT_ADDR.patch \
 "
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/optee-os:"

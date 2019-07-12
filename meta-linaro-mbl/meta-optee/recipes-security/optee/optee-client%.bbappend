@@ -4,9 +4,20 @@
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/optee-client:"
 SRC_URI += "file://init.d.optee"
-SRC_URI += "file://0001-Fix-for-teec_trace.c-snprintf-Werror-format-truncati.patch"
+
+SRCREV = "1cdf49d9259ad83c3fbdf416e5ea223a18a28da8"
 
 inherit update-rc.d
+
+do_install_prepend() {
+	oe_runmake install
+	install -d ${S}/out/export/bin
+	cp -f ${S}/out/export/usr/sbin/* ${S}/out/export/bin
+	install -d ${S}/out/export/lib
+	cp -f ${S}/out/export/usr/lib/* ${S}/out/export/lib
+	install -d ${S}/out/export/include
+	cp -f ${S}/out/export/usr/include/* ${S}/out/export/include
+}
 
 do_install_append() {
         install -d ${D}${sysconfdir}/init.d

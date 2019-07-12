@@ -6,27 +6,22 @@
 #
 # SPDX-License-Identifier: MIT
 
-PV = "${LINUX_VERSION}+git${SRCPV}"
-LINUX_VERSION = "4.14.112"
-SRCREV = "45bad79852d5a7f6c6097f54cee064f92e7d7647"
 SRCREV_imx6ul-des0258-mbl = "83d967e82fe285635be7845c6b578fee2c441996"
 
-KBUILD_DEFCONFIG_imx7s-warp-mbl ?= "warp7_mbl_defconfig"
-KBUILD_DEFCONFIG_imx7d-pico-mbl ?= "pico_mbl_mx6_mx7_defconfig"
-KBUILD_DEFCONFIG_imx6ul-pico-mbl ?= "pico_mbl_mx6_mx7_defconfig"
-KBUILD_DEFCONFIG_imx6ul-des0258-mbl ?= "imx6ul_des0258_defconfig"
+KBUILD_DEFCONFIG_imx7d-pico-mbl ?= "imx_v6_v7_defconfig"
+
+LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
 
 FILESEXTRAPATHS_prepend:="${THISDIR}/files:"
 
-SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/linux.git;protocol=https;nobranch=1 \
-           file://0001-menuconfig-check-lxdiaglog.sh-Allow-specification-of.patch \
+#SRCBRANCH = "kvalo-qca9377/ath10k-pending-sdio-usb"
+SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git;branch=ath10k-pending-sdio-usb \
            file://mqueue-mbl.cfg \
            file://cgroups-mbl.cfg \
            file://namespaces-mbl.cfg \
-           "
-
-
-LIC_FILES_CHKSUM = "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
+           file://qca9377-mbl.cfg \
+"
+SRCREV = "b1e5798d5f183742279d66e4cf0a8a6d852b0634"
 
 do_preconfigure() {
 	mkdir -p ${B}

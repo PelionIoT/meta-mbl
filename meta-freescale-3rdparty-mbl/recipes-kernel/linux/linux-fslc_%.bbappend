@@ -49,8 +49,6 @@ do_preconfigure() {
 		head=`git --git-dir=${S}/.git rev-parse --verify --short HEAD 2> /dev/null`
 		printf "%s%s" +g $head > ${S}/.scmversion
 	fi
-
-
 }
 
 # TO-BE-REMOVED: workaround until the following upstream patch

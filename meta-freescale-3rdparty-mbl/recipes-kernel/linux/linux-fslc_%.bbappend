@@ -48,6 +48,7 @@ do_preconfigure() {
 	kernel_conf_variable CRYPTO_CBC y
 	kernel_conf_variable CRYPTO_AES y
 	kernel_conf_variable ECRYPT_FS y
+	kernel_conf_variable ECRYPT_FS_MESSAGING y
 
 
 	sed -e "${CONF_SED_SCRIPT}" < '${S}/arch/arm/configs/${KBUILD_DEFCONFIG}' >> '${B}/.config'

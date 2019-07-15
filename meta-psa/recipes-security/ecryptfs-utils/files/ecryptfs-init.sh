@@ -41,9 +41,6 @@
 #    removed from the keyring after use. 
 ###############################################################################
 
-# TODO: remove Uncomment this line for debug trace.
-#set -x
-
 ###############################################################################
 # Tools. These ecryptfs-util tools are required to be on the PATH. 
 ###############################################################################

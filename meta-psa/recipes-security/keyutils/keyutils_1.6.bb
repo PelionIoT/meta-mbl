@@ -1,3 +1,12 @@
+# Based on: recipes-security/keyutils/keyutils_1.6.bb
+# In open-source project: http://git.yoctoproject.org/cgit/cgit.cgi/meta-security
+#
+# Original file: http://git.yoctoproject.org/cgit/cgit.cgi/meta-security/tree/COPYING.MIT
+# Modifications: Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
+#                No modifications have been made.
+#
+# SPDX-License-Identifier: MIT
+
 SUMMARY = "Linux Key Management Utilities"
 DESCRIPTION = "\
     Utilities to control the kernel key management facility and to provide \

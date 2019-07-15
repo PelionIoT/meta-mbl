@@ -1,3 +1,12 @@
+# Based on: recipes-security/ecryptfs-utils/ecryptfs-utils_111.bb
+# In open-source project: http://git.yoctoproject.org/cgit/cgit.cgi/meta-security
+#
+# Original file: http://git.yoctoproject.org/cgit/cgit.cgi/meta-security/tree/COPYING.MIT
+# Modifications: Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
+#                No modifications have been made.
+#
+# SPDX-License-Identifier: MIT
+
 SUMMARY = "The eCryptfs mount helper and support libraries"
 DESCRIPTION = "eCryptfs is a stacked cryptographic filesystem \
     that ships in Linux kernel versions 2.6.19 and above. This \

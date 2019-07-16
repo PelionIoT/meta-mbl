@@ -175,7 +175,7 @@ class MkImage:
         cmd = [ToolPaths.MKIMAGE_BIN, *args]
         logger.debug("Invoking mkimage with the following cmd:{}".format(cmd))
         output = subprocess.run(
-            cmd, check=check, capture_output=True, text=True
+            cmd, check=check, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
         )
         if output.stdout:
             logger.info(output.stdout)

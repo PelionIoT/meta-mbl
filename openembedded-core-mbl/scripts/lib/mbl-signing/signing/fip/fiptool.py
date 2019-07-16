@@ -212,7 +212,7 @@ def _invoke(
         "Invoking fiptool with the following command: {}".format(fiptool_cmd)
     )
     return subprocess.run(
-        fiptool_cmd, check=True, capture_output=True, text=True
+        fiptool_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
     )
 
 

@@ -94,7 +94,7 @@ MBL_NON_FACTORY_CONFIG_PARTITION_ALIGN_KiB ?= "${MBL_FLASH_ERASE_BLOCK_SIZE_KiB}
 # ------------------------------------------------------------------------------
 MBL_LOG_MOUNT_POINT = "${MBL_LOG_DIR}"
 MBL_LOG_PARTITION_LABEL ?= "log"
-MBL_LOG_PARTITION_SIZE_MiB ?= "20"
+MBL_LOG_PARTITION_SIZE_MiB ?= "128"
 MBL_LOG_PARTITION_ALIGN_KiB ?= "${MBL_FLASH_ERASE_BLOCK_SIZE_KiB}"
 
 # ------------------------------------------------------------------------------

@@ -39,7 +39,7 @@ class RootFsSubdirPlugin(SourcePlugin):
             raise WicError("Couldn't find rootfs dir, exiting")
 
         try:
-            subdir = source_params['subdir']
+            subdir = source_params['subdir'].strip("/")
         except KeyError:
             raise WicError("Required source parameter 'subdir' not found, exiting")
 

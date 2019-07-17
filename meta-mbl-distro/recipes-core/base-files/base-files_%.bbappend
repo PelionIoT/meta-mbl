@@ -12,7 +12,7 @@ hostname_pn-base-files = ""
 # Create a list of mount points that need to be created
 python() {
     for part in d.getVar("MBL_PARTITIONS").split():
-        mountpoint = d.getVar("MBL_{}_DIR".format(part))
+        mountpoint = d.getVar("MBL_{}_MOUNT_POINT".format(part))
         if mountpoint and mountpoint != "/":
             d.appendVar("MOUNT_POINTS", " {}".format(mountpoint))
 }

@@ -1,0 +1,47 @@
+# Copyright (c) 2018-2019 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+# Note: don't specify mount points and "on-device" options - if we do that then
+# WIC will try to add the devices to fstab, but it will only add them to fstab
+# in the final wic image, not the rootfs images. That would be a problem for us
+# because we use the rootfs images as payload files for firmware update. We
+# just deal with fstab manually to avoid this.
+
+# First space for a bootloader
+${MBL_WKS_COMMENT_IF_SKIP_BOOTLOADER1}part --source rawcopy --sourceparams="file=${MBL_WKS_BOOTLOADER1_FILENAME}" --no-table --align ${MBL_WKS_BOOTLOADER1_ALIGN_KiB}
+
+# Second space for a bootloader
+${MBL_WKS_COMMENT_IF_SKIP_BOOTLOADER2}part --source rawcopy --sourceparams="file=${MBL_WKS_BOOTLOADER2_FILENAME}" --no-table --align ${MBL_WKS_BOOTLOADER2_ALIGN_KiB}
+
+# Partition 1: Boot partition
+part --source bootimg-partition --fstype=vfat --label ${MBL_BOOT_PARTITION_LABEL} --active --align ${MBL_BOOT_PARTITION_ALIGN_KiB} --fixed-size ${MBL_BOOT_PARTITION_SIZE_MiB}
+
+# Partition 2: Boot flags
+part --source rootfs-subdir --sourceparams subdir=${MBL_BOOTFLAGS_MOUNT_POINT} --fstype=ext4 --label ${MBL_BOOTFLAGS_PARTITION_LABEL} --align ${MBL_BOOTFLAGS_PARTITION_ALIGN_KiB} --fixed-size ${MBL_BOOTFLAGS_PARTITION_SIZE_MiB}
+
+# Partition 3: First root partition
+part --source rootfs --fstype=ext4 --label ${MBL_ROOT_PARTITION_LABEL}1 --align ${MBL_ROOT_PARTITION_ALIGN_KiB} --fixed-size ${MBL_ROOT_PARTITION_SIZE_MiB}
+
+# Partition 4: Second root partition
+part --source rootfs --fstype=ext4 --label ${MBL_ROOT_PARTITION_LABEL}2 --align ${MBL_ROOT_PARTITION_ALIGN_KiB} --fixed-size ${MBL_ROOT_PARTITION_SIZE_MiB}
+
+# Partition 5: Factory config partition
+part --fstype=ext4 --label ${MBL_FACTORY_CONFIG_PARTITION_LABEL} --align ${MBL_FACTORY_CONFIG_PARTITION_ALIGN_KiB} --fixed-size ${MBL_FACTORY_CONFIG_PARTITION_SIZE_MiB}
+
+# Partition 6: First non-factory config partition
+part --source rootfs-subdir --sourceparams subdir=${MBL_NON_FACTORY_CONFIG_MOUNT_POINT} --fstype=ext4 --label ${MBL_NON_FACTORY_CONFIG_PARTITION_LABEL}1 --align ${MBL_NON_FACTORY_CONFIG_PARTITION_ALIGN_KiB} --fixed-size ${MBL_NON_FACTORY_CONFIG_PARTITION_SIZE_MiB}
+
+# Partition 7: Second non-factory config partition
+part --fstype=ext4 --label ${MBL_NON_FACTORY_CONFIG_PARTITION_LABEL}2 --align ${MBL_NON_FACTORY_CONFIG_PARTITION_ALIGN_KiB} --fixed-size ${MBL_NON_FACTORY_CONFIG_PARTITION_SIZE_MiB}
+
+# Partition 8: Log partition
+part --fstype=ext4 --label ${MBL_LOG_PARTITION_LABEL} --align ${MBL_LOG_PARTITION_ALIGN_KiB} --fixed-size ${MBL_LOG_PARTITION_SIZE_MiB}
+
+# Partition 9: Scratch partition
+part --source rootfs-subdir --sourceparams subdir=${MBL_SCRATCH_MOUNT_POINT} --fstype=ext4 --label ${MBL_SCRATCH_PARTITION_LABEL} --align ${MBL_SCRATCH_PARTITION_ALIGN_KiB} --fixed-size ${MBL_SCRATCH_PARTITION_SIZE_MiB}
+
+# Partition 10: Home partition
+part --source rootfs-subdir --sourceparams subdir=${MBL_HOME_MOUNT_POINT} --fstype=ext4 --label ${MBL_HOME_PARTITION_LABEL} --align ${MBL_HOME_PARTITION_ALIGN_KiB} --fixed-size ${MBL_HOME_PARTITION_SIZE_MiB}
+
+bootloader --ptable msdos

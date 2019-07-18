@@ -1,0 +1,2 @@
+include signing/fiptool
+include signing/cert_create

@@ -1,0 +1,9 @@
+[Unit]
+Description=A initialisation script and user space daemon for managing ecryptfs ciphered storage.
+After=udev.service
+
+[Service]
+ExecStart=/usr/bin/ecryptfs-init.sh
+
+[Install]
+WantedBy=multi-user.target

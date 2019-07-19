@@ -3,7 +3,7 @@
 ###############################################################################
 # Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
 #
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: BSD-3-Clause
 #
 # ecryptfs homepage: http://ecryptfs.org/
 # Summary: Utilities for the Linux cryptographic filesystem ecryptfs.

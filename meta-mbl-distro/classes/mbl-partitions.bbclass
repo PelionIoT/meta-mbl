@@ -62,7 +62,7 @@ MBL_ROOT_PARTITION_ALIGN_KiB ?= "${MBL_FLASH_ERASE_BLOCK_SIZE_KiB}"
 # ------------------------------------------------------------------------------
 MBL_BOOT_MOUNT_POINT = "${MBL_BOOT_DIR}"
 MBL_BOOT_PARTITION_LABEL ?= "boot"
-MBL_BOOT_PARTITION_SIZE_MiB ?= "32"
+MBL_BOOT_PARTITION_SIZE_MiB ?= "48"
 MBL_BOOT_PARTITION_ALIGN_KiB ?= "${MBL_FLASH_ERASE_BLOCK_SIZE_KiB}"
 
 # ------------------------------------------------------------------------------

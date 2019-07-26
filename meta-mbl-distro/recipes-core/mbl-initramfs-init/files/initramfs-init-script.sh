@@ -89,6 +89,9 @@ mount -t mqueue none /dev/mqueue
 mkdir -p /mnt/rootfs
 mount $ROOTFS_PARTITION /mnt/rootfs
 
+# Make sure that "/" will be owned by root
+chown 0:0 /mnt/rootfs
+
 mount --move /dev /mnt/rootfs/dev
 mount --move /proc /mnt/rootfs/proc
 mount --move /sys /mnt/rootfs/sys

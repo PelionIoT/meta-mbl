@@ -31,6 +31,8 @@ PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ${PYTEST_DEPENDENCIES}"
 #     - optee-client. If the machine supports optee include the client.
 #     - systemd-net-conf. Systemd related network configuration files (e.g.
 #       hostname setup).
+#     - ecryptfs-utils. Include ecryptfs cryptographic filesystem utilities.
+#     - keyutils. Include kernel key store (keyring) utilities.
 ###############################################################################
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ca-certificates"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " runc-opencontainers"
@@ -56,5 +58,7 @@ PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " optee-client"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " connman"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " connman-client"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " systemd-net-conf"
+PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ${@bb.utils.contains('MACHINE_FEATURES', 'ecryptfs', 'ecryptfs-utils', '', d)}"
+PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " ${@bb.utils.contains('MACHINE_FEATURES', 'ecryptfs', 'keyutils', '', d)}"
 
 RDEPENDS_packagegroup-mbl-production += "${PACKAGEGROUP_MBL_PRODUCTION_PKGS}"

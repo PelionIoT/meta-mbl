@@ -16,6 +16,7 @@ DEPENDS += "arm-aarch64-toolchain-native"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/atf-raspberrypi3-mbl:"
 SRC_URI_append_raspberrypi3-mbl = " file://0001-rpi3-Use-mmc-driver-to-load-FIP-from-raw-sectors.patch \
+				file://0002-rpi3-use-external-FIP-offset-definition.patch \
 "
 
 PLATFORM = "rpi3"

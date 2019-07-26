@@ -1,0 +1,28 @@
+From 36c30f9afa1cbad6267ea52e06ea9e1b9ead85d9 Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Fri, 19 Jul 2019 18:12:36 +0800
+Subject: [PATCH 2/2] rpi3: use external FIP offset definition
+
+Use external FIP offset definition for flexibility.
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+---
+ plat/rpi3/include/platform_def.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/plat/rpi3/include/platform_def.h b/plat/rpi3/include/platform_def.h
+index 170430e..c667e1d 100644
+--- a/plat/rpi3/include/platform_def.h
++++ b/plat/rpi3/include/platform_def.h
+@@ -88,7 +88,7 @@
+ /* FIP placed after ROM to append it to BL1 with very little padding. */
+ #define PLAT_RPI3_FIP_BASE		ULL(0x00020000)
+ #define PLAT_RPI3_FIP_MAX_SIZE		ULL(0x001E0000)
+-#define PLAT_RPI3_FIP_MMC_BASE          (1024 * 1024)
++#define PLAT_RPI3_FIP_MMC_BASE          FIP_ROM_OFFSET
+ 
+ /* We have 16M of memory reserved starting at 256M */
+ #define SEC_SRAM_BASE			ULL(0x10000000)
+-- 
+2.7.4
+

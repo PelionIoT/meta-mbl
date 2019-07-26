@@ -16,7 +16,7 @@ SRC_URI = " \
 
 # MBL_ATF_VERSION should be updated to match version pointed to by SRCREV
 MBL_ATF_VERSION = "2.1"
-SRCREV_atf = "5d6615bbeca52d2b368c9d5f1186d44c4febc999"
+SRCREV_atf = "17e93a8fbf2e0925b23151fcb4a7cf1e2a1130f2"
 SRCREV_mbedtls = "1ab9b5714852c6810c0a0bfd8c3b5c60a9a15482"
 
 LICENSE = "BSD-3-Clause & Apache-2.0"
@@ -41,6 +41,11 @@ PARALLEL_MAKE=""
 # This problem is avoided by clearing LDFLAGS.
 LDFLAGS[unexport] = "1"
 
+
+# MBL_FIP_ROM_OFFSET is to configure the FIP image offset on eMMC/SD/etc
+# storage. The default offset is 1MB and it can be override in machine.conf.
+MBL_FIP_ROM_OFFSET ?= "0x100000"
+
 ATF_COMPILE_FLAGS = "-C ${S} \
       BL32=${DEPLOY_DIR_IMAGE}/optee/tee-header_v2.bin \
       BL32_EXTRA1=${DEPLOY_DIR_IMAGE}/optee/tee-pager_v2.bin \
@@ -57,6 +62,7 @@ ATF_COMPILE_FLAGS = "-C ${S} \
       PLAT=${PLATFORM} \
       TRUSTED_BOARD_BOOT=1 \
       USE_TBBR_DEFS=1 \
+      FIP_ROM_OFFSET=${MBL_FIP_ROM_OFFSET} \
 "
 
 # Default name of fip binary from ATF build.

@@ -7,19 +7,17 @@ DESCRIPTION = "Mbed Crypto is a reference implementation of the Arm PSA Crypto A
 
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = " \
-    file://${WORKDIR}/git/LICENSE;md5=302d50a6369f5f22efdb674db908167a \
-    file://${WORKDIR}/git/apache-2.0.txt;md5=3b83ef96387f14655fc854ddc3c6bd57 \
+    file://LICENSE;md5=302d50a6369f5f22efdb674db908167a \
+    file://apache-2.0.txt;md5=3b83ef96387f14655fc854ddc3c6bd57 \
 "
 
 SECTION = "libs"
 
-# Use mbed-crypto fork with mbl-crypto-storage-example-app
-# This is a temporary measure.
-SRC_URI = "git://git@github.com/simonqhughes/mbed-crypto.git;protocol=ssh;nobranch=1"
-SRCREV = "1c18f737d088574e86d86ec98b2fb9f2adab17d7"
+SRC_URI = "https://github.com/ARMmbed/mbed-crypto/archive/mbedcrypto-${PV}.tar.gz"
+SRC_URI[md5sum] = "06dd48905c236f7939d03b09bcf7f1a2"
+SRC_URI[sha256sum] = "70b3bde55c943b931fd296bba3936fa677416b3997aac10ed3ba193ba16e8037"
 
-S = "${WORKDIR}/git"
-B = "${WORKDIR}/build"
+S = "${WORKDIR}/${BPN}-mbedcrypto-${PV}"
 
 # We add a '-test' package here, but ideally we'd be using the ptest framework.
 # MBL has an issue where enabling the ptest DISTRO_FEATURE results in

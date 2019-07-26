@@ -15,6 +15,8 @@ inherit packagegroup
 #     - systemd-net-conf-dbg-iface. Systemd related network service for the
 #       debug interface (e.g. usbgadget). This package should only be installed
 #       if usbgadget is in the COMBINED_FEATURES.
+#     - ecryptfs-utils. Include ecryptfs cryptographic filesystem utilities.
+#     - keyutils. Include kernel key store (keyring) utilities.
 ###############################################################################
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " dropbear"
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " python3 python3-pip"
@@ -32,6 +34,8 @@ PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " optee-test"
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " openssh-sftp-server"
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " ${@bb.utils.contains('COMBINED_FEATURES', 'usbgadget', 'systemd-net-conf-dbg-iface', '', d)}"
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " systemd-analyze"
+PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " ${@bb.utils.contains('MACHINE_FEATURES', 'ecryptfs', 'ecryptfs-utils', '', d)}"
+PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " ${@bb.utils.contains('MACHINE_FEATURES', 'ecryptfs', 'keyutils', '', d)}"
 
 
 ###############################################################################

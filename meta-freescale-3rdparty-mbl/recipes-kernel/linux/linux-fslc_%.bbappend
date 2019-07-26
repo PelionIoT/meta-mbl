@@ -23,6 +23,7 @@ SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/linux.git;protocol=htt
            file://mqueue-mbl.cfg \
            file://cgroups-mbl.cfg \
            file://namespaces-mbl.cfg \
+           file://ecryptfs-mbl.cfg \
            "
 
 

@@ -11,6 +11,9 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1 "
 
+# To override the boot menu - set the default configuration
+SRC_URI_append_imx6ul-pico-mbl = "file://set-pico-imx6ul-config-default-fdt-file-mbl.cfg"
+
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=30503fd321432fc713238f582193b78e"
 
 DEPENDS += "flex-native bison-native"
@@ -28,7 +31,7 @@ DCD_FILE_PATH_imx6ul-pico-mbl = "${B}"
 DCD_FILE_PATH_imx6ul-des0258-mbl = "${B}"
 
 do_deploy_prepend_imx6ul-pico-mbl() {
-	cp ${B}/pico-pi-imx6ul_defconfig/spl/u-boot-spl.cfgout ${B}/u-boot-dtb.cfgout
+	cp ${B}/spl/u-boot-spl.cfgout ${B}/u-boot-dtb.cfgout
 }
 
 # Temporary prepend to create u-boot-dtb.cfgout

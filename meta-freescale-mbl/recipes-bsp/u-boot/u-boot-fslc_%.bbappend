@@ -12,7 +12,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1 "
 
 # To override the boot menu - set the default configuration
-SRC_URI_append_imx6ul-pico-mbl = "file://set-pico-imx6ul-config-default-fdt-file-mbl.cfg"
+SRC_URI_append_imx6ul-pico-mbl = " file://set-pico-imx6ul-config-default-fdt-file-mbl.cfg"
 
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=30503fd321432fc713238f582193b78e"
 

@@ -8,7 +8,7 @@
 
 PV = "${LINUX_VERSION}+git${SRCPV}"
 LINUX_VERSION = "4.14.112"
-SRCREV = "45bad79852d5a7f6c6097f54cee064f92e7d7647"
+SRCREV = "937ee3dd236ed01a6be33fbabc79a528d62b1036"
 SRCREV_imx6ul-des0258-mbl = "83d967e82fe285635be7845c6b578fee2c441996"
 
 KBUILD_DEFCONFIG_imx7s-warp-mbl ?= "warp7_mbl_defconfig"

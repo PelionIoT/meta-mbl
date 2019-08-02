@@ -24,7 +24,7 @@ UBOOT_SIGN_KEYDIR = "${DEPLOY_DIR_IMAGE}"
 # The the name of the key to use for signing.
 UBOOT_SIGN_KEYNAME = "${MBL_FIT_ROT_KEY_BASENAME}"
 
-inherit kernel-fitimage mbl-artifact-names
+inherit kernel-fitimage mbl-artifact-names mbl-uboot-sign
 
 # Recipes that use this class are required to have the mbl-boot-scr recipe support i.e.
 # make the ${DEPLOY_DIR_IMAGE}/${MBL_UBOOT_CMD_FILENAME} available for use.

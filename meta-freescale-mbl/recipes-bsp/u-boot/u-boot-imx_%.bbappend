@@ -2,15 +2,16 @@
 #
 # SPDX-License-Identifier: MIT
 
+inherit mbl-uboot-sign
+
 SRCBRANCH = "imx_v2018.03_4.14.78_1.0.0_ga-mbl"
 SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1 \
-	   file://0001-arm-imx-Add-mbl-specific-boot-option.patch \
 "
 
 # MBL_UBOOT_VERSION should be updated to match version pointed to by SRCREV
 MBL_UBOOT_VERSION = "2018.03"
 
-SRCREV = "4cac377d31d412068e8dadc010093ead91ed6127"
+SRCREV = "e9cb2c6d8a6227a189702ab2cfc7b1273689ddb2"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/u-boot-imx:"
 
@@ -24,3 +25,5 @@ do_deploy_append() {
     cd ${DEPLOYDIR}/${BOOT_TOOLS}
     install -m 0777 ${B}/${config}/u-boot-nodtb.bin  ${DEPLOYDIR}/${BOOT_TOOLS}/u-boot-nodtb.bin
 }
+
+RM_WORK_EXCLUDE_ITEMS += "recipe-sysroot-native"

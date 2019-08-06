@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -38,10 +37,16 @@ def test_create(mock_subprocess):
 
     assert isinstance(output, subprocess.CompletedProcess)
     mock_subprocess.run.assert_called_once_with(
-        [fiptool.ToolPaths.FIPTOOL_BIN, "create", str(img_spec), "fip.bin"],
+        [
+            fiptool.ToolPaths.FIPTOOL_BIN,
+            "create",
+            *str(img_spec).split(" "),
+            "fip.bin",
+        ],
         check=True,
-        capture_output=True,
-        text=True,
+        stdout=mock_subprocess.PIPE,
+        stderr=mock_subprocess.PIPE,
+        universal_newlines=True,
     )
 
 
@@ -72,10 +77,16 @@ def test_update(mock_subprocess):
 
     assert isinstance(output, subprocess.CompletedProcess)
     mock_subprocess.run.assert_called_once_with(
-        [fiptool.ToolPaths.FIPTOOL_BIN, "update", str(img_spec), "fip.bin"],
+        [
+            fiptool.ToolPaths.FIPTOOL_BIN,
+            "update",
+            *str(img_spec).split(" "),
+            "fip.bin",
+        ],
         check=True,
-        capture_output=True,
-        text=True,
+        stdout=mock_subprocess.PIPE,
+        stderr=mock_subprocess.PIPE,
+        universal_newlines=True,
     )
 
 
@@ -96,12 +107,14 @@ def test_unpack(mock_subprocess):
         [
             fiptool.ToolPaths.FIPTOOL_BIN,
             "unpack",
-            "--nt-fw --trusted-key-cert",
+            "--nt-fw",
+            "--trusted-key-cert",
             "fip.bin",
         ],
         check=True,
-        capture_output=True,
-        text=True,
+        stdout=mock_subprocess.PIPE,
+        stderr=mock_subprocess.PIPE,
+        universal_newlines=True,
     )
 
 
@@ -111,10 +124,16 @@ def test_remove(mock_subprocess):
 
     assert isinstance(output, subprocess.CompletedProcess)
     mock_subprocess.run.assert_called_once_with(
-        [fiptool.ToolPaths.FIPTOOL_BIN, "remove", str(img_spec), "fip.bin"],
+        [
+            fiptool.ToolPaths.FIPTOOL_BIN,
+            "remove",
+            *str(img_spec).split(" "),
+            "fip.bin",
+        ],
         check=True,
-        capture_output=True,
-        text=True,
+        stdout=mock_subprocess.PIPE,
+        stderr=mock_subprocess.PIPE,
+        universal_newlines=True,
     )
 
 
@@ -134,13 +153,17 @@ def test_remove_with_opts(mock_subprocess):
         [
             fiptool.ToolPaths.FIPTOOL_BIN,
             "remove",
-            str(img_spec),
-            "--align=1 --blob-uuid=2222 --force --out=output/path",
+            *str(img_spec).split(" "),
+            "--align=1",
+            "--blob-uuid=2222",
+            "--force",
+            "--out=output/path",
             "fip.bin",
         ],
         check=True,
-        capture_output=True,
-        text=True,
+        stdout=mock_subprocess.PIPE,
+        stderr=mock_subprocess.PIPE,
+        universal_newlines=True,
     )
 
 

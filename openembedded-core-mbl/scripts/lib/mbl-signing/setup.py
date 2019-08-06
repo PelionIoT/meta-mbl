@@ -43,18 +43,10 @@ class ArmTrustedFirmwareToolsBuild(build):
             subprocess.run(
                 ["make", "fiptool"], cwd="arm-trusted-firmware", check=True
             )
-            subprocess.run(
-                ["make", "certtool"], cwd="arm-trusted-firmware", check=True
-            )
         except subprocess.CalledProcessError as err:
             raise BuildError(NOTICE) from err
         subprocess.run(
             ["cp", "tools/fiptool/fiptool", "../signing"],
-            cwd="arm-trusted-firmware",
-            check=True,
-        )
-        subprocess.run(
-            ["cp", "tools/cert_create/cert_create", "../signing"],
             cwd="arm-trusted-firmware",
             check=True,
         )
@@ -68,6 +60,9 @@ setup(
     version="1.0.0",
     packages=find_packages(exclude=["*.pyc", "*test_*", "*__pycache__*"]),
     include_package_data=True,
-    install_requires=["hvac", "pyasn1", "cryptography"],
+    install_requires=[
+        "hvac", "pyasn1", "cryptography", "connexion[swagger-ui]", "requests"
+    ],
+    tests_require=["pytest", "pexpect"],
     cmdclass={"build": ArmTrustedFirmwareToolsBuild},
 )

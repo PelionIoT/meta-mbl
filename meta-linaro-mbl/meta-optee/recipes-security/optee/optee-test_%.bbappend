@@ -2,14 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 
-SRC_URI = "git://github.com/OP-TEE/optee_test.git \
-           file://0001-Turn-off-GCC-format-overflow-checking-for-xtest.patch \
-           "
+SRC_URI = "git://github.com/OP-TEE/optee_test.git"
 
 # Tip of tree @ Version 3.6 for imx7 and rpi
 SRCREV="40aacb6dc33bbf6ee329f40274bfe7bb438bbf53"
-
-FILESEXTRAPATHS_prepend := "${THISDIR}/optee-test:"
 
 # Tell the xtest makefile to link against 32 bit openssl when verifying TAs
 EXTRA_OEMAKE_append = " COMPILE_NS_USER=32 "

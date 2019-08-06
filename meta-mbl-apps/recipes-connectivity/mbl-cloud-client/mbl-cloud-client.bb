@@ -14,7 +14,6 @@ S = "${WORKDIR}/git"
 
 # common sources for mbl-cloud-client(public) and mbl-cloud-client-internal
 SRC_URI_COMMON = "file://yocto-toolchain.cmake \
-  file://arm_update_local_config.sh \
   file://mbl-cloud-client.service \
   "
 
@@ -108,7 +107,13 @@ do_configure() {
     cmake -G "Unix Makefiles" \
           -DCMAKE_BUILD_TYPE="${RELEASE_TYPE}" \
           -DCMAKE_TOOLCHAIN_FILE="${S}/cloud-services/mbl-cloud-client/pal-platform/Toolchain/GCC/yocto-toolchain.cmake" \
-          -DEXTARNAL_DEFINE_FILE="${S}/cloud-services/mbl-cloud-client/define.txt"
+          -DEXTARNAL_DEFINE_FILE="${S}/cloud-services/mbl-cloud-client/define.txt" \
+          -DBOOTFLAGS_DIR="${MBL_BOOTFLAGS_DIR}" \
+          -DUPDATE_PAYLOAD_DIR="${MBL_SCRATCH_DIR}" \
+          -DLOG_DIR="${localstatedir}/log" \
+          -DROOTFS1_LABEL="${MBL_ROOT_LABEL}1" \
+          -DROOTFS2_LABEL="${MBL_ROOT_LABEL}2" \
+          -DROOTFS_TYPE="${MBL_ROOT_FSTYPE}"
 
     cd ${CUR_DIR}
 }
@@ -123,14 +128,14 @@ do_compile() {
 
 do_install() {
     install -d "${D}/opt/arm"
-    install "${S}/cloud-services/mbl-cloud-client/__${TARGET}/${RELEASE_TYPE}/mbl-cloud-client" "${D}/opt/arm"
-    install "${S}/cloud-services/mbl-cloud-client/__${TARGET}/${RELEASE_TYPE}/pelion-provisioning-util" "${D}/opt/arm"
+    output_dir="${S}/cloud-services/mbl-cloud-client/__${TARGET}"
+    install -m 755 "${output_dir}/${RELEASE_TYPE}/mbl-cloud-client" "${D}/opt/arm"
+    install -m 755 "${output_dir}/${RELEASE_TYPE}/pelion-provisioning-util" "${D}/opt/arm"
 
-    install -m 755 "${S}/cloud-services/mbl-cloud-client/scripts/arm_update_activate.sh" "${D}/opt/arm"
-    install -m 755 "${S}/cloud-services/mbl-cloud-client/scripts/arm_update_active_details.sh" "${D}/opt/arm"
-    install -m 755 "${S}/cloud-services/mbl-cloud-client/scripts/arm_update_common.sh" "${D}/opt/arm"
+    install -m 755 "${output_dir}/mbl-cloud-client/scripts/arm_update_activate.sh" "${D}/opt/arm"
+    install -m 755 "${output_dir}/mbl-cloud-client/scripts/arm_update_active_details.sh" "${D}/opt/arm"
+    install -m 755 "${output_dir}/mbl-cloud-client/scripts/arm_update_common.sh" "${D}/opt/arm"
     install -m 755 "${S}/cloud-services/mbl-cloud-client/mbed-cloud-client/update-client-hub/modules/pal-linux/scripts/arm_update_cmdline.sh" "${D}/opt/arm"
-    install -m 755 "${WORKDIR}/arm_update_local_config.sh" "${D}/opt/arm"
 
     install -d "${D}${systemd_unitdir}/system/"
     install -m 0644 "${WORKDIR}/mbl-cloud-client.service" "${D}${systemd_unitdir}/system/"

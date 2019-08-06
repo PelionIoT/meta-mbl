@@ -1,2 +1,2 @@
 include signing/fiptool
-include signing/cert_create
+include signing/pki/swagger/keystore.yaml

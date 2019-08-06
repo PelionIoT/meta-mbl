@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -175,7 +174,11 @@ class MkImage:
         cmd = [ToolPaths.MKIMAGE_BIN, *args]
         logger.debug("Invoking mkimage with the following cmd:{}".format(cmd))
         output = subprocess.run(
-            cmd, check=check, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+            cmd,
+            check=check,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
         )
         if output.stdout:
             logger.info(output.stdout)

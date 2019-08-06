@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -204,15 +203,19 @@ def _invoke(
     """Invoke the ATF fiptool with the specified options."""
     fiptool_cmd = [ToolPaths.FIPTOOL_BIN, cmd, *args]
     if img_spec is not None:
-        fiptool_cmd.append(str(img_spec))
+        fiptool_cmd.extend(str(img_spec).split(" "))
     if cmd_opts is not None:
-        fiptool_cmd.append(str(cmd_opts))
+        fiptool_cmd.extend(str(cmd_opts).split(" "))
     fiptool_cmd.append(str(fip_filename))
     logger.debug(
         "Invoking fiptool with the following command: {}".format(fiptool_cmd)
     )
     return subprocess.run(
-        fiptool_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+        fiptool_cmd,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
     )
 
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -248,8 +247,9 @@ def test_fit_image_creation_with_dtc_opts(
                 str(valid_its_path),
                 str(tmp_path / "fit.itb"),
             ],
-            capture_output=True,
-            text=True,
+            stdout=mock_sp.PIPE,
+            stderr=mock_sp.PIPE,
+            universal_newlines=True,
             check=True,
         )
 

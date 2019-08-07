@@ -4,4 +4,6 @@
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
-SRC_URI_append = " file://0001-menuconfig-check-lxdiaglog.sh-Allow-specification-of.patch"
+SRC_URI_append = " file://0001-menuconfig-check-lxdiaglog.sh-Allow-specification-of.patch \
+                   file://config-env-nowhere-mbl.cfg \
+                 "

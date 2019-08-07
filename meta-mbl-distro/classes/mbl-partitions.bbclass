@@ -299,7 +299,30 @@ python __anonymous() {
             ))
         return size_KiB, size_MiB
 
-    def _process_offset_vars(d, part_name, is_banked, size, align, prev_offset, prev_size):
+    def _next_fs_part_number(fs_part_number):
+        """
+        Given a partition number, return the next non-extended partition
+        number.
+        """
+        if fs_part_number == 3:
+            # Wic makes partitions 1, 2 and 3 primary partitions and makes
+            # partition 4 an extended partition. This extended partition is
+            # just a wrapper for further logical partitions so skip it when
+            # working out the numbers of partitions that contain actual file
+            # system data.
+            return fs_part_number + 2
+        return fs_part_number + 1
+
+    def _process_offset_vars(
+        d,
+        part_name,
+        is_banked,
+        size,
+        align,
+        prev_offset,
+        prev_size,
+        prev_fs_part_number
+    ):
         """
         Generate or get offset information for a partition (or banked pair of
         partitions), validate it, and put it in appropriate BitBake variables
@@ -314,13 +337,22 @@ python __anonymous() {
 
         offsets = []
         for offset_var in offset_vars:
-            offset = _process_offset_var(d, part_name, align, offset_var, prev_offset, prev_size)
+            offset = _process_offset_var(d, part_name, align, offset_var, prev_offset, prev_size, prev_fs_part_number)
             offsets.append(offset)
             prev_offset = offset
             prev_size = size
+            prev_fs_part_number = _next_fs_part_number(prev_fs_part_number)
         return offsets
 
-    def _process_offset_var(d, part_name, align, offset_var, prev_offset, prev_size):
+    def _process_offset_var(
+        d,
+        part_name,
+        align,
+        offset_var,
+        prev_offset,
+        prev_size,
+        prev_fs_part_number
+    ):
         """
         Generate or get offset information for a single bank of a partition,
         validate it, and put it in appropriate BitBake variables if its not
@@ -346,9 +378,20 @@ python __anonymous() {
             bb.fatal("{} is not set".format(offset_var))
         elif have_prev:
             offset = _calculate_next_offset(align, prev_offset, prev_size)
+            if prev_fs_part_number > 2:
+                # If the previous fs part number is > 2 then the next partition
+                # (excluding partition 4, the extended partition) will be a
+                # logical partition that must be preceeded by a 512B extended
+                # boot record.
+                # Adjust the offset here so that we leave space for the EBR
+                # ensuring that it doesn't share an alignment chunk with with
+                # either the previous or next partition.
+                # We're working in KiB, so tell _calculate_next_offset that the
+                # EBR is 1KiB instead of 512B.
+                offset = _calculate_next_offset(align, offset, 1)
             d.setVar(offset_var, str(offset))
         else:
-            bb.fatal("{} is not set", offset_var)
+            bb.fatal("{} is not set".format(offset_var))
         return offset
 
     def _calculate_next_offset(align, prev_offset, prev_size):
@@ -430,6 +473,7 @@ python __anonymous() {
     part_names = d.getVar("MBL_PARTITION_NAMES", True).split()
     part_infos = []
     prev_part_info = {}
+    prev_fs_part_number = 0
     for part_name in part_names:
         part_info = {}
         part_infos.append(part_info)
@@ -450,6 +494,7 @@ python __anonymous() {
             align=part_info["align_KiB"],
             prev_offset=prev_part_info.get("offsets_KiB", [None])[-1],
             prev_size=prev_part_info.get("size_KiB"),
+            prev_fs_part_number=prev_fs_part_number,
         )
         prev_part_info = part_info
         if not part_info["is_fs"]:
@@ -460,6 +505,11 @@ python __anonymous() {
         part_info["mount_opts"] = _process_var_with_default(d, part_name, "MOUNT_OPTS")
         part_info["fs_freq"] = _process_var_with_default(d, part_name, "FS_FREQ")
         part_info["fs_passno"] = _process_var_with_default(d, part_name, "FS_PASSNO")
+        part_info["fs_part_numbers"] = []
+        for p in part_info["offsets_KiB"]:
+            new_fs_part_number = _next_fs_part_number(prev_fs_part_number)
+            part_info["fs_part_numbers"].append(new_fs_part_number)
+            prev_fs_part_number = new_fs_part_number
 
     d.setVar("MBL_PARTITION_INFOS", part_infos)
 }

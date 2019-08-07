@@ -2,19 +2,12 @@
 #
 # SPDX-License-Identifier: MIT
 
-###############################################################################
-# mbl.conf
-#
-# This file is the mbed linux OpenEmbedded distribution configuration file.
-# The symbol definitions control the behaviour of the meta layers composed
-# to form the distribution, including:
-# - Enabling the distribution virtualisation features.
-# - Removing the x11 feature which is enabled by default.
-# - Specifying virtual providers for subsystems.
-###############################################################################
-
 require conf/distro/mbl-directories.conf
 require conf/distro/mbl-linked-repositories.conf
+
+# We don't want to append the libc type into TMPDIR
+TCLIBCAPPEND = ""
+
 INHERIT += "mbl-partitions"
 
 DISTRO_NAME = "Mbed Linux OS"

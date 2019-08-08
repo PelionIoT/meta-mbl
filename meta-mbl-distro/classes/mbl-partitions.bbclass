@@ -164,24 +164,32 @@ MBL_WKS_BOOTLOADER2_NO_FS = "1"
 MBL_PARTITION_NAMES += "WKS_BOOTLOADER2"
 
 # ------------------------------------------------------------------------------
-# BOOT (file system; single bank)
+# WKS_BOOTLOADER_FS (file system; single bank)
+# ------------------------------------------------------------------------------
+# WKS_BOOTLOADER_FS, if it exists, has a single file system partition and can
+# be used to store a bootloader on e.g. Raspberry Pi where the boot ROM expects
+# to find a bootloader on a file system partition.
+#
+MBL_WKS_BOOTLOADER_FS_MOUNT_POINT = "${MBL_BOOTLOADER_FS_DIR}"
+MBL_WKS_BOOTLOADER_FS_LABEL ?= "blfs"
+MBL_WKS_BOOTLOADER_FS_DEFAULT_SIZE_MiB ?= "48"
+MBL_WKS_BOOTLOADER_FS_SKIP ?= "1"
+MBL_WKS_BOOTLOADER_FS_FSTYPE ?= "vfat"
+MBL_WKS_BOOTLOADER_FS_MOUNT_OPTS ?= "ro,defaults"
+MBL_PARTITION_NAMES += "WKS_BOOTLOADER_FS"
+
+# ------------------------------------------------------------------------------
+# BOOT (file system; two banks)
 # ------------------------------------------------------------------------------
 # BOOT contains a FIT image containing the Linux kernel, initramfs, and DTB
 #
 MBL_BOOT_MOUNT_POINT = "${MBL_BOOT_DIR}"
 MBL_BOOT_LABEL ?= "boot"
 MBL_BOOT_DEFAULT_SIZE_MiB ?= "48"
+MBL_BOOT_IS_BANKED = "1"
 MBL_BOOT_FSTYPE ?= "vfat"
 MBL_BOOT_MOUNT_OPTS ?= "ro,defaults"
 MBL_PARTITION_NAMES += "BOOT"
-
-# ------------------------------------------------------------------------------
-# BOOTFLAGS (file system; single bank)
-# ------------------------------------------------------------------------------
-MBL_BOOTFLAGS_MOUNT_POINT = "${MBL_BOOTFLAGS_DIR}"
-MBL_BOOTFLAGS_LABEL ?= "bootflags"
-MBL_BOOTFLAGS_DEFAULT_SIZE_MiB ?= "20"
-MBL_PARTITION_NAMES += "BOOTFLAGS"
 
 # ------------------------------------------------------------------------------
 # ROOT (file system; two banks)
@@ -198,7 +206,7 @@ MBL_PARTITION_NAMES += "ROOT"
 MBL_FACTORY_CONFIG_MOUNT_POINT = "${MBL_FACTORY_CONFIG_DIR}"
 MBL_FACTORY_CONFIG_LABEL ?= "factory_config"
 MBL_FACTORY_CONFIG_DEFAULT_SIZE_MiB ?= "20"
-MBL_FACTORY_CONFIG_MOUNT_OPTS = "rw,auto,noexec,nodev,nosuid,nouser,async"
+MBL_FACTORY_CONFIG_MOUNT_OPTS = "rw,noexec,nodev,nosuid,async"
 MBL_PARTITION_NAMES += "FACTORY_CONFIG"
 
 # ------------------------------------------------------------------------------
@@ -208,7 +216,7 @@ MBL_NON_FACTORY_CONFIG_MOUNT_POINT = "${MBL_NON_FACTORY_CONFIG_DIR}"
 MBL_NON_FACTORY_CONFIG_LABEL ?= "nfactory_config"
 MBL_NON_FACTORY_CONFIG_DEFAULT_SIZE_MiB ?= "20"
 MBL_NON_FACTORY_CONFIG_IS_BANKED = "1"
-MBL_NON_FACTORY_CONFIG_MOUNT_OPTS ?= "rw,auto,noexec,nodev,nosuid,nouser,async"
+MBL_NON_FACTORY_CONFIG_MOUNT_OPTS ?= "rw,noexec,nodev,nosuid,async"
 MBL_PARTITION_NAMES += "NON_FACTORY_CONFIG"
 
 # ------------------------------------------------------------------------------
@@ -217,7 +225,7 @@ MBL_PARTITION_NAMES += "NON_FACTORY_CONFIG"
 MBL_LOG_MOUNT_POINT = "${MBL_LOG_DIR}"
 MBL_LOG_LABEL ?= "log"
 MBL_LOG_DEFAULT_SIZE_MiB ?= "128"
-MBL_LOG_MOUNT_OPTS ?= "rw,auto,noexec,nodev,nosuid,nouser,async"
+MBL_LOG_MOUNT_OPTS ?= "rw,noexec,nodev,nosuid,async"
 MBL_PARTITION_NAMES += "LOG"
 
 # ------------------------------------------------------------------------------

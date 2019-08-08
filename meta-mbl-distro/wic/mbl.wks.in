@@ -18,29 +18,28 @@ ${MBL_WKS_BOOTLOADER1_COMMENT_IF_SKIP}part --source rawcopy --sourceparams="file
 # the --align of the next partition so that it doesn't overlap
 ${MBL_WKS_BOOTLOADER2_COMMENT_IF_SKIP}part --source rawcopy --sourceparams="file=${MBL_WKS_BOOTLOADER2_FILENAME}" --no-table --align ${MBL_WKS_BOOTLOADER2_OFFSET_BANK1_KiB}
 
-# Boot partition
-${MBL_BOOT_COMMENT_IF_SKIP}part --source bootimg-partition --fstype=${MBL_BOOT_FSTYPE} --label ${MBL_BOOT_LABEL} --active --align ${MBL_BOOT_OFFSET_BANK1_KiB} --fixed-size ${MBL_BOOT_SIZE_MiB}
+# Third space for a bootloader (single bank)
+# Typically this partition is not used. It is used on e.g. Raspberry Pi 3 to
+# store the VC4 firmware and BL2.
+${MBL_WKS_BOOTLOADER_FS_COMMENT_IF_SKIP}part --source bootimg-partition --fstype=${MBL_WKS_BOOTLOADER_FS_FSTYPE} --label ${MBL_WKS_BOOTLOADER_FS_LABEL} --align ${MBL_WKS_BOOTLOADER_FS_OFFSET_BANK1_KiB} --fixed-size ${MBL_WKS_BOOTLOADER_FS_SIZE_MiB}
 
-# Boot flags
-${MBL_BOOTFLAGS_COMMENT_IF_SKIP}part --source rootfs-subdir --sourceparams subdir=${MBL_BOOTFLAGS_MOUNT_POINT} --fstype=${MBL_BOOTFLAGS_FSTYPE} --label ${MBL_BOOTFLAGS_LABEL} --align ${MBL_BOOTFLAGS_OFFSET_BANK1_KiB} --fixed-size ${MBL_BOOTFLAGS_SIZE_MiB}
+# Boot partition (two banks)
+${MBL_BOOT_COMMENT_IF_SKIP}part --source bootimg-partition --fstype=${MBL_BOOT_FSTYPE} --label ${MBL_BOOT_LABEL}1 --align ${MBL_BOOT_OFFSET_BANK1_KiB} --fixed-size ${MBL_BOOT_SIZE_MiB}
+${MBL_BOOT_COMMENT_IF_SKIP}part --fstype=${MBL_BOOT_FSTYPE} --label ${MBL_BOOT_LABEL}2 --align ${MBL_BOOT_OFFSET_BANK2_KiB} --fixed-size ${MBL_BOOT_SIZE_MiB}
 
-# First root partition
+# Root partition (two banks)
 ${MBL_ROOT_COMMENT_IF_SKIP}part --source rootfs --fstype=${MBL_ROOT_FSTYPE} --label ${MBL_ROOT_LABEL}1 --align ${MBL_ROOT_OFFSET_BANK1_KiB} --fixed-size ${MBL_ROOT_SIZE_MiB}
-
-# Second root partition
-${MBL_ROOT_COMMENT_IF_SKIP}part --source rootfs --fstype=${MBL_ROOT_FSTYPE} --label ${MBL_ROOT_LABEL}2 --align ${MBL_ROOT_OFFSET_BANK2_KiB} --fixed-size ${MBL_ROOT_SIZE_MiB}
+${MBL_ROOT_COMMENT_IF_SKIP}part --fstype=${MBL_ROOT_FSTYPE} --label ${MBL_ROOT_LABEL}2 --align ${MBL_ROOT_OFFSET_BANK2_KiB} --fixed-size ${MBL_ROOT_SIZE_MiB}
 
 # Factory config partition
 ${MBL_FACTORY_CONFIG_COMMENT_IF_SKIP}part --fstype=${MBL_FACTORY_CONFIG_FSTYPE} --label ${MBL_FACTORY_CONFIG_LABEL} --align ${MBL_FACTORY_CONFIG_OFFSET_BANK1_KiB} --fixed-size ${MBL_FACTORY_CONFIG_SIZE_MiB}
 
-# First non-factory config partition
+# Non-factory config partition (two banks)
 ${MBL_NON_FACTORY_CONFIG_COMMENT_IF_SKIP}part --source rootfs-subdir --sourceparams subdir=${MBL_NON_FACTORY_CONFIG_MOUNT_POINT} --fstype=${MBL_NON_FACTORY_CONFIG_FSTYPE} --label ${MBL_NON_FACTORY_CONFIG_LABEL}1 --align ${MBL_NON_FACTORY_CONFIG_OFFSET_BANK1_KiB} --fixed-size ${MBL_NON_FACTORY_CONFIG_SIZE_MiB}
-
-# Second non-factory config partition
 ${MBL_NON_FACTORY_CONFIG_COMMENT_IF_SKIP}part --fstype=${MBL_NON_FACTORY_CONFIG_FSTYPE} --label ${MBL_NON_FACTORY_CONFIG_LABEL}2 --align ${MBL_NON_FACTORY_CONFIG_OFFSET_BANK2_KiB} --fixed-size ${MBL_NON_FACTORY_CONFIG_SIZE_MiB}
 
 # Log partition
-${MBL_LOG_COMMENT_IF_SKIP}part --fstype=${MBL_LOG_FSTYPE} --label ${MBL_LOG_LABEL} --align ${MBL_LOG_OFFSET_BANK1_KiB} --fixed-size ${MBL_LOG_SIZE_MiB}
+${MBL_LOG_COMMENT_IF_SKIP}part --source rootfs-subdir --sourceparams subdir=${MBL_LOG_MOUNT_POINT} --fstype=${MBL_LOG_FSTYPE} --label ${MBL_LOG_LABEL} --align ${MBL_LOG_OFFSET_BANK1_KiB} --fixed-size ${MBL_LOG_SIZE_MiB}
 
 # Scratch partition
 ${MBL_SCRATCH_COMMENT_IF_SKIP}part --source rootfs-subdir --sourceparams subdir=${MBL_SCRATCH_MOUNT_POINT} --fstype=${MBL_SCRATCH_FSTYPE} --label ${MBL_SCRATCH_LABEL} --align ${MBL_SCRATCH_OFFSET_BANK1_KiB} --fixed-size ${MBL_SCRATCH_SIZE_MiB}

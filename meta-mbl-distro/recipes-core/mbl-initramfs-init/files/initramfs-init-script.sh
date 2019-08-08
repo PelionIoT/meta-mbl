@@ -8,6 +8,13 @@
 #
 # SPDX-License-Identifier: MIT
 
+LOG_PARTITION_LABEL="__REPLACE_ME_WITH_MBL_LOG_LABEL__"
+LOG_MOUNT_OPTS="__REPLACE_ME_WITH_MBL_LOG_MOUNT_OPTS__"
+LOG_MOUNT_POINT="__REPLACE_ME_WITH_MBL_LOG_MOUNT_POINT__"
+BOOTFLAGS_DIR="__REPLACE_ME_WITH_MBL_BOOTFLAGS_DIR__"
+ROOTFS_LABEL_BASE="__REPLACE_ME_WITH_MBL_ROOT_LABEL__"
+
+
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 
 do_mount_fs() {
@@ -64,19 +71,20 @@ echo "Booting from init script in initramfs"
 # Workaround findfs failure on Raspberry Pi 3: unable to resolve 'LABEL=rootfs1'
 sleep 0.1
 
-BOOTFLAG_PARTITION="$(findfs LABEL=bootflags)"
-mkdir -p /mnt/bootflags
-mount $BOOTFLAG_PARTITION /mnt/bootflags
+# The boot flags (which indicate which rootfs bank to use) are temporarily stored
+# in the log partition. Mount the log partition so we can check them.
+LOG_PARTITION="$(findfs "LABEL=${LOG_PARTITION_LABEL}")"
+mkdir -p "$LOG_MOUNT_POINT"
+mount -o "$LOG_MOUNT_OPTS" "$LOG_PARTITION" "$LOG_MOUNT_POINT"
 
-# Check for the existence of a "rootfs2" on BOOTFLAG_PARTITION.
-# If it exists - use findfs to find the file system with label "rootfs2"
-# Else - use findfs to find the file system with ROOTFS_LABEL
-ROOTFS_LABEL="rootfs2"
-ROOTFS_FILE_INDICATOR="/mnt/bootflags/rootfs2"
-if [ ! -f "$ROOTFS_FILE_INDICATOR" ]
+# Check for the existence of a flag file indicating that we should use the
+# second rootfs bank rather than the first.
+ROOTFS_LABEL="${ROOTFS_LABEL_BASE}2"
+if [ ! -f "${BOOTFLAGS_DIR}/${ROOTFS_LABEL}" ]
 then
-    ROOTFS_LABEL="rootfs1"
+    ROOTFS_LABEL="${ROOTFS_LABEL_BASE}1"
 fi
+
 
 ROOTFS_PARTITION="$(findfs LABEL=$ROOTFS_LABEL)"
 
@@ -95,6 +103,7 @@ chown 0:0 /mnt/rootfs
 mount --move /dev /mnt/rootfs/dev
 mount --move /proc /mnt/rootfs/proc
 mount --move /sys /mnt/rootfs/sys
+mount --move "$LOG_MOUNT_POINT" "/mnt/rootfs${LOG_MOUNT_POINT}"
 cd /mnt/rootfs
 
 echo "Switching to $ROOTFS_PARTITION"

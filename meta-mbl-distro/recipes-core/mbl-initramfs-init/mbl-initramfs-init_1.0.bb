@@ -20,3 +20,6 @@ do_install() {
 inherit allarch
 
 FILES_${PN} += "/init"
+
+inherit mbl-var-placeholders
+MBL_VAR_PLACEHOLDER_FILES = "${D}/init"

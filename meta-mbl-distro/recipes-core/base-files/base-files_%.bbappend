@@ -49,6 +49,11 @@ do_install_append() {
         install -d "${D}${mountpoint}"
     done
 
+    # This is where update scripts put flag files. Create it here so that the
+    # update scripts don't have to know how to create it (i.e. whether to use
+    # just a "mkdir" or whether a partition needs mounting).
+    install -d "${D}${MBL_BOOTFLAGS_DIR}"
+
     # Add a line to fstab for each partition. FSTAB_LINES is set in the python
     # __anonymous() block above.
     while read fstab_line; do

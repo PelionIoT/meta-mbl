@@ -1,0 +1,244 @@
+From 254a70639b213b958c6198def0ce5159e3b0f15c Mon Sep 17 00:00:00 2001
+From: Rob Walton <rob.walton@arm.com>
+Date: Mon, 22 Jul 2019 20:31:27 +0100
+Subject: [PATCH] Add x509v3 extensions and signature alg parameters
+
+This patch also sets the SubjectPublicKeyInfo to the public key of the
+signing root. ATF doesn't use the AKID and SKID verification, which is
+standard for a typical CA.
+---
+ builtin/logical/pki/cert_util.go       | 110 ++++++++++++++++++++++++++++-----
+ builtin/logical/pki/path_issue_sign.go |  10 +++
+ 2 files changed, 105 insertions(+), 15 deletions(-)
+
+diff --git a/builtin/logical/pki/cert_util.go b/builtin/logical/pki/cert_util.go
+index 2ad925b..e9f6db0 100644
+--- a/builtin/logical/pki/cert_util.go
++++ b/builtin/logical/pki/cert_util.go
+@@ -12,15 +12,10 @@ import (
+ 	"crypto/x509/pkix"
+ 	"encoding/asn1"
+ 	"encoding/base64"
++	"encoding/hex"
+ 	"encoding/pem"
++	"errors"
+ 	"fmt"
+-	"net"
+-	"net/url"
+-	"regexp"
+-	"strconv"
+-	"strings"
+-	"time"
+-
+ 	"github.com/hashicorp/errwrap"
+ 	"github.com/hashicorp/vault/sdk/framework"
+ 	"github.com/hashicorp/vault/sdk/helper/certutil"
+@@ -31,6 +26,12 @@ import (
+ 	"golang.org/x/crypto/cryptobyte"
+ 	cbbasn1 "golang.org/x/crypto/cryptobyte/asn1"
+ 	"golang.org/x/net/idna"
++	"net"
++	"net/url"
++	"regexp"
++	"strconv"
++	"strings"
++	"time"
+ )
+ 
+ type certExtKeyUsage int
+@@ -77,7 +78,7 @@ type creationParameters struct {
+ 	ExtKeyUsageOIDs               []string
+ 	PolicyIdentifiers             []string
+ 	BasicConstraintsValidForNonCA bool
+-
++	Extensions                    []pkix.Extension
+ 	// Only used when signing a CA cert
+ 	UseCSRValues        bool
+ 	PermittedDNSDomains []string
+@@ -89,7 +90,8 @@ type creationParameters struct {
+ 	MaxPathLength int
+ 
+ 	// The duration the certificate will use NotBefore
+-	NotBeforeDuration time.Duration
++	NotBeforeDuration  time.Duration
++	SignatureAlgorithm x509.SignatureAlgorithm
+ }
+ 
+ type caInfoBundle struct {
+@@ -1015,7 +1017,6 @@ func generateCreationBundle(b *backend, data *dataBundle) error {
+ 				"cannot satisfy request, as TTL would result in notAfter %s that is beyond the expiration of the CA certificate at %s", notAfter.Format(time.RFC3339Nano), data.signingBundle.Certificate.NotAfter.Format(time.RFC3339Nano))}
+ 		}
+ 	}
+-
+ 	data.params = &creationParameters{
+ 		Subject:                       subject,
+ 		DNSNames:                      dnsNames,
+@@ -1034,6 +1035,19 @@ func generateCreationBundle(b *backend, data *dataBundle) error {
+ 		NotBeforeDuration:             data.role.NotBeforeDuration,
+ 	}
+ 
++	extensions, ok := data.apiData.GetOk("extensions")
++	if ok {
++		data.params.Extensions, _ = parseExtensionInputStrings(extensions.([]string))
++	}
++
++	sigAlg, ok := data.apiData.GetOk("signature_alg")
++	if ok {
++		if sigAlg == "pkcs1_1_5" {
++			data.params.SignatureAlgorithm = x509.SHA256WithRSA
++		} else if sigAlg == "pkcs1_2_1" {
++			data.params.SignatureAlgorithm = x509.SHA256WithRSAPSS
++		}
++	}
+ 	// Don't deal with URLs or max path length if it's self-signed, as these
+ 	// normally come from the signing bundle
+ 	if data.signingBundle == nil {
+@@ -1133,6 +1147,69 @@ func addKeyUsages(data *dataBundle, certTemplate *x509.Certificate) {
+ 	}
+ }
+ 
++func parseExtensionInputStrings(exts []string) ([]pkix.Extension, error) {
++	var output []pkix.Extension
++	for _, e := range exts {
++		ext, err := unmarshalExtension(e)
++		if err != nil {
++			return output, err
++		}
++		output = append(output, ext)
++	}
++	return output, nil
++}
++
++func objectIdentifierFromString(oid string) (oi asn1.ObjectIdentifier, err error) {
++	if len(oid) == 0 {
++		return nil, errors.New("zero length OBJECT IDENTIFIER")
++	}
++
++	if oid[0] == '{' {
++		// ASN.1 notation. (eg {iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9) messageDigest(4)})
++		parts := strings.Split(oid[1:len(oid)-1], " ")
++		oi = make(asn1.ObjectIdentifier, len(parts), len(parts))
++		for i, part := range parts {
++			idx := strings.IndexRune(part, '(')
++			oi[i], err = strconv.Atoi(part[idx+1 : len(part)-1])
++			if err != nil {
++				return
++			}
++		}
++	} else {
++		// Dot notation. (eg 1.2.840.113549.1.9.4)
++		parts := strings.Split(oid, ".")
++		oi = make(asn1.ObjectIdentifier, len(parts), len(parts))
++		for i, part := range parts {
++			oi[i], err = strconv.Atoi(part)
++			if err != nil {
++				return
++			}
++		}
++	}
++	return oi, nil
++}
++
++func unmarshalExtension(extData string) (pkix.Extension, error) {
++	substringList := strings.Split(extData, ";")
++
++	oid, err := objectIdentifierFromString(substringList[0])
++	if err != nil {
++		return pkix.Extension{}, err
++	}
++
++	val, hexerr := hex.DecodeString(substringList[2])
++	if hexerr != nil {
++		return pkix.Extension{}, err
++	}
++
++	critical := false
++	if substringList[1] == "true" {
++		critical = true
++	}
++	ext := pkix.Extension{Id: oid, Critical: critical, Value: val}
++	return ext, nil
++}
++
+ // addPolicyIdentifiers adds certificate policies extension
+ //
+ func addPolicyIdentifiers(data *dataBundle, certTemplate *x509.Certificate) {
+@@ -1192,6 +1269,9 @@ func createCertificate(data *dataBundle) (*certutil.ParsedCertBundle, error) {
+ 		certTemplate.NotBefore = time.Now().Add(-1 * data.params.NotBeforeDuration)
+ 	}
+ 
++	if len(data.params.Extensions) > 0 {
++		certTemplate.ExtraExtensions = data.params.Extensions
++	}
+ 	if err := handleOtherSANs(certTemplate, data.params.OtherSANs); err != nil {
+ 		return nil, errutil.InternalError{Err: errwrap.Wrapf("error marshaling other SANs: {{err}}", err).Error()}
+ 	}
+@@ -1224,7 +1304,7 @@ func createCertificate(data *dataBundle) (*certutil.ParsedCertBundle, error) {
+ 	if data.signingBundle != nil {
+ 		switch data.signingBundle.PrivateKeyType {
+ 		case certutil.RSAPrivateKey:
+-			certTemplate.SignatureAlgorithm = x509.SHA256WithRSA
++			certTemplate.SignatureAlgorithm = data.params.SignatureAlgorithm
+ 		case certutil.ECPrivateKey:
+ 			certTemplate.SignatureAlgorithm = x509.ECDSAWithSHA256
+ 		}
+@@ -1232,7 +1312,7 @@ func createCertificate(data *dataBundle) (*certutil.ParsedCertBundle, error) {
+ 		caCert := data.signingBundle.Certificate
+ 		certTemplate.AuthorityKeyId = caCert.SubjectKeyId
+ 
+-		certBytes, err = x509.CreateCertificate(rand.Reader, certTemplate, caCert, result.PrivateKey.Public(), data.signingBundle.PrivateKey)
++		certBytes, err = x509.CreateCertificate(rand.Reader, certTemplate, caCert, data.signingBundle.PrivateKey.Public(), data.signingBundle.PrivateKey)
+ 	} else {
+ 		// Creating a self-signed root
+ 		if data.params.MaxPathLength == 0 {
+@@ -1244,7 +1324,7 @@ func createCertificate(data *dataBundle) (*certutil.ParsedCertBundle, error) {
+ 
+ 		switch data.params.KeyType {
+ 		case "rsa":
+-			certTemplate.SignatureAlgorithm = x509.SHA256WithRSA
++			certTemplate.SignatureAlgorithm = data.params.SignatureAlgorithm
+ 		case "ec":
+ 			certTemplate.SignatureAlgorithm = x509.ECDSAWithSHA256
+ 		}
+@@ -1325,7 +1405,7 @@ func createCSR(data *dataBundle) (*certutil.ParsedCSRBundle, error) {
+ 
+ 	switch data.params.KeyType {
+ 	case "rsa":
+-		csrTemplate.SignatureAlgorithm = x509.SHA256WithRSA
++		csrTemplate.SignatureAlgorithm = data.params.SignatureAlgorithm
+ 	case "ec":
+ 		csrTemplate.SignatureAlgorithm = x509.ECDSAWithSHA256
+ 	}
+@@ -1392,7 +1472,7 @@ func signCertificate(data *dataBundle) (*certutil.ParsedCertBundle, error) {
+ 
+ 	switch data.signingBundle.PrivateKeyType {
+ 	case certutil.RSAPrivateKey:
+-		certTemplate.SignatureAlgorithm = x509.SHA256WithRSA
++		certTemplate.SignatureAlgorithm = x509.SHA256WithRSAPSS
+ 	case certutil.ECPrivateKey:
+ 		certTemplate.SignatureAlgorithm = x509.ECDSAWithSHA256
+ 	}
+diff --git a/builtin/logical/pki/path_issue_sign.go b/builtin/logical/pki/path_issue_sign.go
+index 1ace807..899bab3 100644
+--- a/builtin/logical/pki/path_issue_sign.go
++++ b/builtin/logical/pki/path_issue_sign.go
+@@ -26,6 +26,16 @@ func pathIssue(b *backend) *framework.Path {
+ 	}
+ 
+ 	ret.Fields = addNonCACommonFields(map[string]*framework.FieldSchema{})
++	ret.Fields["extensions"] = &framework.FieldSchema{
++		Type:        framework.TypeStringSlice,
++		Default:     "",
++		Description: "Additional x509v3 Extensions as a list of DER encoded strings.",
++	}
++	ret.Fields["signature_alg"] = &framework.FieldSchema{
++		Type:        framework.TypeString,
++		Default:     "pkcs1_1_5",
++		Description: "Set the signature algorithm used to sign the certificate. Options are  pkcs1_1_5 or pkcs1_2_1",
++	}
+ 	return ret
+ }
+ 
+-- 
+2.7.4
+

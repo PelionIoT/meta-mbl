@@ -57,13 +57,15 @@ ATF_COMPILE_FLAGS = "-C ${S} \
       CRTTOOL=${S}/tools/cert_create/cert_create \
       CRTTOOLPATH=${S}/tools/fiptool \
       GENERATE_COT=1 \
-      LOG_LEVEL=40 \
       MBEDTLS_DIR=${WORKDIR}/mbedtls \
       PLAT=${PLATFORM} \
       TRUSTED_BOARD_BOOT=1 \
       USE_TBBR_DEFS=1 \
       FIP_ROM_OFFSET=${MBL_FIP_ROM_OFFSET} \
 "
+
+PACKAGECONFIG[silent] = ""
+ATF_COMPILE_FLAGS += "${@bb.utils.contains("PACKAGECONFIG", "silent", " LOG_LEVEL=0", " LOG_LEVEL=40", d)}"
 
 # Default name of fip binary from ATF build.
 FIP_BIN = "fip.bin"

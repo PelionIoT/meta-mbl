@@ -66,12 +66,14 @@ OPTEE_ARCH = "arm32"
 #
 EXTRA_OEMAKE = " \
                 CFG_DT=y \
-                CFG_TEE_CORE_LOG_LEVEL=1 \
                 LDFLAGS= \
                 LIBGCC_LOCATE_CFLAGS=--sysroot=${STAGING_DIR_HOST} \
                 NOWERROR=1 \
                 PLATFORM=${OPTEEMACHINE} \
          "
+
+PACKAGECONFIG[silent] = ""
+EXTRA_OEMAKE += "${@bb.utils.contains("PACKAGECONFIG", "silent", " CFG_TEE_CORE_LOG_LEVEL=0", " CFG_TEE_CORE_LOG_LEVEL=1", d)}"
 
 # CROSS_COMPILE_core: Set the cross-compiler for OPTEE core.
 # ta-targets: Set the ta-targets. On WaRP7 and PICO IMX7D it should be ta_arm32

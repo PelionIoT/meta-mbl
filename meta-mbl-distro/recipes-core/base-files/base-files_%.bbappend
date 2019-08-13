@@ -1,13 +1,15 @@
 # Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: MIT
-
 FILESEXTRAPATHS_append := "${THISDIR}/files:"
 
 SRC_URI_append = " file://fstab "
-
 # override hostname in build time. hostname will be set by hostname.sh init script
 hostname_pn-base-files = ""
+
+# This is where write_partition_info temporarily stores the partition variable
+# files. The files are installed into the factory config partition in do_install.
+MBL_PART_FILES_TMP_DIR = "${WORKDIR}/part-info-tmp"
 
 python __anonymous() {
     # MBL_PARTITION_INFOS is set in mbl-partitions.bbclass. It's a list of
@@ -42,6 +44,31 @@ python __anonymous() {
         d.appendVar("FSTAB_LINES", fstab_line)
 }
 
+# Save the values of all the variables created by mbl-partitions.bbclass.
+# Each value will be in its own file with the variable name as the
+# file name. These files will end up in /config/factory on the target.
+python do_write_partition_vars() {
+    import pathlib
+
+    # Create a temporary directory to hold the partition var files.
+    # They will be picked up from the temporary dir in do_install.
+    part_files_tmp = pathlib.Path(d.getVar("MBL_PART_FILES_TMP_DIR"))
+    part_files_tmp.mkdir(parents=True, exist_ok=True)
+
+    # MBL_PARTITION_VARS is a list of the variable names set in mbl-partitions.
+    part_vars = d.getVar("MBL_PARTITION_VARS", True)
+    if not part_vars:
+        bb.fatal("Could not read MBL_PARTITION_VARS.")
+
+    for var in part_vars.split():
+        var_value = d.getVar(var, True)
+        file_path = pathlib.Path(part_files_tmp, var)
+        file_path.write_text(var_value)
+}
+
+addtask write_partition_vars before do_install after do_compile
+do_write_partition_vars[vardeps] += "MBL_PARTITION_VARS ${MBL_PARTITION_VARS}"
+
 do_install_append() {
     # Ensure that mountpoints specified in fstab exist on the root filesystem
     # MOUNT_POINTS is set in the python __anonymous() block above
@@ -62,4 +89,14 @@ do_install_append() {
 ${FSTAB_LINES}
 EOF
     cat ${D}${sysconfdir}/fstab
+
+    # This directory is where the values of mbl-partitions variables are stored
+    # as files on the factory config partition.
+    MBL_PARTITIONS_DIR="${D}${MBL_FACTORY_CONFIG_MOUNT_POINT}/part-info"
+    install -d "${MBL_PARTITIONS_DIR}"
+
+    # Install the partition variable files with correct permissions.
+    for fpath in "${MBL_PART_FILES_TMP_DIR}"/*; do
+        install -m 0444 "${fpath}" "${MBL_PARTITIONS_DIR}"
+    done
 }

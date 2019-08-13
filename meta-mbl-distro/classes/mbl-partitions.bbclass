@@ -122,7 +122,7 @@ MBL_PARTITION_NAMES = ""
 # (and default) case, "WKS_BOOTLOADER1" will correspond with an image
 # containing TF-A BL2 and "WKS_BOOTLOADER2" will correspond with an image
 # containing TF-A BL3, OP-TEE and U-Boot.
- 
+
 # ------------------------------------------------------------------------------
 # MBR
 # ------------------------------------------------------------------------------
@@ -243,7 +243,6 @@ MBL_HOME_MOUNT_POINT = "${MBL_HOME_DIR}"
 MBL_HOME_LABEL ?= "home"
 MBL_HOME_DEFAULT_SIZE_MiB ?= "450"
 MBL_PARTITION_NAMES += "HOME"
-
 
 # ------------------------------------------------------------------------------
 # Validate partition variable values and compute missing values
@@ -520,4 +519,19 @@ python __anonymous() {
             prev_fs_part_number = new_fs_part_number
 
     d.setVar("MBL_PARTITION_INFOS", part_infos)
+
+    # Create a list of the variables set in this class so recipes can easily query the
+    # values. We need to store the list in a temporary variable so we don't mutate the
+    # data store's internal dict while iterating over it, as that causes bitbake to
+    # raise an exception.
+    part_vars_list = []
+    # We need to keep the variable list sorted so bitbake doesn't throw a basehash
+    # mismatched error every time this file is parsed (which happens often).
+    mbl_part_names = d.getVar("MBL_PARTITION_NAMES").split()
+    for var in sorted(d.localkeys()):
+        if var.startswith("MBL_") and any(name in var for name in mbl_part_names):
+            part_vars_list.append(var)
+
+    part_vars = " ".join(part_vars_list)
+    d.appendVar("MBL_PARTITION_VARS", part_vars)
 }

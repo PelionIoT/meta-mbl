@@ -11,4 +11,4 @@
 # In Production images we want the following pakages to be silent
 # and don't print any messages into the serial console.
 PACKAGECONFIG_append_pn-u-boot-fslc = " silent"
-PACKAGECONFIG_append_pn-atf-imx7s-warp-mbl = " silent"
+PACKAGECONFIG_append_pn-atf-${MACHINE} = " silent"

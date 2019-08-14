@@ -7,14 +7,26 @@ inherit mbl-uboot-sign
 SRCBRANCH = "imx_v2018.03_4.14.78_1.0.0_ga-mbl"
 SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1 \
 "
-SRC_URI_append_imx8mmevk = "file://0002-imx8mmevk-mbl-set-noenv.patch"
-
 # MBL_UBOOT_VERSION should be updated to match version pointed to by SRCREV
 MBL_UBOOT_VERSION = "2018.03"
 
 SRCREV = "e9cb2c6d8a6227a189702ab2cfc7b1273689ddb2"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/u-boot-imx:"
+
+
+do_configure_prepend_imx8mmevk-mbl() {
+    # When setting UBOOT_CONFIG variable the do_configure defined in
+    # u-boot.inc in oe-core doesn't call the merge_config.sh.
+    # We added this workaround to call the merge_config.sh and prevent
+    # patching the machine defconfig file for imx8mmevk-mbl.
+    if [ -n "${UBOOT_CONFIG}" ]; then
+        if [ -n "${UBOOT_MACHINE}" ]; then
+            UBOOT_DEFCONFIG=$(echo "${UBOOT_MACHINE}" | sed 's/_config/_defconfig/g' | sed 's/ //g')
+            KCONFIG_CONFIG=${S}/configs/${UBOOT_DEFCONFIG} merge_config.sh -m ${S}/configs/${UBOOT_DEFCONFIG} ${@" ".join(find_cfgs(d))}
+        fi
+    fi
+}
 
 do_compile_append_imx8mmevk-mbl() {
 	# Copy device tree to default name for fit image signature verification usage.

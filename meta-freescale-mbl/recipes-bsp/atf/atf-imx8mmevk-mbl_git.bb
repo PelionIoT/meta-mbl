@@ -7,13 +7,6 @@ DEPENDS += "u-boot-tools-native"
 
 require recipes-bsp/atf/atf.inc
 
-# MBL_ATF_VERSION should be updated to match version pointed to by SRCREV
-MBL_ATF_VERSION = "1.5"
-SRCREV_atf = "ba3f2f0002ca1277307b96d975b980f9b55d470c"
-
-LIC_FILES_CHKSUM_remove = "file://license.rst;md5=90153916317c204fade8b8df15739cde"
-LIC_FILES_CHKSUM_append = "file://license.rst;md5=3b83ef96387f14655fc854ddc3c6bd57"
-
 PLATFORM = "imx8mm"
 
 # SPD= tells ATF to use optee for runtime SPD instead of internal ATF code.

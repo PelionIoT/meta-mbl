@@ -18,8 +18,8 @@ SRC_URI_append_raspberrypi3-mbl = " \
 "
 
 do_compile_append_raspberrypi3-mbl() {
-    # Link device tree to default name for fit image signature verification usage.
-    ln -sf dts/dt.dtb ${UBOOT_DTB_BINARY}
+    # Copy device tree to default name for fit image signature verification usage.
+    cp dts/dt.dtb ${UBOOT_DTB_BINARY}
 }
 
 do_deploy_append() {

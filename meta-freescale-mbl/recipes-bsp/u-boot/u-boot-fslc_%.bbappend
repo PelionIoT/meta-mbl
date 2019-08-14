@@ -21,8 +21,8 @@ LIC_FILES_CHKSUM = "file://Licenses/README;md5=30503fd321432fc713238f582193b78e"
 DEPENDS += "flex-native bison-native"
 
 do_compile_append_imx7s-warp-mbl() {
-	# Link device tree to default name for fit image signature verification usage.
-	ln -snf ${B}/dts/dt.dtb ${B}/${UBOOT_DTB_BINARY}
+	# Copy device tree to default name for fit image signature verification usage.
+	cp ${B}/dts/dt.dtb ${B}/${UBOOT_DTB_BINARY}
 	# Generate u-boot-dtb.cfgout for board early initlization.
 	oe_runmake u-boot-dtb.imx
 }

@@ -17,8 +17,8 @@ SRCREV = "e9cb2c6d8a6227a189702ab2cfc7b1273689ddb2"
 FILESEXTRAPATHS_prepend := "${THISDIR}/u-boot-imx:"
 
 do_compile_append_imx8mmevk-mbl() {
-	# Link device tree to default name for fit image signature verification usage.
-	ln -sf ${config}/dts/dt.dtb ${B}/${UBOOT_DTB_BINARY}
+	# Copy device tree to default name for fit image signature verification usage.
+	cp ${config}/dts/dt.dtb ${B}/${UBOOT_DTB_BINARY}
 }
 
 do_deploy_append() {

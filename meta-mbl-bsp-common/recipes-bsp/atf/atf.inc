@@ -26,7 +26,7 @@ LIC_FILES_CHKSUM = "file://license.rst;md5=90153916317c204fade8b8df15739cde \
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
 
-SRCREV_FORMAT = "kernel"
+SRCREV_FORMAT = "atf"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 PV = "${MBL_ATF_VERSION}+git${SRCPV}"
 

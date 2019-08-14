@@ -528,7 +528,7 @@ python __anonymous() {
     # We need to keep the variable list sorted so bitbake doesn't throw a basehash
     # mismatched error every time this file is parsed (which happens often).
     mbl_part_names = d.getVar("MBL_PARTITION_NAMES").split()
-    for var in sorted(d.localkeys()):
+    for var in sorted(d):
         if var.startswith("MBL_") and any(name in var for name in mbl_part_names):
             part_vars_list.append(var)
 

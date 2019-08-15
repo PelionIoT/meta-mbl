@@ -11,7 +11,9 @@ SRCREV = "c0c4ee5fce01ec0818c4f27ce029d9b16c8849ad"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1 "
+SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1 \
+           ${@bb.utils.contains_any('PACKAGECONFIG','noconsole silent',' file://0002-set-silent-envs.patch','',d)} \
+          "
 
 # To override the boot menu - set the default configuration
 SRC_URI_append_imx6ul-pico-mbl = " file://set-pico-imx6ul-config-default-fdt-file-mbl.cfg"

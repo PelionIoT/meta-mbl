@@ -1,0 +1,52 @@
+Index: git/include/configs/imx8mm_evk.h
+===================================================================
+--- git.orig/include/configs/imx8mm_evk.h
++++ git/include/configs/imx8mm_evk.h
+@@ -137,15 +137,30 @@
+ 	"emmc_dev=1\0"\
+ 	"sd_dev=0\0" \
+ 
++#if defined(CONFIG_SILENT_CONSOLE)
++#define SILENT_CONSOLE_VAL 1
++#else
++#define SILENT_CONSOLE_VAL 0
++#endif
++
++#if defined(CONFIG_SILENT_U_BOOT_ONLY)
++#define SILENT_LINUX_CONSOLE_VAL 0
++#else
++#define SILENT_LINUX_CONSOLE_VAL 1
++#endif
++
++
+ /* Initial environment variables */
+ #if defined(CONFIG_NAND_BOOT)
+ #define CONFIG_EXTRA_ENV_SETTINGS \
++    "silent=" __stringify(SILENT_CONSOLE_VAL) "\0" \
++    "silent_linux=" __stringify(SILENT_LINUX_CONSOLE_VAL) "\0" \
+ 	CONFIG_MFG_ENV_SETTINGS \
+ 	"fdt_addr=0x43000000\0"			\
+ 	"fdt_high=0xffffffffffffffff\0" \
+ 	"mtdparts=" MFG_NAND_PARTITION "\0" \
+-	"console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200\0" \
+-	"bootargs=console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200 ubi.mtd=5 "  \
++	"console=ttymxc1,115200 \0" \
++	"bootargs=console=ttymxc1,115200 ubi.mtd=5 "  \
+ 		"root=ubi0:nandrootfs rootfstype=ubifs "		     \
+ 		MFG_NAND_PARTITION \
+ 		"\0" \
+@@ -155,11 +170,13 @@
+ 
+ #else
+ #define CONFIG_EXTRA_ENV_SETTINGS		\
++    "silent=" __stringify(SILENT_CONSOLE_VAL) "\0" \
++    "silent_linux=" __stringify(SILENT_LINUX_CONSOLE_VAL) "\0" \
+ 	CONFIG_MFG_ENV_SETTINGS \
+ 	JAILHOUSE_ENV \
+ 	"script=boot.scr\0" \
+ 	"image=Image\0" \
+-	"console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200\0" \
++	"console=ttymxc1,115200 \0" \
+ 	"fdt_addr=0x43000000\0"			\
+ 	"fdt_high=0xffffffffffffffff\0"		\
+ 	"boot_fdt=try\0" \

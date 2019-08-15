@@ -1,0 +1,27 @@
+Index: git/include/configs/pico-imx6ul.h
+===================================================================
+--- git.orig/include/configs/pico-imx6ul.h
++++ git/include/configs/pico-imx6ul.h
+@@ -71,7 +71,22 @@
+ 
+ #define CONFIG_SYS_MMC_IMG_LOAD_PART	1
+ 
++#if defined(CONFIG_SILENT_CONSOLE)
++#define SILENT_CONSOLE_VAL 1
++#else
++#define SILENT_CONSOLE_VAL 0
++#endif
++
++#if defined(CONFIG_SILENT_U_BOOT_ONLY)
++#define SILENT_LINUX_CONSOLE_VAL 0
++#else
++#define SILENT_LINUX_CONSOLE_VAL 1
++#endif
++
++
+ #define CONFIG_EXTRA_ENV_SETTINGS \
++    "silent=" __stringify(SILENT_CONSOLE_VAL) "\0" \
++    "silent_linux=" __stringify(SILENT_LINUX_CONSOLE_VAL) "\0" \
+ 	"script=boot.scr\0" \
+ 	"image=zImage\0" \
+ 	"console=ttymxc5\0" \

@@ -65,7 +65,14 @@ do_mknod /dev/console c 5 1
 do_mknod /dev/null c 1 3
 do_mknod /dev/zero c 1 5
 
-exec </dev/console >/dev/console 2>/dev/console
+
+# We need to check whether we have an active console to call the exec with the stdout, stdin and stderr redirections.
+# For production images, u-boot sets the kernel console command line to "console=", hence there is no active console.
+if [ $(cat /sys/class/tty/console/active | wc -c) -gt 0 ]
+then
+    exec </dev/console >/dev/console 2>/dev/console
+fi
+
 echo "Booting from init script in initramfs"
 
 # Workaround findfs failure on Raspberry Pi 3: unable to resolve 'LABEL=rootfs1'

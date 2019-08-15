@@ -15,6 +15,7 @@ SRC_URI_append_raspberrypi3-mbl = " \
 		file://enable-fit-mbl.cfg \
 		file://enable-random-macaddr-mbl.cfg \
 		file://enable-fastboot.cfg \
+		${@bb.utils.contains_any('PACKAGECONFIG','noconsole silent',' file://0003-set-silent-envs.patch','',d)} \
 "
 
 do_compile_append_raspberrypi3-mbl() {

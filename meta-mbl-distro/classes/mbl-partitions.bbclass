@@ -164,6 +164,22 @@ MBL_WKS_BOOTLOADER2_NO_FS = "1"
 MBL_PARTITION_NAMES += "WKS_BOOTLOADER2"
 
 # ------------------------------------------------------------------------------
+# BANK_AND_UPDATE_STATE (non-file system; single bank)
+# ------------------------------------------------------------------------------
+# BANK_AND_UPDATE_STATE will be accessed by BL2. Make it easy for BL2 to locate
+# by just using a fixed offset of 48MiB, which is unlikely to share an erase
+# block with WKS_BOOTLOADER2.
+# In order to implement transactional operations in this storage we need
+# multiple flash erase blocks, but we don't have a detailed design yet so
+# reserve 128MiB to give us some flexibility.
+#
+MBL_BANK_AND_UPDATE_STATE_DEFAULT_SIZE_MiB = "128"
+MBL_BANK_AND_UPDATE_STATE_OFFSET_BANK1_KiB ?= "49152"
+MBL_BANK_AND_UPDATE_STATE_ALIGN_KiB ?= "1"
+MBL_BANK_AND_UPDATE_STATE_NO_FS = "1"
+MBL_PARTITION_NAMES += "BANK_AND_UPDATE_STATE"
+
+# ------------------------------------------------------------------------------
 # WKS_BOOTLOADER_FS (file system; single bank)
 # ------------------------------------------------------------------------------
 # WKS_BOOTLOADER_FS, if it exists, has a single file system partition and can

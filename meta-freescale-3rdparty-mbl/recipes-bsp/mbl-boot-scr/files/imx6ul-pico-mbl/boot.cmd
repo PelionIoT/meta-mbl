@@ -11,6 +11,12 @@ load mmc 0:1 ${kernel_addr_r} ${image}
 # Load the fdt
 load mmc 0:1 ${fdt_addr_r} ${fdtfile}
 
+# Apply OP-TEE provided overlay
+setenv fdtovaddr 0x83100000
+fdt addr ${fdt_addr}
+fdt resize 0x1000
+fdt apply ${fdtovaddr}
+
 # find uuid
 run finduuid
 

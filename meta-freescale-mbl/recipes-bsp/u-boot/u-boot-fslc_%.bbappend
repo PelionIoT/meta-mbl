@@ -4,19 +4,18 @@
 
 # MBL_UBOOT_VERSION should be updated to match version pointed to by SRCREV
 MBL_UBOOT_VERSION = "2018.11-rc1"
+MBL_UBOOT_VERSION_imx6ul-pico-mbl = "v2019.10-rc1"
 
 inherit mbl-uboot-sign
 
 SRCREV = "c0c4ee5fce01ec0818c4f27ce029d9b16c8849ad"
+SRCREV_imx6ul-pico-mbl = "ee3b9f43dfdde29ba939342bbdc22a0549015979"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1 \
            ${@bb.utils.contains_any('PACKAGECONFIG','noconsole silent',' file://0002-set-silent-envs.patch','',d)} \
           "
-
-# To override the boot menu - set the default configuration
-SRC_URI_append_imx6ul-pico-mbl = " file://set-pico-imx6ul-config-default-fdt-file-mbl.cfg"
 
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=30503fd321432fc713238f582193b78e"
 
@@ -33,10 +32,6 @@ DCD_FILE_PATH_imx7s-warp-mbl = "${B}"
 DCD_FILE_PATH_imx7d-pico-mbl = "${B}"
 DCD_FILE_PATH_imx6ul-pico-mbl = "${B}"
 DCD_FILE_PATH_imx6ul-des0258-mbl = "${B}"
-
-do_deploy_prepend_imx6ul-pico-mbl() {
-	cp ${B}/spl/u-boot-spl.cfgout ${B}/u-boot-dtb.cfgout
-}
 
 # Temporary prepend to create u-boot-dtb.cfgout
 do_deploy_prepend_imx6ul-des0258-mbl() {

@@ -2,6 +2,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-require atf-imx7-mbl_git.inc
+require atf-imx6-imx7-mbl_git.inc
 
 PLATFORM = "warp7"

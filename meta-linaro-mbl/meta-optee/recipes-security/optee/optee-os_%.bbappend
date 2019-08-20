@@ -16,6 +16,11 @@ SRCREV="f398d4923da875370149ffee45c963d7adb41495"
 SRC_URI="git://github.com/OP-TEE/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 "
+SRCREV_imx6ul-pico-mbl="476fc86142f058c7190733243f48c5c0115157e9"
+SRC_URI_imx6ul-pico-mbl="git://git.linaro.org/landing-teams/working/mbl/optee_os.git;protocol=https;nobranch=1 \
+file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
+"
+SRC_URI_append_imx8mmevk-mbl = " file://0001-generic_boot-init-new-dtb-if-CFG_DT_ADDR-defined.patch"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/optee-os:"
 
@@ -23,7 +28,7 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=c1f21c4f72f372ef38a5a4aee55ec173"
 OPTEEMACHINE_imx7s-warp-mbl="imx-mx7swarp7_mbl"
 OPTEEMACHINE_imx7d-pico-mbl="imx-mx7dpico_mbl"
 OPTEEMACHINE_imx8mmevk-mbl = "imx-imx8mmevk"
-OPTEEMACHINE_imx6ul-pico-mbl = "imx-mx6ulevk"
+OPTEEMACHINE_imx6ul-pico-mbl = "imx-mx6ulpico_mbl"
 OPTEEMACHINE_imx6ul-des0258-mbl = "imx-mx6ulevk"
 OPTEEOUTPUTMACHINE_imx="imx"
 OPTEEMACHINE_raspberrypi3-mbl="rpi3"

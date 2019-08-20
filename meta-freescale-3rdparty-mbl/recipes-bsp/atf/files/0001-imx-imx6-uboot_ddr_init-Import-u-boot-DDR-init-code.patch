@@ -1,0 +1,1650 @@
+From fb3bb64c856fc5ccb822a4781465bf33336022dc Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 29 Jul 2019 17:12:22 +0100
+Subject: [PATCH 1/2] imx: imx6: uboot_ddr_init: Import u-boot DDR init code
+
+Import u-boot DDR init code for imx6ul. Since the u-boot stuff is GPL-2.0+
+we can't send it to the ATF repo. Therefore this patch must not be included
+in any PR to ATF.
+
+It should probably be a standalone patch in the meta-mbl layer and applied
+during building of the i.MX6 ATF binary.
+
+For now just stack it as a patch for the Linaro landing area to host.
+
+Original code from u-boot upstream:
+
+83d290c56fab2d38cd1ab4c4cc7099559c1d5046
+https://gitlab.denx.de/u-boot/u-boot/blob/master/arch/arm/mach-imx/mx6/ddr.c
+https://gitlab.denx.de/u-boot/u-boot/blob/master/include/linux/kernel.h
+https://gitlab.denx.de/u-boot/u-boot/blob/master/board/technexion/pico-imx6ul/spl.c
+https://gitlab.denx.de/u-boot/u-boot/blob/master/arch/arm/include/asm/arch-mx6/mx6-ddr.h
+https://gitlab.denx.de/u-boot/u-boot/blob/master/arch/arm/include/asm/arch-mx6/mx6ul-ddr.h
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/imx6/common/uboot_ddr_init/ddr.c     | 674 ++++++++++++++++++
+ .../uboot_ddr_init/imx6ul_pico_init_dram.c    |  49 ++
+ .../uboot_ddr_init/imx6ul_pico_init_dram.h    |  12 +
+ plat/imx/imx6/common/uboot_ddr_init/kernel.h  | 261 +++++++
+ plat/imx/imx6/common/uboot_ddr_init/mx6-ddr.h | 532 ++++++++++++++
+ .../imx6/common/uboot_ddr_init/mx6ul-ddr.h    |  44 ++
+ 6 files changed, 1572 insertions(+)
+ create mode 100644 plat/imx/imx6/common/uboot_ddr_init/ddr.c
+ create mode 100644 plat/imx/imx6/common/uboot_ddr_init/imx6ul_pico_init_dram.c
+ create mode 100644 plat/imx/imx6/common/uboot_ddr_init/imx6ul_pico_init_dram.h
+ create mode 100644 plat/imx/imx6/common/uboot_ddr_init/kernel.h
+ create mode 100644 plat/imx/imx6/common/uboot_ddr_init/mx6-ddr.h
+ create mode 100644 plat/imx/imx6/common/uboot_ddr_init/mx6ul-ddr.h
+
+diff --git a/plat/imx/imx6/common/uboot_ddr_init/ddr.c b/plat/imx/imx6/common/uboot_ddr_init/ddr.c
+new file mode 100644
+index 000000000..0d417ab9e
+--- /dev/null
++++ b/plat/imx/imx6/common/uboot_ddr_init/ddr.c
+@@ -0,0 +1,674 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2014 Gateworks Corporation
++ * Author: Tim Harvey <tharvey@gateworks.com>
++ */
++
++#include <arch_helpers.h>
++#include <assert.h>
++#include <common/bl_common.h>
++#include <drivers/console.h>
++#include <lib/mmio.h>
++#include <lib/optee_utils.h>
++#include <lib/utils.h>
++#include <common/debug.h>
++#include <common/desc_image_load.h>
++#include <drivers/delay_timer.h>
++#include <imx_regs.h>
++#include <platform_def.h>
++#include <atf_uboot_compat.h>
++
++/* imported from u-boot */
++#include <kernel.h>
++#include <mx6-ddr.h>
++
++/*
++ * Configure mx6 mmdc registers based on:
++ *  - board-specific memory configuration
++ *  - board-specific calibration data
++ *  - ddr3/lpddr2 chip details
++ *
++ * The various calculations here are derived from the Freescale
++ * 1. i.Mx6DQSDL DDR3 Script Aid spreadsheet (DOC-94917) designed to generate
++ *    MMDC configuration registers based on memory system and memory chip
++ *    parameters.
++ *
++ * 2. i.Mx6SL LPDDR2 Script Aid spreadsheet V0.04 designed to generate MMDC
++ *    configuration registers based on memory system and memory chip
++ *    parameters.
++ *
++ * The defaults here are those which were specified in the spreadsheet.
++ * For details on each register, refer to the IMX6DQRM and/or IMX6SDLRM
++ * and/or IMX6SLRM section titled MMDC initialization.
++ */
++#define MR(val, ba, cmd, cs1) \
++	((val << 16) | (1 << 15) | (cmd << 4) | (cs1 << 3) | ba)
++#define MMDC1(entry, value) do {					  \
++	if (!is_mx6sx() && !is_mx6ul() && !is_mx6ull() && !is_mx6sl())	  \
++		mmdc1->entry = value;					  \
++	} while (0)
++
++/*
++ * According JESD209-2B-LPDDR2: Table 103
++ * WL: write latency
++ */
++static int lpddr2_wl(uint32_t mem_speed)
++{
++	switch (mem_speed) {
++	case 1066:
++	case 933:
++		return 4;
++	case 800:
++		return 3;
++	case 677:
++	case 533:
++		return 2;
++	case 400:
++	case 333:
++		return 1;
++	default:
++		INFO("invalid memory speed\n");
++		panic();
++	}
++
++	return 0;
++}
++
++/*
++ * According JESD209-2B-LPDDR2: Table 103
++ * RL: read latency
++ */
++static int lpddr2_rl(uint32_t mem_speed)
++{
++	switch (mem_speed) {
++	case 1066:
++		return 8;
++	case 933:
++		return 7;
++	case 800:
++		return 6;
++	case 677:
++		return 5;
++	case 533:
++		return 4;
++	case 400:
++	case 333:
++		return 3;
++	default:
++		INFO("invalid memory speed\n");
++		panic();
++	}
++
++	return 0;
++}
++
++void mx6_lpddr2_cfg(const struct mx6_ddr_sysinfo *sysinfo,
++		    const struct mx6_mmdc_calibration *calib,
++		    const struct mx6_lpddr2_cfg *lpddr2_cfg)
++{
++	volatile struct mmdc_p_regs *mmdc0;
++	uint32_t val;
++	uint8_t tcke, tcksrx, tcksre, trrd;
++	uint8_t twl, txp, tfaw, tcl;
++	uint16_t tras, twr, tmrd, trtp, twtr, trfc, txsr;
++	uint16_t trcd_lp, trppb_lp, trpab_lp, trc_lp;
++	uint16_t cs0_end;
++	uint8_t coladdr;
++	int clkper; /* clock period in picoseconds */
++	int clock;  /* clock freq in mHz */
++	int cs;
++
++	/* only support 16/32 bits */
++	if (sysinfo->dsize > 1)
++		panic();
++
++	mmdc0 = (struct mmdc_p_regs *)MMDC_P0_BASE;
++
++	clock = mxc_get_clock(MXC_DDR_CLK) / 1000000U;
++	clkper = (1000 * 1000) / clock; /* pico seconds */
++
++	twl = lpddr2_wl(lpddr2_cfg->mem_speed) - 1;
++
++	/* LPDDR2-S2 and LPDDR2-S4 have the same tRFC value. */
++	switch (lpddr2_cfg->density) {
++	case 1:
++	case 2:
++	case 4:
++		trfc = DIV_ROUND_UP(130000, clkper) - 1;
++		txsr = DIV_ROUND_UP(140000, clkper) - 1;
++		break;
++	case 8:
++		trfc = DIV_ROUND_UP(210000, clkper) - 1;
++		txsr = DIV_ROUND_UP(220000, clkper) - 1;
++		break;
++	default:
++		/*
++		 * 64Mb, 128Mb, 256Mb, 512Mb are not supported currently.
++		 */
++		panic();
++		break;
++	}
++	/*
++	 * txpdll, txpr, taonpd and taofpd are not relevant in LPDDR2 mode,
++	 * set them to 0. */
++	txp = DIV_ROUND_UP(7500, clkper) - 1;
++	tcke = 3;
++	if (lpddr2_cfg->mem_speed == 333)
++		tfaw = DIV_ROUND_UP(60000, clkper) - 1;
++	else
++		tfaw = DIV_ROUND_UP(50000, clkper) - 1;
++	trrd = DIV_ROUND_UP(10000, clkper) - 1;
++
++	/* tckesr for LPDDR2 */
++	tcksre = DIV_ROUND_UP(15000, clkper);
++	tcksrx = tcksre;
++	twr  = DIV_ROUND_UP(15000, clkper) - 1;
++	/*
++	 * tMRR: 2, tMRW: 5
++	 * tMRD should be set to max(tMRR, tMRW)
++	 */
++	tmrd = 5;
++	tras = DIV_ROUND_UP(lpddr2_cfg->trasmin, clkper / 10) - 1;
++	/* LPDDR2 mode use tRCD_LP filed in MDCFG3. */
++	trcd_lp = DIV_ROUND_UP(lpddr2_cfg->trcd_lp, clkper / 10) - 1;
++	trc_lp = DIV_ROUND_UP(lpddr2_cfg->trasmin + lpddr2_cfg->trppb_lp,
++			      clkper / 10) - 1;
++	trppb_lp = DIV_ROUND_UP(lpddr2_cfg->trppb_lp, clkper / 10) - 1;
++	trpab_lp = DIV_ROUND_UP(lpddr2_cfg->trpab_lp, clkper / 10) - 1;
++	/* To LPDDR2, CL in MDCFG0 refers to RL */
++	tcl = lpddr2_rl(lpddr2_cfg->mem_speed) - 3;
++	twtr = DIV_ROUND_UP(7500, clkper) - 1;
++	trtp = DIV_ROUND_UP(7500, clkper) - 1;
++
++	cs0_end = 4 * sysinfo->cs_density - 1;
++
++	VERBOSE("density:%d Gb (%d Gb per chip)\n",
++	      sysinfo->cs_density, lpddr2_cfg->density);
++	VERBOSE("clock: %dMHz (%d ps)\n", clock, clkper);
++	VERBOSE("memspd:%d\n", lpddr2_cfg->mem_speed);
++	VERBOSE("trcd_lp=%d\n", trcd_lp);
++	VERBOSE("trppb_lp=%d\n", trppb_lp);
++	VERBOSE("trpab_lp=%d\n", trpab_lp);
++	VERBOSE("trc_lp=%d\n", trc_lp);
++	VERBOSE("tcke=%d\n", tcke);
++	VERBOSE("tcksrx=%d\n", tcksrx);
++	VERBOSE("tcksre=%d\n", tcksre);
++	VERBOSE("trfc=%d\n", trfc);
++	VERBOSE("txsr=%d\n", txsr);
++	VERBOSE("txp=%d\n", txp);
++	VERBOSE("tfaw=%d\n", tfaw);
++	VERBOSE("tcl=%d\n", tcl);
++	VERBOSE("tras=%d\n", tras);
++	VERBOSE("twr=%d\n", twr);
++	VERBOSE("tmrd=%d\n", tmrd);
++	VERBOSE("twl=%d\n", twl);
++	VERBOSE("trtp=%d\n", trtp);
++	VERBOSE("twtr=%d\n", twtr);
++	VERBOSE("trrd=%d\n", trrd);
++	VERBOSE("cs0_end=%d\n", cs0_end);
++	VERBOSE("ncs=%d\n", sysinfo->ncs);
++
++	/*
++	 * board-specific configuration:
++	 *  These values are determined empirically and vary per board layout
++	 */
++	mmdc0->mpwldectrl0 = calib->p0_mpwldectrl0;
++	mmdc0->mpwldectrl1 = calib->p0_mpwldectrl1;
++	mmdc0->mpdgctrl0 = calib->p0_mpdgctrl0;
++	mmdc0->mpdgctrl1 = calib->p0_mpdgctrl1;
++	mmdc0->mprddlctl = calib->p0_mprddlctl;
++	mmdc0->mpwrdlctl = calib->p0_mpwrdlctl;
++	mmdc0->mpzqlp2ctl = calib->mpzqlp2ctl;
++
++	/* Read data DQ Byte0-3 delay */
++	mmdc0->mprddqby0dl = 0x33333333;
++	mmdc0->mprddqby1dl = 0x33333333;
++	if (sysinfo->dsize > 0) {
++		mmdc0->mprddqby2dl = 0x33333333;
++		mmdc0->mprddqby3dl = 0x33333333;
++	}
++
++	/* Write data DQ Byte0-3 delay */
++	mmdc0->mpwrdqby0dl = 0xf3333333;
++	mmdc0->mpwrdqby1dl = 0xf3333333;
++	if (sysinfo->dsize > 0) {
++		mmdc0->mpwrdqby2dl = 0xf3333333;
++		mmdc0->mpwrdqby3dl = 0xf3333333;
++	}
++
++	/*
++	 * In LPDDR2 mode this register should be cleared,
++	 * so no termination will be activated.
++	 */
++	mmdc0->mpodtctrl = 0;
++
++	/* complete calibration */
++	val = (1 << 11); /* Force measurement on delay-lines */
++	mmdc0->mpmur0 = val;
++
++	/* Step 1: configuration request */
++	mmdc0->mdscr = (uint32_t)(1 << 15); /* config request */
++
++	/* Step 2: Timing configuration */
++	mmdc0->mdcfg0 = (trfc << 24) | (txsr << 16) | (txp << 13) |
++			(tfaw << 4) | tcl;
++	mmdc0->mdcfg1 = (tras << 16) | (twr << 9) | (tmrd << 5) | twl;
++	mmdc0->mdcfg2 = (trtp << 6) | (twtr << 3) | trrd;
++	mmdc0->mdcfg3lp = (trc_lp << 16) | (trcd_lp << 8) |
++			  (trppb_lp << 4) | trpab_lp;
++	mmdc0->mdotc = 0;
++
++	mmdc0->mdasp = cs0_end; /* CS addressing */
++
++	/* Step 3: Configure DDR type */
++	mmdc0->mdmisc = (sysinfo->cs1_mirror << 19) | (sysinfo->walat << 16) |
++			(sysinfo->bi_on << 12) | (sysinfo->mif3_mode << 9) |
++			(sysinfo->ralat << 6) | (1 << 3);
++
++	/* Step 4: Configure delay while leaving reset */
++	mmdc0->mdor = (sysinfo->sde_to_rst << 8) |
++		      (sysinfo->rst_to_cke << 0);
++
++	/* Step 5: Configure DDR physical parameters (density and burst len) */
++	coladdr = lpddr2_cfg->coladdr;
++	if (lpddr2_cfg->coladdr == 8)		/* 8-bit COL is 0x3 */
++		coladdr += 4;
++	else if (lpddr2_cfg->coladdr == 12)	/* 12-bit COL is 0x4 */
++		coladdr += 1;
++	mmdc0->mdctl =  (lpddr2_cfg->rowaddr - 11) << 24 |	/* ROW */
++			(coladdr - 9) << 20 |			/* COL */
++			(0 << 19) |	/* Burst Length = 4 for LPDDR2 */
++			(sysinfo->dsize << 16);	/* DDR data bus size */
++
++	/* Step 6: Perform ZQ calibration */
++	val = 0xa1390003; /* one-time HW ZQ calib */
++	mmdc0->mpzqhwctrl = val;
++
++	/* Step 7: Enable MMDC with desired chip select */
++	mmdc0->mdctl |= (1 << 31) |			     /* SDE_0 for CS0 */
++			((sysinfo->ncs == 2) ? 1 : 0) << 30; /* SDE_1 for CS1 */
++
++	/* Step 8: Write Mode Registers to Init LPDDR2 devices */
++	for (cs = 0; cs < sysinfo->ncs; cs++) {
++		/* MR63: reset */
++		mmdc0->mdscr = MR(63, 0, 3, cs);
++		/* MR10: calibration,
++		 * 0xff is calibration command after intilization.
++		 */
++		val = 0xA | (0xff << 8);
++		mmdc0->mdscr = MR(val, 0, 3, cs);
++		/* MR1 */
++		val = 0x1 | (0x82 << 8);
++		mmdc0->mdscr = MR(val, 0, 3, cs);
++		/* MR2 */
++		val = 0x2 | (0x04 << 8);
++		mmdc0->mdscr = MR(val, 0, 3, cs);
++		/* MR3 */
++		val = 0x3 | (0x02 << 8);
++		mmdc0->mdscr = MR(val, 0, 3, cs);
++	}
++
++	/* Step 10: Power down control and self-refresh */
++	mmdc0->mdpdc = (tcke & 0x7) << 16 |
++			5            << 12 |  /* PWDT_1: 256 cycles */
++			5            <<  8 |  /* PWDT_0: 256 cycles */
++			1            <<  6 |  /* BOTH_CS_PD */
++			(tcksrx & 0x7) << 3 |
++			(tcksre & 0x7);
++	mmdc0->mapsr = 0x00001006; /* ADOPT power down enabled */
++
++	/* Step 11: Configure ZQ calibration: one-time and periodic 1ms */
++	val = 0xa1310003;
++	mmdc0->mpzqhwctrl = val;
++
++	/* Step 12: Configure and activate periodic refresh */
++	mmdc0->mdref = (sysinfo->refsel << 14) | (sysinfo->refr << 11);
++
++	/* Step 13: Deassert config request - init complete */
++	mmdc0->mdscr = 0x00000000;
++
++	/* wait for auto-ZQ calibration to complete */
++	udelay(1);
++}
++
++void mx6_ddr3_cfg(const struct mx6_ddr_sysinfo *sysinfo,
++		  const struct mx6_mmdc_calibration *calib,
++		  const struct mx6_ddr3_cfg *ddr3_cfg)
++{
++	volatile struct mmdc_p_regs *mmdc0;
++	volatile struct mmdc_p_regs *mmdc1;
++	uint32_t val;
++	uint8_t tcke, tcksrx, tcksre, txpdll, taofpd, taonpd, trrd;
++	uint8_t todtlon, taxpd, tanpd, tcwl, txp, tfaw, tcl;
++	uint8_t todt_idle_off = 0x4; /* from DDR3 Script Aid spreadsheet */
++	uint16_t trcd, trc, tras, twr, tmrd, trtp, trp, twtr, trfc, txs, txpr;
++	uint16_t cs0_end;
++	uint16_t tdllk = 0x1ff; /* DLL locking time: 512 cycles (JEDEC DDR3) */
++	uint8_t coladdr;
++	int clkper; /* clock period in picoseconds */
++	int clock; /* clock freq in MHz */
++	int cs;
++	uint16_t mem_speed = ddr3_cfg->mem_speed;
++
++	mmdc0 = (struct mmdc_p_regs *)MMDC_P0_BASE;
++	if (!is_mx6sx() && !is_mx6ul() && !is_mx6ull() && !is_mx6sl())
++		mmdc1 = (struct mmdc_p_regs *)MMDC_P1_BASE;
++
++	/* Limit mem_speed for MX6D/MX6Q */
++	if (is_mx6dq() || is_mx6dqp()) {
++		if (mem_speed > 1066)
++			mem_speed = 1066; /* 1066 MT/s */
++
++		tcwl = 4;
++	}
++	/* Limit mem_speed for MX6S/MX6DL */
++	else {
++		if (mem_speed > 800)
++			mem_speed = 800;  /* 800 MT/s */
++
++		tcwl = 3;
++	}
++
++	clock = mem_speed / 2;
++	/*
++	 * Data rate of 1066 MT/s requires 533 MHz DDR3 clock, but MX6D/Q supports
++	 * up to 528 MHz, so reduce the clock to fit chip specs
++	 */
++	if (is_mx6dq() || is_mx6dqp()) {
++		if (clock > 528)
++			clock = 528; /* 528 MHz */
++	}
++
++	clkper = (1000 * 1000) / clock; /* pico seconds */
++	todtlon = tcwl;
++	taxpd = tcwl;
++	tanpd = tcwl;
++
++	switch (ddr3_cfg->density) {
++	case 1: /* 1Gb per chip */
++		trfc = DIV_ROUND_UP(110000, clkper) - 1;
++		txs = DIV_ROUND_UP(120000, clkper) - 1;
++		break;
++	case 2: /* 2Gb per chip */
++		trfc = DIV_ROUND_UP(160000, clkper) - 1;
++		txs = DIV_ROUND_UP(170000, clkper) - 1;
++		break;
++	case 4: /* 4Gb per chip */
++		trfc = DIV_ROUND_UP(260000, clkper) - 1;
++		txs = DIV_ROUND_UP(270000, clkper) - 1;
++		break;
++	case 8: /* 8Gb per chip */
++		trfc = DIV_ROUND_UP(350000, clkper) - 1;
++		txs = DIV_ROUND_UP(360000, clkper) - 1;
++		break;
++	default:
++		/* invalid density */
++		INFO("invalid chip density\n");
++		panic();
++		break;
++	}
++	txpr = txs;
++
++	switch (mem_speed) {
++	case 800:
++		txp = DIV_ROUND_UP(max(3 * clkper, 7500), clkper) - 1;
++		tcke = DIV_ROUND_UP(max(3 * clkper, 7500), clkper) - 1;
++		if (ddr3_cfg->pagesz == 1) {
++			tfaw = DIV_ROUND_UP(40000, clkper) - 1;
++			trrd = DIV_ROUND_UP(max(4 * clkper, 10000), clkper) - 1;
++		} else {
++			tfaw = DIV_ROUND_UP(50000, clkper) - 1;
++			trrd = DIV_ROUND_UP(max(4 * clkper, 10000), clkper) - 1;
++		}
++		break;
++	case 1066:
++		txp = DIV_ROUND_UP(max(3 * clkper, 7500), clkper) - 1;
++		tcke = DIV_ROUND_UP(max(3 * clkper, 5625), clkper) - 1;
++		if (ddr3_cfg->pagesz == 1) {
++			tfaw = DIV_ROUND_UP(37500, clkper) - 1;
++			trrd = DIV_ROUND_UP(max(4 * clkper, 7500), clkper) - 1;
++		} else {
++			tfaw = DIV_ROUND_UP(50000, clkper) - 1;
++			trrd = DIV_ROUND_UP(max(4 * clkper, 10000), clkper) - 1;
++		}
++		break;
++	default:
++		INFO("invalid memory speed\n");
++		panic();
++		break;
++	}
++	txpdll = DIV_ROUND_UP(max(10 * clkper, 24000), clkper) - 1;
++	tcksre = DIV_ROUND_UP(max(5 * clkper, 10000), clkper);
++	taonpd = DIV_ROUND_UP(2000, clkper) - 1;
++	tcksrx = tcksre;
++	taofpd = taonpd;
++	twr  = DIV_ROUND_UP(15000, clkper) - 1;
++	tmrd = DIV_ROUND_UP(max(12 * clkper, 15000), clkper) - 1;
++	trc  = DIV_ROUND_UP(ddr3_cfg->trcmin, clkper / 10) - 1;
++	tras = DIV_ROUND_UP(ddr3_cfg->trasmin, clkper / 10) - 1;
++	tcl  = DIV_ROUND_UP(ddr3_cfg->trcd, clkper / 10) - 3;
++	trp  = DIV_ROUND_UP(ddr3_cfg->trcd, clkper / 10) - 1;
++	twtr = ROUND(max(4 * clkper, 7500) / clkper, 1) - 1;
++	trcd = trp;
++	trtp = twtr;
++	cs0_end = 4 * sysinfo->cs_density - 1;
++
++	VERBOSE("density:%d Gb (%d Gb per chip)\n",
++	      sysinfo->cs_density, ddr3_cfg->density);
++	VERBOSE("clock: %dMHz (%d ps)\n", clock, clkper);
++	VERBOSE("memspd:%d\n", mem_speed);
++	VERBOSE("tcke=%d\n", tcke);
++	VERBOSE("tcksrx=%d\n", tcksrx);
++	VERBOSE("tcksre=%d\n", tcksre);
++	VERBOSE("taofpd=%d\n", taofpd);
++	VERBOSE("taonpd=%d\n", taonpd);
++	VERBOSE("todtlon=%d\n", todtlon);
++	VERBOSE("tanpd=%d\n", tanpd);
++	VERBOSE("taxpd=%d\n", taxpd);
++	VERBOSE("trfc=%d\n", trfc);
++	VERBOSE("txs=%d\n", txs);
++	VERBOSE("txp=%d\n", txp);
++	VERBOSE("txpdll=%d\n", txpdll);
++	VERBOSE("tfaw=%d\n", tfaw);
++	VERBOSE("tcl=%d\n", tcl);
++	VERBOSE("trcd=%d\n", trcd);
++	VERBOSE("trp=%d\n", trp);
++	VERBOSE("trc=%d\n", trc);
++	VERBOSE("tras=%d\n", tras);
++	VERBOSE("twr=%d\n", twr);
++	VERBOSE("tmrd=%d\n", tmrd);
++	VERBOSE("tcwl=%d\n", tcwl);
++	VERBOSE("tdllk=%d\n", tdllk);
++	VERBOSE("trtp=%d\n", trtp);
++	VERBOSE("twtr=%d\n", twtr);
++	VERBOSE("trrd=%d\n", trrd);
++	VERBOSE("txpr=%d\n", txpr);
++	VERBOSE("cs0_end=%d\n", cs0_end);
++	VERBOSE("ncs=%d\n", sysinfo->ncs);
++	VERBOSE("Rtt_wr=%d\n", sysinfo->rtt_wr);
++	VERBOSE("Rtt_nom=%d\n", sysinfo->rtt_nom);
++	VERBOSE("SRT=%d\n", ddr3_cfg->SRT);
++	VERBOSE("twr=%d\n", twr);
++
++	/*
++	 * board-specific configuration:
++	 *  These values are determined empirically and vary per board layout
++	 *  see:
++	 *   appnote, ddr3 spreadsheet
++	 */
++	mmdc0->mpwldectrl0 = calib->p0_mpwldectrl0;
++	mmdc0->mpwldectrl1 = calib->p0_mpwldectrl1;
++	mmdc0->mpdgctrl0 = calib->p0_mpdgctrl0;
++	mmdc0->mpdgctrl1 = calib->p0_mpdgctrl1;
++	mmdc0->mprddlctl = calib->p0_mprddlctl;
++	mmdc0->mpwrdlctl = calib->p0_mpwrdlctl;
++	if (sysinfo->dsize > 1) {
++		MMDC1(mpwldectrl0, calib->p1_mpwldectrl0);
++		MMDC1(mpwldectrl1, calib->p1_mpwldectrl1);
++		MMDC1(mpdgctrl0, calib->p1_mpdgctrl0);
++		MMDC1(mpdgctrl1, calib->p1_mpdgctrl1);
++		MMDC1(mprddlctl, calib->p1_mprddlctl);
++		MMDC1(mpwrdlctl, calib->p1_mpwrdlctl);
++	}
++
++	/* Read data DQ Byte0-3 delay */
++	mmdc0->mprddqby0dl = 0x33333333;
++	mmdc0->mprddqby1dl = 0x33333333;
++	if (sysinfo->dsize > 0) {
++		mmdc0->mprddqby2dl = 0x33333333;
++		mmdc0->mprddqby3dl = 0x33333333;
++	}
++
++	if (sysinfo->dsize > 1) {
++		MMDC1(mprddqby0dl, 0x33333333);
++		MMDC1(mprddqby1dl, 0x33333333);
++		MMDC1(mprddqby2dl, 0x33333333);
++		MMDC1(mprddqby3dl, 0x33333333);
++	}
++
++	/* MMDC Termination: rtt_nom:2 RZQ/2(120ohm), rtt_nom:1 RZQ/4(60ohm) */
++	val = (sysinfo->rtt_nom == 2) ? 0x00011117 : 0x00022227;
++	mmdc0->mpodtctrl = val;
++	if (sysinfo->dsize > 1)
++		MMDC1(mpodtctrl, val);
++
++	/* complete calibration */
++	val = (1 << 11); /* Force measurement on delay-lines */
++	mmdc0->mpmur0 = val;
++	if (sysinfo->dsize > 1)
++		MMDC1(mpmur0, val);
++
++	/* Step 1: configuration request */
++	mmdc0->mdscr = (uint32_t)(1 << 15); /* config request */
++
++	/* Step 2: Timing configuration */
++	mmdc0->mdcfg0 = (trfc << 24) | (txs << 16) | (txp << 13) |
++			(txpdll << 9) | (tfaw << 4) | tcl;
++	mmdc0->mdcfg1 = (trcd << 29) | (trp << 26) | (trc << 21) |
++			(tras << 16) | (1 << 15) /* trpa */ |
++			(twr << 9) | (tmrd << 5) | tcwl;
++	mmdc0->mdcfg2 = (tdllk << 16) | (trtp << 6) | (twtr << 3) | trrd;
++	mmdc0->mdotc = (taofpd << 27) | (taonpd << 24) | (tanpd << 20) |
++		       (taxpd << 16) | (todtlon << 12) | (todt_idle_off << 4);
++	mmdc0->mdasp = cs0_end; /* CS addressing */
++
++	/* Step 3: Configure DDR type */
++	mmdc0->mdmisc = (sysinfo->cs1_mirror << 19) | (sysinfo->walat << 16) |
++			(sysinfo->bi_on << 12) | (sysinfo->mif3_mode << 9) |
++			(sysinfo->ralat << 6);
++
++	/* Step 4: Configure delay while leaving reset */
++	mmdc0->mdor = (txpr << 16) | (sysinfo->sde_to_rst << 8) |
++		      (sysinfo->rst_to_cke << 0);
++
++	/* Step 5: Configure DDR physical parameters (density and burst len) */
++	coladdr = ddr3_cfg->coladdr;
++	if (ddr3_cfg->coladdr == 8)		/* 8-bit COL is 0x3 */
++		coladdr += 4;
++	else if (ddr3_cfg->coladdr == 12)	/* 12-bit COL is 0x4 */
++		coladdr += 1;
++	mmdc0->mdctl =  (ddr3_cfg->rowaddr - 11) << 24 |	/* ROW */
++			(coladdr - 9) << 20 |			/* COL */
++			(1 << 19) |		/* Burst Length = 8 for DDR3 */
++			(sysinfo->dsize << 16);		/* DDR data bus size */
++
++	/* Step 6: Perform ZQ calibration */
++	val = 0xa1390001; /* one-time HW ZQ calib */
++	mmdc0->mpzqhwctrl = val;
++	if (sysinfo->dsize > 1)
++		MMDC1(mpzqhwctrl, val);
++
++	/* Step 7: Enable MMDC with desired chip select */
++	mmdc0->mdctl |= (1 << 31) |			     /* SDE_0 for CS0 */
++			((sysinfo->ncs == 2) ? 1 : 0) << 30; /* SDE_1 for CS1 */
++
++	/* Step 8: Write Mode Registers to Init DDR3 devices */
++	for (cs = 0; cs < sysinfo->ncs; cs++) {
++		/* MR2 */
++		val = (sysinfo->rtt_wr & 3) << 9 | (ddr3_cfg->SRT & 1) << 7 |
++		      ((tcwl - 3) & 3) << 3;
++		VERBOSE("MR2 CS%d: 0x%08x\n", cs, (uint32_t)MR(val, 2, 3, cs));
++		mmdc0->mdscr = MR(val, 2, 3, cs);
++		/* MR3 */
++		VERBOSE("MR3 CS%d: 0x%08x\n", cs, (uint32_t)MR(0, 3, 3, cs));
++		mmdc0->mdscr = MR(0, 3, 3, cs);
++		/* MR1 */
++		val = ((sysinfo->rtt_nom & 1) ? 1 : 0) << 2 |
++		      ((sysinfo->rtt_nom & 2) ? 1 : 0) << 6;
++		VERBOSE("MR1 CS%d: 0x%08x\n", cs, (uint32_t)MR(val, 1, 3, cs));
++		mmdc0->mdscr = MR(val, 1, 3, cs);
++		/* MR0 */
++		val = ((tcl - 1) << 4) |	/* CAS */
++		      (1 << 8)   |		/* DLL Reset */
++		      ((twr - 3) << 9) |	/* Write Recovery */
++		      (sysinfo->pd_fast_exit << 12); /* Precharge PD PLL on */
++		VERBOSE("MR0 CS%d: 0x%08x\n", cs, (uint32_t)MR(val, 0, 3, cs));
++		mmdc0->mdscr = MR(val, 0, 3, cs);
++		/* ZQ calibration */
++		val = (1 << 10);
++		mmdc0->mdscr = MR(val, 0, 4, cs);
++	}
++
++	/* Step 10: Power down control and self-refresh */
++	mmdc0->mdpdc = (tcke & 0x7) << 16 |
++			5            << 12 |  /* PWDT_1: 256 cycles */
++			5            <<  8 |  /* PWDT_0: 256 cycles */
++			1            <<  6 |  /* BOTH_CS_PD */
++			(tcksrx & 0x7) << 3 |
++			(tcksre & 0x7);
++	if (!sysinfo->pd_fast_exit)
++		mmdc0->mdpdc |= (1 << 7); /* SLOW_PD */
++	mmdc0->mapsr = 0x00001006; /* ADOPT power down enabled */
++
++	/* Step 11: Configure ZQ calibration: one-time and periodic 1ms */
++	val = 0xa1390003;
++	mmdc0->mpzqhwctrl = val;
++	if (sysinfo->dsize > 1)
++		MMDC1(mpzqhwctrl, val);
++
++	/* Step 12: Configure and activate periodic refresh */
++	mmdc0->mdref = (sysinfo->refsel << 14) | (sysinfo->refr << 11);
++
++	/* Step 13: Deassert config request - init complete */
++	mmdc0->mdscr = 0x00000000;
++
++	/* wait for auto-ZQ calibration to complete */
++	mdelay(1);
++}
++
++void mmdc_read_calibration(struct mx6_ddr_sysinfo const *sysinfo,
++                           struct mx6_mmdc_calibration *calib)
++{
++	struct mmdc_p_regs *mmdc0 = (struct mmdc_p_regs *)MMDC_P0_BASE;
++	struct mmdc_p_regs *mmdc1 = (struct mmdc_p_regs *)MMDC_P1_BASE;
++
++	calib->p0_mpwldectrl0 = readl(&mmdc0->mpwldectrl0);
++	calib->p0_mpwldectrl1 = readl(&mmdc0->mpwldectrl1);
++	calib->p0_mpdgctrl0 = readl(&mmdc0->mpdgctrl0);
++	calib->p0_mpdgctrl1 = readl(&mmdc0->mpdgctrl1);
++	calib->p0_mprddlctl = readl(&mmdc0->mprddlctl);
++	calib->p0_mpwrdlctl = readl(&mmdc0->mpwrdlctl);
++
++	if (sysinfo->dsize == 2) {
++		calib->p1_mpwldectrl0 = readl(&mmdc1->mpwldectrl0);
++		calib->p1_mpwldectrl1 = readl(&mmdc1->mpwldectrl1);
++		calib->p1_mpdgctrl0 = readl(&mmdc1->mpdgctrl0);
++		calib->p1_mpdgctrl1 = readl(&mmdc1->mpdgctrl1);
++		calib->p1_mprddlctl = readl(&mmdc1->mprddlctl);
++		calib->p1_mpwrdlctl = readl(&mmdc1->mpwrdlctl);
++	}
++}
++
++void mx6_dram_cfg(const struct mx6_ddr_sysinfo *sysinfo,
++		  const struct mx6_mmdc_calibration *calib,
++		  const void *ddr_cfg)
++{
++	if (sysinfo->ddr_type == DDR_TYPE_DDR3) {
++		mx6_ddr3_cfg(sysinfo, calib, ddr_cfg);
++	} else if (sysinfo->ddr_type == DDR_TYPE_LPDDR2) {
++		mx6_lpddr2_cfg(sysinfo, calib, ddr_cfg);
++	} else {
++		INFO("Unsupported ddr type\n");
++		panic();
++	}
++}
+diff --git a/plat/imx/imx6/common/uboot_ddr_init/imx6ul_pico_init_dram.c b/plat/imx/imx6/common/uboot_ddr_init/imx6ul_pico_init_dram.c
+new file mode 100644
+index 000000000..7dec8f4ea
+--- /dev/null
++++ b/plat/imx/imx6/common/uboot_ddr_init/imx6ul_pico_init_dram.c
+@@ -0,0 +1,49 @@
++/*
++ * Copyright (c) 2019, ARM Limited and Contributors. All rights reserved.
++ * SPDX-License-Identifier: GPL-2.0+
++ */
++
++#include <mx6-ddr.h>
++#include "imx6ul_pico_init_dram.h"
++
++static struct mx6_ddr_sysinfo ddr_sysinfo = {
++        .dsize          = 0,
++        .cs1_mirror     = 0,
++        .cs_density     = 32,
++        .ncs            = 1,
++        .bi_on          = 1,
++        .rtt_nom        = 1,
++        .rtt_wr         = 0,
++        .ralat          = 5,
++        .walat          = 0,
++        .mif3_mode      = 3,
++        .rst_to_cke     = 0x23,
++        .sde_to_rst     = 0x10,
++        .refsel = 1,
++        .refr = 3,
++};
++
++static struct mx6_mmdc_calibration mx6_mmcd_calib = {
++        .p0_mpwldectrl0 = 0x00000000,
++        .p0_mpdgctrl0 = 0x01380134,
++        .p0_mprddlctl = 0x40404244,
++        .p0_mpwrdlctl = 0x40405050,
++};
++
++static struct mx6_ddr3_cfg mem_ddr = {
++        .mem_speed = 1333,
++        .density = 2,
++        .width = 16,
++        .banks = 8,
++        .coladdr = 10,
++        .pagesz = 2,
++        .trcd = 1350,
++        .trcmin = 4950,
++        .trasmin = 3600,
++	.rowaddr = 15,
++};
++
++void imx6ul_pico_init_dram(void)
++{
++	mx6_dram_cfg(&ddr_sysinfo, &mx6_mmcd_calib, &mem_ddr);
++}
+diff --git a/plat/imx/imx6/common/uboot_ddr_init/imx6ul_pico_init_dram.h b/plat/imx/imx6/common/uboot_ddr_init/imx6ul_pico_init_dram.h
+new file mode 100644
+index 000000000..228d3d1bc
+--- /dev/null
++++ b/plat/imx/imx6/common/uboot_ddr_init/imx6ul_pico_init_dram.h
+@@ -0,0 +1,12 @@
++/*
++ * Copyright (c) 2019, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: GPL-2.0+
++ */
++
++#ifndef __IMX6UL_PICO_INIT_DRAM__
++#define  __IMX6UL_PICO_INIT_DRAM__
++
++void imx6ul_pico_init_dram(void);
++
++#endif /* __IMX6UL_PICO_INIT_DRAM__ */
+diff --git a/plat/imx/imx6/common/uboot_ddr_init/kernel.h b/plat/imx/imx6/common/uboot_ddr_init/kernel.h
+new file mode 100644
+index 000000000..4fb90ae81
+--- /dev/null
++++ b/plat/imx/imx6/common/uboot_ddr_init/kernel.h
+@@ -0,0 +1,261 @@
++#ifndef _LINUX_KERNEL_H
++#define _LINUX_KERNEL_H
++
++
++#define USHRT_MAX	((uint16_t)(~0U))
++#define SHRT_MAX	((int16_t)(USHRT_MAX>>1))
++#define SHRT_MIN	((int16_t)(-SHRT_MAX - 1))
++#define INT_MAX		((int)(~0U>>1))
++#define INT_MIN		(-INT_MAX - 1)
++#define UINT_MAX	(~0U)
++#define LONG_MAX	((long)(~0UL>>1))
++#define LONG_MIN	(-LONG_MAX - 1)
++#define ULONG_MAX	(~0UL)
++#define LLONG_MAX	((long long)(~0ULL>>1))
++#define LLONG_MIN	(-LLONG_MAX - 1)
++#define ULLONG_MAX	(~0ULL)
++#ifndef SIZE_MAX
++#define SIZE_MAX	(~(size_t)0)
++#endif
++
++#define U8_MAX		((uint8_t)~0U)
++#define S8_MAX		((int8_t)(U8_MAX>>1))
++#define S8_MIN		((int8_t)(-S8_MAX - 1))
++#define U16_MAX		((uint16_t)~0U)
++#define S16_MAX		((int16_t)(U16_MAX>>1))
++#define S16_MIN		((int16_t)(-S16_MAX - 1))
++#define U32_MAX		((uint32_t)~0U)
++#define S32_MAX		((int32_t)(U32_MAX>>1))
++#define S32_MIN		((int32_t)(-S32_MAX - 1))
++#define U64_MAX		((uint64_t)~0ULL)
++#define S64_MAX		((int64_t)(U64_MAX>>1))
++#define S64_MIN		((int64_t)(-S64_MAX - 1))
++
++#define STACK_MAGIC	0xdeadbeef
++
++#define REPEAT_BYTE(x)	((~0ul / 0xff) * (x))
++
++#define ALIGN(x,a)		__ALIGN_MASK((x),(typeof(x))(a)-1)
++#define ALIGN_DOWN(x, a)	ALIGN((x) - ((a) - 1), (a))
++#define __ALIGN_MASK(x,mask)	(((x)+(mask))&~(mask))
++#define PTR_ALIGN(p, a)		((typeof(p))ALIGN((unsigned long)(p), (a)))
++#define IS_ALIGNED(x, a)		(((x) & ((typeof(x))(a) - 1)) == 0)
++
++#ifndef ARRAY_SIZE
++#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
++#endif
++
++/*
++ * This looks more complex than it should be. But we need to
++ * get the type for the ~ right in round_down (it needs to be
++ * as wide as the result!), and we want to evaluate the macro
++ * arguments just once each.
++ */
++#define __round_mask(x, y) ((__typeof__(x))((y)-1))
++#ifndef round_up
++#define round_up(x, y) ((((x)-1) | __round_mask(x, y))+1)
++#endif
++#ifndef round_down
++#define round_down(x, y) ((x) & ~__round_mask(x, y))
++#endif
++
++#define FIELD_SIZEOF(t, f) (sizeof(((t*)0)->f))
++#define DIV_ROUND_UP(n,d) (((n) + (d) - 1) / (d))
++
++#define DIV_ROUND_DOWN_ULL(ll, d) \
++	({ unsigned long long _tmp = (ll); do_div(_tmp, d); _tmp; })
++
++#define DIV_ROUND_UP_ULL(ll, d)		DIV_ROUND_DOWN_ULL((ll) + (d) - 1, (d))
++
++#ifndef ROUND
++#define ROUND(a,b)		(((a) + (b) - 1) & ~((b) - 1))
++#endif
++
++#if BITS_PER_LONG == 32
++# define DIV_ROUND_UP_SECTOR_T(ll,d) DIV_ROUND_UP_ULL(ll, d)
++#else
++# define DIV_ROUND_UP_SECTOR_T(ll,d) DIV_ROUND_UP(ll,d)
++#endif
++
++/* The `const' in roundup() prevents gcc-3.3 from calling __divdi3 */
++#define roundup(x, y) (					\
++{							\
++	const typeof(y) __y = y;			\
++	(((x) + (__y - 1)) / __y) * __y;		\
++}							\
++)
++#define rounddown(x, y) (				\
++{							\
++	typeof(x) __x = (x);				\
++	__x - (__x % (y));				\
++}							\
++)
++
++/*
++ * Divide positive or negative dividend by positive divisor and round
++ * to closest integer. Result is undefined for negative divisors and
++ * for negative dividends if the divisor variable type is unsigned.
++ */
++#define DIV_ROUND_CLOSEST(x, divisor)(			\
++{							\
++	typeof(x) __x = x;				\
++	typeof(divisor) __d = divisor;			\
++	(((typeof(x))-1) > 0 ||				\
++	 ((typeof(divisor))-1) > 0 || (__x) > 0) ?	\
++		(((__x) + ((__d) / 2)) / (__d)) :	\
++		(((__x) - ((__d) / 2)) / (__d));	\
++}							\
++)
++
++/*
++ * Multiplies an integer by a fraction, while avoiding unnecessary
++ * overflow or loss of precision.
++ */
++#define mult_frac(x, numer, denom)(			\
++{							\
++	typeof(x) quot = (x) / (denom);			\
++	typeof(x) rem  = (x) % (denom);			\
++	(quot * (numer)) + ((rem * (numer)) / (denom));	\
++}							\
++)
++
++/**
++ * upper_32_bits - return bits 32-63 of a number
++ * @n: the number we're accessing
++ *
++ * A basic shift-right of a 64- or 32-bit quantity.  Use this to suppress
++ * the "right shift count >= width of type" warning when that quantity is
++ * 32-bits.
++ */
++#define upper_32_bits(n) ((uint32_t)(((n) >> 16) >> 16))
++
++/**
++ * lower_32_bits - return bits 0-31 of a number
++ * @n: the number we're accessing
++ */
++#define lower_32_bits(n) ((uint32_t)(n))
++
++/*
++ * abs() handles unsigned and signed longs, ints, shorts and chars.  For all
++ * input types abs() returns a signed long.
++ * abs() should not be used for 64-bit types (int64_t, uint64_t, long long) - use abint64_t()
++ * for those.
++ */
++#define abs(x) ({						\
++		long ret;					\
++		if (sizeof(x) == sizeof(long)) {		\
++			long __x = (x);				\
++			ret = (__x < 0) ? -__x : __x;		\
++		} else {					\
++			int __x = (x);				\
++			ret = (__x < 0) ? -__x : __x;		\
++		}						\
++		ret;						\
++	})
++
++#define abint64_t(x) ({				\
++		int64_t __x = (x);			\
++		(__x < 0) ? -__x : __x;		\
++	})
++
++/*
++ * min()/max()/clamp() macros that also do
++ * strict type-checking.. See the
++ * "unnecessary" pointer comparison.
++ */
++#define min(x, y) ({				\
++	typeof(x) _min1 = (x);			\
++	typeof(y) _min2 = (y);			\
++	(void) (&_min1 == &_min2);		\
++	_min1 < _min2 ? _min1 : _min2; })
++
++#define max(x, y) ({				\
++	typeof(x) _max1 = (x);			\
++	typeof(y) _max2 = (y);			\
++	(void) (&_max1 == &_max2);		\
++	_max1 > _max2 ? _max1 : _max2; })
++
++#define min3(x, y, z) min((typeof(x))min(x, y), z)
++#define max3(x, y, z) max((typeof(x))max(x, y), z)
++
++/**
++ * min_not_zero - return the minimum that is _not_ zero, unless both are zero
++ * @x: value1
++ * @y: value2
++ */
++#define min_not_zero(x, y) ({			\
++	typeof(x) __x = (x);			\
++	typeof(y) __y = (y);			\
++	__x == 0 ? __y : ((__y == 0) ? __x : min(__x, __y)); })
++
++/**
++ * clamp - return a value clamped to a given range with strict typechecking
++ * @val: current value
++ * @lo: lowest allowable value
++ * @hi: highest allowable value
++ *
++ * This macro does strict typechecking of lo/hi to make sure they are of the
++ * same type as val.  See the unnecessary pointer comparisons.
++ */
++#define clamp(val, lo, hi) min((typeof(val))max(val, lo), hi)
++
++/*
++ * ..and if you can't take the strict
++ * types, you can specify one yourself.
++ *
++ * Or not use min/max/clamp at all, of course.
++ */
++#define min_t(type, x, y) ({			\
++	type __min1 = (x);			\
++	type __min2 = (y);			\
++	__min1 < __min2 ? __min1: __min2; })
++
++#define max_t(type, x, y) ({			\
++	type __max1 = (x);			\
++	type __max2 = (y);			\
++	__max1 > __max2 ? __max1: __max2; })
++
++/**
++ * clamp_t - return a value clamped to a given range using a given type
++ * @type: the type of variable to use
++ * @val: current value
++ * @lo: minimum allowable value
++ * @hi: maximum allowable value
++ *
++ * This macro does no typechecking and uses temporary variables of type
++ * 'type' to make all the comparisons.
++ */
++#define clamp_t(type, val, lo, hi) min_t(type, max_t(type, val, lo), hi)
++
++/**
++ * clamp_val - return a value clamped to a given range using val's type
++ * @val: current value
++ * @lo: minimum allowable value
++ * @hi: maximum allowable value
++ *
++ * This macro does no typechecking and uses temporary variables of whatever
++ * type the input argument 'val' is.  This is useful when val is an unsigned
++ * type and min and max are literals that will otherwise be assigned a signed
++ * integer type.
++ */
++#define clamp_val(val, lo, hi) clamp_t(typeof(val), val, lo, hi)
++
++
++/*
++ * swap - swap value of @a and @b
++ */
++#define swap(a, b) \
++	do { typeof(a) __tmp = (a); (a) = (b); (b) = __tmp; } while (0)
++
++/**
++ * container_of - cast a member of a structure out to the containing structure
++ * @ptr:	the pointer to the member.
++ * @type:	the type of the container struct this is embedded in.
++ * @member:	the name of the member within the struct.
++ *
++ */
++#define container_of(ptr, type, member) ({			\
++	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
++	(type *)( (char *)__mptr - offsetof(type,member) );})
++
++#endif
+diff --git a/plat/imx/imx6/common/uboot_ddr_init/mx6-ddr.h b/plat/imx/imx6/common/uboot_ddr_init/mx6-ddr.h
+new file mode 100644
+index 000000000..c6b6c6e8c
+--- /dev/null
++++ b/plat/imx/imx6/common/uboot_ddr_init/mx6-ddr.h
+@@ -0,0 +1,532 @@
++/* SPDX-License-Identifier: GPL-2.0+ */
++/*
++ * Copyright (C) 2013 Boundary Devices Inc.
++ */
++#ifndef __ASM_ARCH_MX6_DDR_H__
++#define __ASM_ARCH_MX6_DDR_H__
++
++#include <stdint.h>
++
++#ifndef CONFIG_SPL_BUILD
++#ifdef CONFIG_MX6Q
++#include "mx6q-ddr.h"
++#else
++#if defined(CONFIG_MX6DL) || defined(CONFIG_MX6S)
++#include "mx6dl-ddr.h"
++#else
++#ifdef CONFIG_MX6SX
++#include "mx6sx-ddr.h"
++#else
++#if defined(CONFIG_MX6UL) || defined(CONFIG_MX6ULL)
++#include "mx6ul-ddr.h"
++#else
++#ifdef CONFIG_MX6SL
++#include "mx6sl-ddr.h"
++#else
++#error "Please select cpu"
++#endif	/* CONFIG_MX6SL */
++#endif	/* CONFIG_MX6UL */
++#endif	/* CONFIG_MX6SX */
++#endif	/* CONFIG_MX6DL or CONFIG_MX6S */
++#endif	/* CONFIG_MX6Q */
++#else
++
++enum {
++	DDR_TYPE_DDR3,
++	DDR_TYPE_LPDDR2,
++};
++
++/* MMDC P0/P1 Registers */
++struct mmdc_p_regs {
++	uint32_t mdctl;
++	uint32_t mdpdc;
++	uint32_t mdotc;
++	uint32_t mdcfg0;
++	uint32_t mdcfg1;
++	uint32_t mdcfg2;
++	uint32_t mdmisc;
++	uint32_t mdscr;
++	uint32_t mdref;
++	uint32_t res1[2];
++	uint32_t mdrwd;
++	uint32_t mdor;
++	uint32_t mdmrr;
++	uint32_t mdcfg3lp;
++	uint32_t mdmr4;
++	uint32_t mdasp;
++	uint32_t res2[239];
++	uint32_t maarcr;
++	uint32_t mapsr;
++	uint32_t maexidr0;
++	uint32_t maexidr1;
++	uint32_t madpcr0;
++	uint32_t madpcr1;
++	uint32_t madpsr0;
++	uint32_t madpsr1;
++	uint32_t madpsr2;
++	uint32_t madpsr3;
++	uint32_t madpsr4;
++	uint32_t madpsr5;
++	uint32_t masbs0;
++	uint32_t masbs1;
++	uint32_t res3[2];
++	uint32_t magenp;
++	uint32_t res4[239];
++	uint32_t mpzqhwctrl;
++	uint32_t mpzqswctrl;
++	uint32_t mpwlgcr;
++	uint32_t mpwldectrl0;
++	uint32_t mpwldectrl1;
++	uint32_t mpwldlst;
++	uint32_t mpodtctrl;
++	uint32_t mprddqby0dl;
++	uint32_t mprddqby1dl;
++	uint32_t mprddqby2dl;
++	uint32_t mprddqby3dl;
++	uint32_t mpwrdqby0dl;
++	uint32_t mpwrdqby1dl;
++	uint32_t mpwrdqby2dl;
++	uint32_t mpwrdqby3dl;
++	uint32_t mpdgctrl0;
++	uint32_t mpdgctrl1;
++	uint32_t mpdgdlst0;
++	uint32_t mprddlctl;
++	uint32_t mprddlst;
++	uint32_t mpwrdlctl;
++	uint32_t mpwrdlst;
++	uint32_t mpsdctrl;
++	uint32_t mpzqlp2ctl;
++	uint32_t mprddlhwctl;
++	uint32_t mpwrdlhwctl;
++	uint32_t mprddlhwst0;
++	uint32_t mprddlhwst1;
++	uint32_t mpwrdlhwst0;
++	uint32_t mpwrdlhwst1;
++	uint32_t mpwlhwerr;
++	uint32_t mpdghwst0;
++	uint32_t mpdghwst1;
++	uint32_t mpdghwst2;
++	uint32_t mpdghwst3;
++	uint32_t mppdcmpr1;
++	uint32_t mppdcmpr2;
++	uint32_t mpswdar0;
++	uint32_t mpswdrdr0;
++	uint32_t mpswdrdr1;
++	uint32_t mpswdrdr2;
++	uint32_t mpswdrdr3;
++	uint32_t mpswdrdr4;
++	uint32_t mpswdrdr5;
++	uint32_t mpswdrdr6;
++	uint32_t mpswdrdr7;
++	uint32_t mpmur0;
++	uint32_t mpwrcadl;
++	uint32_t mpdccr;
++};
++
++#define MX6SL_IOM_DDR_BASE     0x020e0300
++struct mx6sl_iomux_ddr_regs {
++	uint32_t dram_cas;
++	uint32_t dram_cs0_b;
++	uint32_t dram_cs1_b;
++	uint32_t dram_dqm0;
++	uint32_t dram_dqm1;
++	uint32_t dram_dqm2;
++	uint32_t dram_dqm3;
++	uint32_t dram_ras;
++	uint32_t dram_reset;
++	uint32_t dram_sdba0;
++	uint32_t dram_sdba1;
++	uint32_t dram_sdba2;
++	uint32_t dram_sdcke0;
++	uint32_t dram_sdcke1;
++	uint32_t dram_sdclk_0;
++	uint32_t dram_odt0;
++	uint32_t dram_odt1;
++	uint32_t dram_sdqs0;
++	uint32_t dram_sdqs1;
++	uint32_t dram_sdqs2;
++	uint32_t dram_sdqs3;
++	uint32_t dram_sdwe_b;
++};
++
++#define MX6SL_IOM_GRP_BASE     0x020e0500
++struct mx6sl_iomux_grp_regs {
++	uint32_t res1[43];
++	uint32_t grp_addds;
++	uint32_t grp_ddrmode_ctl;
++	uint32_t grp_ddrpke;
++	uint32_t grp_ddrpk;
++	uint32_t grp_ddrhys;
++	uint32_t grp_ddrmode;
++	uint32_t grp_b0ds;
++	uint32_t grp_ctlds;
++	uint32_t grp_b1ds;
++	uint32_t grp_ddr_type;
++	uint32_t grp_b2ds;
++	uint32_t grp_b3ds;
++};
++
++#define MX6UL_IOM_DDR_BASE	0x020e0200
++struct mx6ul_iomux_ddr_regs {
++	uint32_t res1[17];
++	uint32_t dram_dqm0;
++	uint32_t dram_dqm1;
++	uint32_t dram_ras;
++	uint32_t dram_cas;
++	uint32_t dram_cs0;
++	uint32_t dram_cs1;
++	uint32_t dram_sdwe_b;
++	uint32_t dram_odt0;
++	uint32_t dram_odt1;
++	uint32_t dram_sdba0;
++	uint32_t dram_sdba1;
++	uint32_t dram_sdba2;
++	uint32_t dram_sdcke0;
++	uint32_t dram_sdcke1;
++	uint32_t dram_sdclk_0;
++	uint32_t dram_sdqs0;
++	uint32_t dram_sdqs1;
++	uint32_t dram_reset;
++};
++
++#define MX6UL_IOM_GRP_BASE	0x020e0400
++struct mx6ul_iomux_grp_regs {
++	uint32_t res1[36];
++	uint32_t grp_addds;
++	uint32_t grp_ddrmode_ctl;
++	uint32_t grp_b0ds;
++	uint32_t grp_ddrpk;
++	uint32_t grp_ctlds;
++	uint32_t grp_b1ds;
++	uint32_t grp_ddrhys;
++	uint32_t grp_ddrpke;
++	uint32_t grp_ddrmode;
++	uint32_t grp_ddr_type;
++};
++
++#define MX6SX_IOM_DDR_BASE	0x020e0200
++struct mx6sx_iomux_ddr_regs {
++	uint32_t res1[59];
++	uint32_t dram_dqm0;
++	uint32_t dram_dqm1;
++	uint32_t dram_dqm2;
++	uint32_t dram_dqm3;
++	uint32_t dram_ras;
++	uint32_t dram_cas;
++	uint32_t res2[2];
++	uint32_t dram_sdwe_b;
++	uint32_t dram_odt0;
++	uint32_t dram_odt1;
++	uint32_t dram_sdba0;
++	uint32_t dram_sdba1;
++	uint32_t dram_sdba2;
++	uint32_t dram_sdcke0;
++	uint32_t dram_sdcke1;
++	uint32_t dram_sdclk_0;
++	uint32_t dram_sdqs0;
++	uint32_t dram_sdqs1;
++	uint32_t dram_sdqs2;
++	uint32_t dram_sdqs3;
++	uint32_t dram_reset;
++};
++
++#define MX6SX_IOM_GRP_BASE	0x020e0500
++struct mx6sx_iomux_grp_regs {
++	uint32_t res1[61];
++	uint32_t grp_addds;
++	uint32_t grp_ddrmode_ctl;
++	uint32_t grp_ddrpke;
++	uint32_t grp_ddrpk;
++	uint32_t grp_ddrhys;
++	uint32_t grp_ddrmode;
++	uint32_t grp_b0ds;
++	uint32_t grp_b1ds;
++	uint32_t grp_ctlds;
++	uint32_t grp_ddr_type;
++	uint32_t grp_b2ds;
++	uint32_t grp_b3ds;
++};
++
++/*
++ * MMDC iomux registers (pinctl/padctl) - (different for IMX6DQ vs IMX6SDL)
++ */
++#define MX6DQ_IOM_DDR_BASE      0x020e0500
++struct mx6dq_iomux_ddr_regs {
++	uint32_t res1[3];
++	uint32_t dram_sdqs5;
++	uint32_t dram_dqm5;
++	uint32_t dram_dqm4;
++	uint32_t dram_sdqs4;
++	uint32_t dram_sdqs3;
++	uint32_t dram_dqm3;
++	uint32_t dram_sdqs2;
++	uint32_t dram_dqm2;
++	uint32_t res2[16];
++	uint32_t dram_cas;
++	uint32_t res3[2];
++	uint32_t dram_ras;
++	uint32_t dram_reset;
++	uint32_t res4[2];
++	uint32_t dram_sdclk_0;
++	uint32_t dram_sdba2;
++	uint32_t dram_sdcke0;
++	uint32_t dram_sdclk_1;
++	uint32_t dram_sdcke1;
++	uint32_t dram_sdodt0;
++	uint32_t dram_sdodt1;
++	uint32_t res5;
++	uint32_t dram_sdqs0;
++	uint32_t dram_dqm0;
++	uint32_t dram_sdqs1;
++	uint32_t dram_dqm1;
++	uint32_t dram_sdqs6;
++	uint32_t dram_dqm6;
++	uint32_t dram_sdqs7;
++	uint32_t dram_dqm7;
++};
++
++#define MX6DQ_IOM_GRP_BASE      0x020e0700
++struct mx6dq_iomux_grp_regs {
++	uint32_t res1[18];
++	uint32_t grp_b7ds;
++	uint32_t grp_addds;
++	uint32_t grp_ddrmode_ctl;
++	uint32_t res2;
++	uint32_t grp_ddrpke;
++	uint32_t res3[6];
++	uint32_t grp_ddrmode;
++	uint32_t res4[3];
++	uint32_t grp_b0ds;
++	uint32_t grp_b1ds;
++	uint32_t grp_ctlds;
++	uint32_t res5;
++	uint32_t grp_b2ds;
++	uint32_t grp_ddr_type;
++	uint32_t grp_b3ds;
++	uint32_t grp_b4ds;
++	uint32_t grp_b5ds;
++	uint32_t grp_b6ds;
++};
++
++#define MX6SDL_IOM_DDR_BASE     0x020e0400
++struct mx6sdl_iomux_ddr_regs {
++	uint32_t res1[25];
++	uint32_t dram_cas;
++	uint32_t res2[2];
++	uint32_t dram_dqm0;
++	uint32_t dram_dqm1;
++	uint32_t dram_dqm2;
++	uint32_t dram_dqm3;
++	uint32_t dram_dqm4;
++	uint32_t dram_dqm5;
++	uint32_t dram_dqm6;
++	uint32_t dram_dqm7;
++	uint32_t dram_ras;
++	uint32_t dram_reset;
++	uint32_t res3[2];
++	uint32_t dram_sdba2;
++	uint32_t dram_sdcke0;
++	uint32_t dram_sdcke1;
++	uint32_t dram_sdclk_0;
++	uint32_t dram_sdclk_1;
++	uint32_t dram_sdodt0;
++	uint32_t dram_sdodt1;
++	uint32_t dram_sdqs0;
++	uint32_t dram_sdqs1;
++	uint32_t dram_sdqs2;
++	uint32_t dram_sdqs3;
++	uint32_t dram_sdqs4;
++	uint32_t dram_sdqs5;
++	uint32_t dram_sdqs6;
++	uint32_t dram_sdqs7;
++};
++
++#define MX6SDL_IOM_GRP_BASE     0x020e0700
++struct mx6sdl_iomux_grp_regs {
++	uint32_t res1[18];
++	uint32_t grp_b7ds;
++	uint32_t grp_addds;
++	uint32_t grp_ddrmode_ctl;
++	uint32_t grp_ddrpke;
++	uint32_t res2[2];
++	uint32_t grp_ddrmode;
++	uint32_t grp_b0ds;
++	uint32_t res3;
++	uint32_t grp_ctlds;
++	uint32_t grp_b1ds;
++	uint32_t grp_ddr_type;
++	uint32_t grp_b2ds;
++	uint32_t grp_b3ds;
++	uint32_t grp_b4ds;
++	uint32_t grp_b5ds;
++	uint32_t res4;
++	uint32_t grp_b6ds;
++};
++
++/* Device Information: Varies per DDR3 part number and speed grade */
++struct mx6_ddr3_cfg {
++	uint16_t mem_speed;	/* ie 1600 for DDR3-1600 (800,1066,1333,1600) */
++	uint8_t density;	/* chip density (Gb) (1,2,4,8) */
++	uint8_t width;	/* bus width (bits) (4,8,16) */
++	uint8_t banks;	/* number of banks */
++	uint8_t rowaddr;	/* row address bits (11-16)*/
++	uint8_t coladdr;	/* col address bits (9-12) */
++	uint8_t pagesz;	/* page size (K) (1-2) */
++	uint16_t trcd;	/* tRCD=tRP=CL (ns*100) */
++	uint16_t trcmin;	/* tRC min (ns*100) */
++	uint16_t trasmin;	/* tRAS min (ns*100) */
++	uint8_t SRT;		/* self-refresh temperature: 0=normal, 1=extended */
++};
++
++/* Device Information: Varies per LPDDR2 part number and speed grade */
++struct mx6_lpddr2_cfg {
++	uint16_t mem_speed;	/* ie 800 for LPDDR2-800 */
++	uint8_t density;	/* chip density (Gb) (1,2,4,8) */
++	uint8_t width;	/* bus width (bits) (4,8,16) */
++	uint8_t banks;	/* number of banks */
++	uint8_t rowaddr;	/* row address bits (11-16)*/
++	uint8_t coladdr;	/* col address bits (9-12) */
++	uint16_t trcd_lp;
++	uint16_t trppb_lp;
++	uint16_t trpab_lp;
++	uint16_t trcmin;	/* tRC min (ns*100) */
++	uint16_t trasmin;	/* tRAS min (ns*100) */
++};
++
++/* System Information: Varies per board design, layout, and term choices */
++struct mx6_ddr_sysinfo {
++	uint8_t dsize;	/* size of bus (in dwords: 0=16bit,1=32bit,2=64bit) */
++	uint8_t cs_density;	/* density per chip select (Gb) */
++	uint8_t ncs;		/* number chip selects used (1|2) */
++	char cs1_mirror;/* enable address mirror (0|1) */
++	char bi_on;	/* Bank interleaving enable */
++	uint8_t rtt_nom;	/* Rtt_Nom (DDR3_RTT_*) */
++	uint8_t rtt_wr;	/* Rtt_Wr (DDR3_RTT_*) */
++	uint8_t ralat;	/* Read Additional Latency (0-7) */
++	uint8_t walat;	/* Write Additional Latency (0-3) */
++	uint8_t mif3_mode;	/* Command prediction working mode */
++	uint8_t rst_to_cke;	/* Time from SDE enable to CKE rise */
++	uint8_t sde_to_rst;	/* Time from SDE enable until DDR reset# is high */
++	uint8_t pd_fast_exit;/* enable precharge powerdown fast-exit */
++	uint8_t ddr_type;	/* DDR type: DDR3(0) or LPDDR2(1) */
++	uint8_t refsel;	/* REF_SEL field of register MDREF */
++	uint8_t refr;	/* REFR field of register MDREF */
++};
++
++/*
++ * Board specific calibration:
++ *   This includes write leveling calibration values as well as DQS gating
++ *   and read/write delays. These values are board/layout/device specific.
++ *   Freescale recommends using the i.MX6 DDR Stress Test Tool V1.0.2
++ *   (DOC-96412) to determine these values over a range of boards and
++ *   temperatures.
++ */
++struct mx6_mmdc_calibration {
++	/* write leveling calibration */
++	uint32_t p0_mpwldectrl0;
++	uint32_t p0_mpwldectrl1;
++	uint32_t p1_mpwldectrl0;
++	uint32_t p1_mpwldectrl1;
++	/* read DQS gating */
++	uint32_t p0_mpdgctrl0;
++	uint32_t p0_mpdgctrl1;
++	uint32_t p1_mpdgctrl0;
++	uint32_t p1_mpdgctrl1;
++	/* read delay */
++	uint32_t p0_mprddlctl;
++	uint32_t p1_mprddlctl;
++	/* write delay */
++	uint32_t p0_mpwrdlctl;
++	uint32_t p1_mpwrdlctl;
++	/* lpddr2 zq hw calibration */
++	uint32_t mpzqlp2ctl;
++};
++
++/* configure iomux (pinctl/padctl) */
++void mx6dq_dram_iocfg(unsigned width,
++		      const struct mx6dq_iomux_ddr_regs *,
++		      const struct mx6dq_iomux_grp_regs *);
++void mx6sdl_dram_iocfg(unsigned width,
++		       const struct mx6sdl_iomux_ddr_regs *,
++		       const struct mx6sdl_iomux_grp_regs *);
++void mx6sx_dram_iocfg(unsigned width,
++		      const struct mx6sx_iomux_ddr_regs *,
++		      const struct mx6sx_iomux_grp_regs *);
++void mx6ul_dram_iocfg(unsigned width,
++		      const struct mx6ul_iomux_ddr_regs *,
++		      const struct mx6ul_iomux_grp_regs *);
++void mx6sl_dram_iocfg(unsigned width,
++		      const struct mx6sl_iomux_ddr_regs *,
++		      const struct mx6sl_iomux_grp_regs *);
++
++#if defined(CONFIG_MX6_DDRCAL)
++int mmdc_do_write_level_calibration(struct mx6_ddr_sysinfo const *sysinfo);
++int mmdc_do_dqs_calibration(struct mx6_ddr_sysinfo const *sysinfo);
++void mmdc_read_calibration(struct mx6_ddr_sysinfo const *sysinfo,
++                           struct mx6_mmdc_calibration *calib);
++#endif
++
++/* configure mx6 mmdc registers */
++void mx6_dram_cfg(const struct mx6_ddr_sysinfo *,
++		  const struct mx6_mmdc_calibration *,
++		  const void *);
++
++#endif /* CONFIG_SPL_BUILD */
++
++#define MX6_MMDC_P0_MDCTL	0x021b0000
++#define MX6_MMDC_P0_MDPDC	0x021b0004
++#define MX6_MMDC_P0_MDOTC	0x021b0008
++#define MX6_MMDC_P0_MDCFG0	0x021b000c
++#define MX6_MMDC_P0_MDCFG1	0x021b0010
++#define MX6_MMDC_P0_MDCFG2	0x021b0014
++#define MX6_MMDC_P0_MDMISC	0x021b0018
++#define MX6_MMDC_P0_MDSCR	0x021b001c
++#define MX6_MMDC_P0_MDREF	0x021b0020
++#define MX6_MMDC_P0_MDRWD	0x021b002c
++#define MX6_MMDC_P0_MDOR	0x021b0030
++#define MX6_MMDC_P0_MDASP	0x021b0040
++#define MX6_MMDC_P0_MAPSR	0x021b0404
++#define MX6_MMDC_P0_MPZQHWCTRL	0x021b0800
++#define MX6_MMDC_P0_MPWLDECTRL0	0x021b080c
++#define MX6_MMDC_P0_MPWLDECTRL1	0x021b0810
++#define MX6_MMDC_P0_MPODTCTRL	0x021b0818
++#define MX6_MMDC_P0_MPRDDQBY0DL	0x021b081c
++#define MX6_MMDC_P0_MPRDDQBY1DL	0x021b0820
++#define MX6_MMDC_P0_MPRDDQBY2DL	0x021b0824
++#define MX6_MMDC_P0_MPRDDQBY3DL	0x021b0828
++#define MX6_MMDC_P0_MPDGCTRL0	0x021b083c
++#define MX6_MMDC_P0_MPDGCTRL1	0x021b0840
++#define MX6_MMDC_P0_MPRDDLCTL	0x021b0848
++#define MX6_MMDC_P0_MPWRDLCTL	0x021b0850
++#define MX6_MMDC_P0_MPZQLP2CTL	0x021b085C
++#define MX6_MMDC_P0_MPMUR0	0x021b08b8
++
++#define MX6_MMDC_P1_MDCTL	0x021b4000
++#define MX6_MMDC_P1_MDPDC	0x021b4004
++#define MX6_MMDC_P1_MDOTC	0x021b4008
++#define MX6_MMDC_P1_MDCFG0	0x021b400c
++#define MX6_MMDC_P1_MDCFG1	0x021b4010
++#define MX6_MMDC_P1_MDCFG2	0x021b4014
++#define MX6_MMDC_P1_MDMISC	0x021b4018
++#define MX6_MMDC_P1_MDSCR	0x021b401c
++#define MX6_MMDC_P1_MDREF	0x021b4020
++#define MX6_MMDC_P1_MDRWD	0x021b402c
++#define MX6_MMDC_P1_MDOR	0x021b4030
++#define MX6_MMDC_P1_MDASP	0x021b4040
++#define MX6_MMDC_P1_MAPSR	0x021b4404
++#define MX6_MMDC_P1_MPZQHWCTRL	0x021b4800
++#define MX6_MMDC_P1_MPWLDECTRL0	0x021b480c
++#define MX6_MMDC_P1_MPWLDECTRL1	0x021b4810
++#define MX6_MMDC_P1_MPODTCTRL	0x021b4818
++#define MX6_MMDC_P1_MPRDDQBY0DL	0x021b481c
++#define MX6_MMDC_P1_MPRDDQBY1DL	0x021b4820
++#define MX6_MMDC_P1_MPRDDQBY2DL	0x021b4824
++#define MX6_MMDC_P1_MPRDDQBY3DL	0x021b4828
++#define MX6_MMDC_P1_MPDGCTRL0	0x021b483c
++#define MX6_MMDC_P1_MPDGCTRL1	0x021b4840
++#define MX6_MMDC_P1_MPRDDLCTL	0x021b4848
++#define MX6_MMDC_P1_MPWRDLCTL	0x021b4850
++#define MX6_MMDC_P1_MPZQLP2CTL	0x021b485C
++#define MX6_MMDC_P1_MPMUR0	0x021b48b8
++
++#endif	/*__ASM_ARCH_MX6_DDR_H__ */
+diff --git a/plat/imx/imx6/common/uboot_ddr_init/mx6ul-ddr.h b/plat/imx/imx6/common/uboot_ddr_init/mx6ul-ddr.h
+new file mode 100644
+index 000000000..99779588b
+--- /dev/null
++++ b/plat/imx/imx6/common/uboot_ddr_init/mx6ul-ddr.h
+@@ -0,0 +1,44 @@
++/* SPDX-License-Identifier: GPL-2.0+ */
++/*
++ * Copyright (C) 2015 Freescale Semiconductor, Inc.
++ */
++
++#ifndef __ASM_ARCH_MX6UL_DDR_H__
++#define __ASM_ARCH_MX6UL_DDR_H__
++
++#if !(defined(CONFIG_MX6UL) || defined(CONFIG_MX6ULL))
++#error "wrong CPU"
++#endif
++
++#define MX6_IOM_DRAM_DQM0	0x020e0244
++#define MX6_IOM_DRAM_DQM1	0x020e0248
++
++#define MX6_IOM_DRAM_RAS	0x020e024c
++#define MX6_IOM_DRAM_CAS	0x020e0250
++#define MX6_IOM_DRAM_CS0	0x020e0254
++#define MX6_IOM_DRAM_CS1	0x020e0258
++#define MX6_IOM_DRAM_SDWE_B	0x020e025c
++#define MX6_IOM_DRAM_SDODT0	0x020e0260
++#define MX6_IOM_DRAM_SDODT1	0x020e0264
++#define MX6_IOM_DRAM_SDBA0	0x020e0268
++#define MX6_IOM_DRAM_SDBA1	0x020e026c
++#define MX6_IOM_DRAM_SDBA2	0x020e0270
++#define MX6_IOM_DRAM_SDCKE0	0x020e0274
++#define MX6_IOM_DRAM_SDCKE1	0x020e0278
++#define MX6_IOM_DRAM_SDCLK_0	0x020e027c
++#define MX6_IOM_DRAM_SDQS0	0x020e0280
++#define MX6_IOM_DRAM_SDQS1	0x020e0284
++#define MX6_IOM_DRAM_RESET	0x020e0288
++
++#define MX6_IOM_GRP_ADDDS	0x020e0490
++#define MX6_IOM_DDRMODE_CTL	0x020e0494
++#define MX6_IOM_GRP_B0DS	0x020e0498
++#define MX6_IOM_GRP_DDRPK	0x020e049c
++#define MX6_IOM_GRP_CTLDS	0x020e04a0
++#define MX6_IOM_GRP_B1DS	0x020e04a4
++#define MX6_IOM_GRP_DDRHYS	0x020e04a8
++#define MX6_IOM_GRP_DDRPKE	0x020e04ac
++#define MX6_IOM_GRP_DDRMODE	0x020e04b0
++#define MX6_IOM_GRP_DDR_TYPE	0x020e04b4
++
++#endif	/*__ASM_ARCH_MX6SX_DDR_H__ */
+-- 
+2.22.0
+

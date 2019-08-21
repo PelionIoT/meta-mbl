@@ -16,7 +16,7 @@ SRC_URI = " \
 
 # MBL_ATF_VERSION should be updated to match version pointed to by SRCREV
 MBL_ATF_VERSION = "2.1"
-SRCREV_atf = "17e93a8fbf2e0925b23151fcb4a7cf1e2a1130f2"
+SRCREV_atf = "e5599535e10c12dee7a14769551996cb412425f5"
 SRCREV_mbedtls = "1ab9b5714852c6810c0a0bfd8c3b5c60a9a15482"
 
 LICENSE = "BSD-3-Clause & Apache-2.0"

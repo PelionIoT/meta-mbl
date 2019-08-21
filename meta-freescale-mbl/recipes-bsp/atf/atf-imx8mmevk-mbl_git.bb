@@ -35,8 +35,8 @@ do_compile_append() {
 
 # We need to over-ride the default do_deploy with a NOP here.
 # When we switch on FIP images signing we will need to do_deploy_append
-do_deploy() {
+do_deploy_append() {
 	install -d ${DEPLOYDIR}/imx-boot-tools
 	install -D -p -m 0644 ${B}/${PLATFORM}/${MBL_UNIFIED_BIN} ${DEPLOYDIR}/imx-boot-tools
-	install -D -p -m 0644 ${B}/${PLATFORM}/fip.bin ${DEPLOYDIR}/imx-boot-tools
+	install -D -p -m 0644 ${B}/${PLATFORM}/${FIP_BIN} ${DEPLOYDIR}
 }

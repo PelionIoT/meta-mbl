@@ -16,3 +16,5 @@ python __anonymous () {
         features_intersection = list(set(mbl_image_features_blacklist.split()) & set(d.getVar('IMAGE_FEATURES', True).split()))
         raise bb.parse.SkipRecipe("Mbed Linux OS production image blacklists the following added IMAGE_FEATURES {}.".format(features_intersection))
 }
+
+inherit mbl-extrausers

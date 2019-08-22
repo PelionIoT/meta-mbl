@@ -79,6 +79,9 @@ MBL_DEFAULT_FS_PASSNO ?= "0"
 # * MBL_<partition>_FS_FREQ     - fifth fstab(5) field
 # * MBL_<partition>_FS_PASSNO   - sixth fstab(5) field
 #
+# For the HOME partition there is:
+# * MBL_HOME_FILL_STORAGE       - extend the home partition to the end of the storage if set to "1"
+
 # Notes:
 # * Note that a pair of banked partitions share these variables except for
 #   having separate OFFSET variables.
@@ -258,6 +261,10 @@ MBL_PARTITION_NAMES += "SCRATCH"
 MBL_HOME_MOUNT_POINT = "${MBL_HOME_DIR}"
 MBL_HOME_LABEL ?= "home"
 MBL_HOME_DEFAULT_SIZE_MiB ?= "450"
+# Extend the home partition to the end of the storage?
+# This is off by default, for now, because it leads to huge flash images that
+# take too long to write to devices.
+MBL_HOME_FILL_STORAGE ?= "0"
 MBL_PARTITION_NAMES += "HOME"
 
 # ------------------------------------------------------------------------------
@@ -321,6 +328,43 @@ python __anonymous() {
                 part_name, size_KiB_var, size_KiB
             ))
         return size_KiB, size_MiB
+
+    def _extend_part_to_end_of_storage(d, part_name, size_KiB, offset_KiB):
+        """
+        Recalculate a partition's size so that it extends to the end of the
+        storage.
+
+        Returns a tuple: (new_size_in_KiB, new_size_in_MiB)
+
+        Notes:
+        * The new size will be at least as big as the old size and will be a
+          multiple of 1MiB.
+        * The BitBake variables for the partition's size in MiB and KiB will be
+          set to the new values.
+        """
+        # Don't allow extending a banked partition - each bank of a partition
+        # should always be the same size.
+        if _process_bool_var(d, part_name, "IS_BANKED"):
+            bb.fatal("Cannot extend banked partition \"{}\" to end of storage".format(part_name))
+
+        total_size_MiB = _get_size_var_or_fatal(d, "MBL_WKS_STORAGE_SIZE_MiB")
+        total_size_KiB = total_size_MiB * 1024
+        size_left_MiB = (total_size_KiB - offset_KiB) // 1024
+        size_left_KiB = size_left_MiB * 1024
+
+        # Don't allow "extending" the partition to actually make it smaller
+        if size_left_KiB < size_KiB:
+            bb.fatal(
+                "Not enough space for partition \"{}\" on storage: offset is {}KiB; size is {}KiB; total storage size is {}KiB".format(
+                    part_name, offset_KiB, size_KiB, total_size_KiB
+                )
+            )
+        size_KiB_var = "MBL_{}_SIZE_KiB".format(part_name)
+        d.setVar(size_KiB_var, str(size_left_KiB))
+        size_MiB_var = "MBL_{}_SIZE_MiB".format(part_name)
+        d.setVar(size_MiB_var, str(size_left_MiB))
+
+        return size_left_KiB, size_left_MiB
 
     def _next_fs_part_number(fs_part_number):
         """
@@ -519,6 +563,13 @@ python __anonymous() {
             prev_size=prev_part_info.get("size_KiB"),
             prev_fs_part_number=prev_fs_part_number,
         )
+        if _process_bool_var(d, part_name, "FILL_STORAGE"):
+            part_info["size_KiB"], part_info["size_MiB"] = _extend_part_to_end_of_storage(
+                d,
+                part_name,
+                part_info["size_KiB"],
+                part_info["offsets_KiB"][0],
+            )
         prev_part_info = part_info
         if not part_info["is_fs"]:
             continue

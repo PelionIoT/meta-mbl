@@ -1,0 +1,7 @@
+/var/log/faillog {
+    missingok
+    monthly
+    create 0664 root utmp
+    minsize 1M
+    rotate 1
+}

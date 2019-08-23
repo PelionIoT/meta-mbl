@@ -147,7 +147,7 @@ MBL_PARTITION_NAMES += "MBR"
 # packaged however the vendor specific boot ROM requires.
 #
 MBL_WKS_BOOTLOADER1_FILENAME ?= "${MBL_BL2_FILENAME}"
-MBL_WKS_BOOTLOADER1_DEFAULT_SIZE_MiB = "3"
+MBL_WKS_BOOTLOADER1_DEFAULT_SIZE_MiB = "4"
 MBL_WKS_BOOTLOADER1_ALIGN_KiB ?= "1"
 MBL_WKS_BOOTLOADER1_NO_DEFAULT_OFFSET = "1"
 MBL_WKS_BOOTLOADER1_NO_FS = "1"
@@ -161,7 +161,7 @@ MBL_PARTITION_NAMES += "WKS_BOOTLOADER1"
 # FIP image containing BL3, OP-TEE and U-Boot.
 #
 MBL_WKS_BOOTLOADER2_FILENAME ?= "${MBL_FIP_BIN_FILENAME}"
-MBL_WKS_BOOTLOADER2_DEFAULT_SIZE_MiB = "4"
+MBL_WKS_BOOTLOADER2_DEFAULT_SIZE_MiB = "16"
 MBL_WKS_BOOTLOADER2_IS_BANKED = "1"
 MBL_WKS_BOOTLOADER2_NO_FS = "1"
 MBL_PARTITION_NAMES += "WKS_BOOTLOADER2"
@@ -170,14 +170,14 @@ MBL_PARTITION_NAMES += "WKS_BOOTLOADER2"
 # BANK_AND_UPDATE_STATE (non-file system; single bank)
 # ------------------------------------------------------------------------------
 # BANK_AND_UPDATE_STATE will be accessed by BL2. Make it easy for BL2 to locate
-# by just using a fixed offset of 48MiB, which is unlikely to share an erase
+# by just using a fixed offset of 64MiB, which is unlikely to share an erase
 # block with WKS_BOOTLOADER2.
 # In order to implement transactional operations in this storage we need
 # multiple flash erase blocks, but we don't have a detailed design yet so
 # reserve 128MiB to give us some flexibility.
 #
 MBL_BANK_AND_UPDATE_STATE_DEFAULT_SIZE_MiB = "128"
-MBL_BANK_AND_UPDATE_STATE_OFFSET_BANK1_KiB ?= "49152"
+MBL_BANK_AND_UPDATE_STATE_OFFSET_BANK1_KiB ?= "65536"
 MBL_BANK_AND_UPDATE_STATE_ALIGN_KiB ?= "1"
 MBL_BANK_AND_UPDATE_STATE_NO_FS = "1"
 MBL_PARTITION_NAMES += "BANK_AND_UPDATE_STATE"
@@ -601,4 +601,17 @@ python __anonymous() {
 
     part_vars = " ".join(part_vars_list)
     d.appendVar("MBL_PARTITION_VARS", part_vars)
+
+    # Create a list of paths that should be excluded when populating the root
+    # file system. This is passed to the --exclude-path option in our .wks file.
+    # Remove the leading "/" of each mount point because Wic expects relative
+    # paths, and append a trailing "/" to each mount point so that Wic excludes
+    # the contents of the mount point, but not the mount point directory
+    # itself.
+    rootfs_exclude_paths = [
+        "{}/".format(part["mount_point"].lstrip("/"))
+        for part in part_infos
+        if not part["skip"] and part["is_fs"] and part["mount_point"] != "/"
+    ]
+    d.setVar("MBL_WKS_ROOT_EXCLUDE_PATHS", " ".join(rootfs_exclude_paths))
 }

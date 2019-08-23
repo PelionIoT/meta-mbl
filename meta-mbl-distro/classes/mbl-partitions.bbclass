@@ -204,7 +204,7 @@ MBL_PARTITION_NAMES += "WKS_BOOTLOADER_FS"
 #
 MBL_BOOT_MOUNT_POINT = "${MBL_BOOT_DIR}"
 MBL_BOOT_LABEL ?= "boot"
-MBL_BOOT_DEFAULT_SIZE_MiB ?= "48"
+MBL_BOOT_DEFAULT_SIZE_MiB ?= "128"
 MBL_BOOT_IS_BANKED = "1"
 MBL_BOOT_FSTYPE ?= "vfat"
 MBL_BOOT_MOUNT_OPTS ?= "ro,defaults"
@@ -215,7 +215,7 @@ MBL_PARTITION_NAMES += "BOOT"
 # ------------------------------------------------------------------------------
 MBL_ROOT_MOUNT_POINT = "/"
 MBL_ROOT_LABEL ?= "rootfs"
-MBL_ROOT_DEFAULT_SIZE_MiB ?= "500"
+MBL_ROOT_DEFAULT_SIZE_MiB ?= "512"
 MBL_ROOT_IS_BANKED = "1"
 MBL_PARTITION_NAMES += "ROOT"
 
@@ -224,7 +224,7 @@ MBL_PARTITION_NAMES += "ROOT"
 # ------------------------------------------------------------------------------
 MBL_FACTORY_CONFIG_MOUNT_POINT = "${MBL_FACTORY_CONFIG_DIR}"
 MBL_FACTORY_CONFIG_LABEL ?= "factory_config"
-MBL_FACTORY_CONFIG_DEFAULT_SIZE_MiB ?= "20"
+MBL_FACTORY_CONFIG_DEFAULT_SIZE_MiB ?= "32"
 MBL_FACTORY_CONFIG_MOUNT_OPTS = "rw,noexec,nodev,nosuid,async"
 MBL_PARTITION_NAMES += "FACTORY_CONFIG"
 
@@ -233,7 +233,7 @@ MBL_PARTITION_NAMES += "FACTORY_CONFIG"
 # ------------------------------------------------------------------------------
 MBL_NON_FACTORY_CONFIG_MOUNT_POINT = "${MBL_NON_FACTORY_CONFIG_DIR}"
 MBL_NON_FACTORY_CONFIG_LABEL ?= "nfactory_config"
-MBL_NON_FACTORY_CONFIG_DEFAULT_SIZE_MiB ?= "20"
+MBL_NON_FACTORY_CONFIG_DEFAULT_SIZE_MiB ?= "32"
 MBL_NON_FACTORY_CONFIG_IS_BANKED = "1"
 MBL_NON_FACTORY_CONFIG_MOUNT_OPTS ?= "rw,noexec,nodev,nosuid,async"
 MBL_PARTITION_NAMES += "NON_FACTORY_CONFIG"
@@ -252,7 +252,7 @@ MBL_PARTITION_NAMES += "LOG"
 # ------------------------------------------------------------------------------
 MBL_SCRATCH_MOUNT_POINT = "${MBL_SCRATCH_DIR}"
 MBL_SCRATCH_LABEL ?= "scratch"
-MBL_SCRATCH_DEFAULT_SIZE_MiB ?= "500"
+MBL_SCRATCH_DEFAULT_SIZE_MiB ?= "640"
 MBL_PARTITION_NAMES += "SCRATCH"
 
 # ------------------------------------------------------------------------------
@@ -260,7 +260,7 @@ MBL_PARTITION_NAMES += "SCRATCH"
 # ------------------------------------------------------------------------------
 MBL_HOME_MOUNT_POINT = "${MBL_HOME_DIR}"
 MBL_HOME_LABEL ?= "home"
-MBL_HOME_DEFAULT_SIZE_MiB ?= "450"
+MBL_HOME_DEFAULT_SIZE_MiB ?= "512"
 # Extend the home partition to the end of the storage?
 # This is off by default, for now, because it leads to huge flash images that
 # take too long to write to devices.

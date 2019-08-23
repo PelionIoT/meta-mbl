@@ -28,7 +28,7 @@ ${MBL_BOOT_COMMENT_IF_SKIP}part --source bootimg-partition --fstype=${MBL_BOOT_F
 ${MBL_BOOT_COMMENT_IF_SKIP}part --fstype=${MBL_BOOT_FSTYPE} --label ${MBL_BOOT_LABEL}2 --align ${MBL_BOOT_OFFSET_BANK2_KiB} --fixed-size ${MBL_BOOT_SIZE_MiB}
 
 # Root partition (two banks)
-${MBL_ROOT_COMMENT_IF_SKIP}part --source rootfs --fstype=${MBL_ROOT_FSTYPE} --label ${MBL_ROOT_LABEL}1 --align ${MBL_ROOT_OFFSET_BANK1_KiB} --fixed-size ${MBL_ROOT_SIZE_MiB}
+${MBL_ROOT_COMMENT_IF_SKIP}part --source rootfs --fstype=${MBL_ROOT_FSTYPE} --label ${MBL_ROOT_LABEL}1 --align ${MBL_ROOT_OFFSET_BANK1_KiB} --fixed-size ${MBL_ROOT_SIZE_MiB} --exclude-path ${MBL_WKS_ROOT_EXCLUDE_PATHS}
 ${MBL_ROOT_COMMENT_IF_SKIP}part --fstype=${MBL_ROOT_FSTYPE} --label ${MBL_ROOT_LABEL}2 --align ${MBL_ROOT_OFFSET_BANK2_KiB} --fixed-size ${MBL_ROOT_SIZE_MiB}
 
 # Factory config partition

@@ -41,6 +41,7 @@ The script must be executed from OEROOT, as set in bblayers.conf, or bitbake
 can't resolve the paths it needs.
 """
 
+import gzip
 import pathlib
 import re
 import shutil
@@ -165,11 +166,11 @@ def copy_to_staging_dir(filename_var_map, staging_dir, tinfoil=None):
     )
     for var, fname in filename_var_map.items():
         src = deploy_dir_img / fname
-        dest = staging_dir / var
+        dest = staging_dir / fname
         shutil.copy2(str(src), str(dest))
 
 
-def create_payload_tar_archive(tar_archive_name, dir_path):
+def create_payload_tar_archive(tar_archive_name, dir_path, fname_var_map):
     """
     Create the payload tar archive.
 
@@ -178,13 +179,27 @@ def create_payload_tar_archive(tar_archive_name, dir_path):
 
     :param tar_archive_name str: Path to the tar archive.
     :param dir_path Path: Path to the directory of the files to archive.
+    :param fname_var_map dict: Mapping of bitbake variable names to files.
     """
+    files_for_tar = []
+    for fname in dir_path.iterdir():
+        # Look up a dictionary key by value, so we can name the file with
+        # the bitbake variable name.
+        gzip_fname = "{}.gz".format(
+            list(fname_var_map.keys())[
+                list(fname_var_map.values()).index(fname.name)
+            ]
+        )
+        gzip_path = dir_path / gzip_fname
+        files_for_tar.append(gzip_path)
+
+        with fname.open(mode="rb") as f_obj:
+            with gzip.open(str(gzip_path), "wb") as gzip_arc:
+                shutil.copyfileobj(f_obj, gzip_arc)
+
     with tarfile.open(tar_archive_name, mode="w") as tar:
-        for fname in dir_path.iterdir():
-            ftar_path = str(dir_path / fname.name)
-            with tarfile.open(ftar_path, mode="w:xz") as ftar:
-                ftar.add(str(fname), arcname=fname.name)
-            tar.add(ftar_path, arcname=fname.name)
+        for arc_path in files_for_tar:
+            tar.add(str(arc_path), arcname=arc_path.name)
 
 
 def main(args):
@@ -207,7 +222,7 @@ def main(args):
         with tempfile.TemporaryDirectory() as staging_dir:
             staging_dir = pathlib.Path(staging_dir)
             copy_to_staging_dir(fname_var_map, staging_dir, tinfoil=tinfoil)
-            create_payload_tar_archive(str(args.tar_output_path), staging_dir)
+            create_payload_tar_archive(str(args.tar_output_path), staging_dir, fname_var_map)
 
 
 if __name__ == "__main__":

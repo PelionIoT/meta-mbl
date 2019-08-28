@@ -113,7 +113,8 @@ do_configure() {
           -DLOG_DIR="${localstatedir}/log" \
           -DROOTFS1_LABEL="${MBL_ROOT_LABEL}1" \
           -DROOTFS2_LABEL="${MBL_ROOT_LABEL}2" \
-          -DROOTFS_TYPE="${MBL_ROOT_FSTYPE}"
+          -DROOTFS_TYPE="${MBL_ROOT_FSTYPE}" \
+          -DFACTORY_CONFIG_PARTITION="${MBL_FACTORY_CONFIG_DIR}"
 
     cd ${CUR_DIR}
 }

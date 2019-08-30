@@ -37,8 +37,11 @@ We have to set the import path relative to this script so python can import the
 bitbake and oe libs, so it cannot be moved from the meta-mbl-distro/scripts
 folder, as the paths are worked out relative to the location of this file.
 
-The script must be executed from OEROOT, as set in bblayers.conf, or bitbake
-can't resolve the paths it needs.
+The script must be executed from TOPDIR, which is the build directory created
+when you source setup-environment, or bitbake can't resolve the paths it needs.
+
+TOPDIR is ./mbl-manifest/build-mbl-development or
+./mbl-manifest/build-mbl-production in the MBL workspace.
 """
 
 import gzip
@@ -72,7 +75,7 @@ import argparse_oe
 
 def parse_args():
     """Parse the command line arguments."""
-    parser = argparse_oe.ArgumentParser()
+    parser = argparse_oe.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "-f",
@@ -164,6 +167,13 @@ def copy_to_staging_dir(filename_var_map, staging_dir, tinfoil=None):
     deploy_dir_img = pathlib.Path(
         tinfoil.config_data.getVar("DEPLOY_DIR_IMAGE")
     )
+    if deploy_dir_img is None:
+        raise EnvironmentError(
+            "DEPLOY_DIR_IMAGE was not found. "
+            "You must be in a valid bitbake environment and you must "
+            "have built an MBL image first so DEPLOY_DIR_IMAGE exists."
+        )
+
     for var, fname in filename_var_map.items():
         src = deploy_dir_img / fname
         dest = staging_dir / fname
@@ -210,7 +220,20 @@ def main(args):
     """
     fname_var_map = {}
     with bb.tinfoil.Tinfoil() as tinfoil:
-        tinfoil.prepare(config_only=True)
+        try:
+            tinfoil.prepare(config_only=True)
+            # Tinfoil throws a SystemExit when it can't find the Layer
+            # Directory. This error means the CWD is probably incorrect.
+        except SystemExit:
+            bb.fatal(
+                "Your current working directory must be $TOPDIR, i.e the "
+                "build directory, to run this script. If you want to run "
+                "this script, or bitbake, from outside the build directory, "
+                "you must set $BBPATH to point to the build directory. For "
+                "more information see the Yocto mega manual: "
+                "https://www.yoctoproject.org/docs/latest/mega-manual/"
+                "mega-manual.html#var-BBPATH"
+            )
         if args.filenames is not None:
             fname_var_map = match_varnames_to(args.filenames, tinfoil=tinfoil)
 

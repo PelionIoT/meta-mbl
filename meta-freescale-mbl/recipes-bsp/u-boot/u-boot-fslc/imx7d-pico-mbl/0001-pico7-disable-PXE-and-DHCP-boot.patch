@@ -1,0 +1,29 @@
+From 269cda02509a48473219e50f02a9bccbbe0be471 Mon Sep 17 00:00:00 2001
+From: "Ying-Chun Liu (PaulLiu)" <paulliu@debian.org>
+Date: Wed, 21 Aug 2019 12:20:17 +0800
+Subject: [PATCH] pico7: disable PXE and DHCP boot.
+
+We disable PXE and DHCP boot for our production image
+
+Signed-off-by: Ying-Chun Liu (PaulLiu) <paulliu@debian.org>
+---
+ include/configs/pico-imx7d.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/include/configs/pico-imx7d.h b/include/configs/pico-imx7d.h
+index 95110df09c..fa141604f0 100644
+--- a/include/configs/pico-imx7d.h
++++ b/include/configs/pico-imx7d.h
+@@ -122,8 +122,7 @@
+ 	"fi"
+ 
+ #define BOOT_TARGET_DEVICES(func) \
+-	func(MMC, mmc, 0) \
+-	func(DHCP, dhcp, na)
++	func(MMC, mmc, 0)
+ 
+ #include <config_distro_bootcmd.h>
+ 
+-- 
+2.23.0.rc1
+

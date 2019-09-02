@@ -13,9 +13,10 @@ SRC_URI_append_raspberrypi3-mbl = " \
 		file://0002-rpi3-Enable-boot-kernel-from-fit-image.patch \
 		file://change-text-base-mbl.cfg \
 		file://enable-fit-mbl.cfg \
-		file://enable-random-macaddr-mbl.cfg \
-		file://enable-fastboot.cfg \
 		${@bb.utils.contains_any('PACKAGECONFIG','noconsole silent',' file://0003-set-silent-envs.patch','',d)} \
+		${@bb.utils.contains('PACKAGECONFIG', 'minimal', '', ' file://enable-random-macaddr-mbl.cfg', d)} \
+		${@bb.utils.contains('PACKAGECONFIG', 'minimal', '', ' file://enable-fastboot-mbl.cfg', d)} \
+		${@bb.utils.contains('PACKAGECONFIG', 'minimal', ' file://0001-rpi3-disable-PXE-and-DHCP-boot.patch', '', d)} \
 "
 
 do_compile_append_raspberrypi3-mbl() {

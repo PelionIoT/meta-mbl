@@ -17,6 +17,9 @@ SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=ht
            ${@bb.utils.contains_any('PACKAGECONFIG','noconsole silent',' file://0002-set-silent-envs.patch','',d)} \
           "
 
+SRC_URI_append_imx7d-pico-mbl = " \
+           ${@bb.utils.contains('PACKAGECONFIG','minimal',' file://0001-pico7-disable-PXE-and-DHCP-boot.patch','',d)} \
+	   "
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=30503fd321432fc713238f582193b78e"
 
 DEPENDS += "flex-native bison-native"

@@ -12,9 +12,9 @@
 # Possible values for u-boot recipes PACKAGECONFIG:
 # "noconsole": disables u-boot console only
 # "silent": disables u-boot and kernel consoles
-PACKAGECONFIG_append_pn-u-boot-fslc = " silent"
-PACKAGECONFIG_append_pn-u-boot-imx = " silent"
-PACKAGECONFIG_append_pn-u-boot = " silent"
+PACKAGECONFIG_append_pn-u-boot-fslc = " silent minimal"
+PACKAGECONFIG_append_pn-u-boot-imx = " silent minimal"
+PACKAGECONFIG_append_pn-u-boot = " silent minimal"
 
 PACKAGECONFIG_append_pn-atf-${MACHINE} = " silent"
 

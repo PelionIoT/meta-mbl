@@ -1,0 +1,30 @@
+From 62ad247eac83052b9aec1a53251694859074ed53 Mon Sep 17 00:00:00 2001
+From: "Ying-Chun Liu (PaulLiu)" <paulliu@debian.org>
+Date: Tue, 20 Aug 2019 14:28:12 +0800
+Subject: [PATCH] rpi3: disable PXE and DHCP boot.
+
+We disable PXE and DHCP boot for our production image
+
+Signed-off-by: Ying-Chun Liu (PaulLiu) <paulliu@debian.org>
+---
+ include/configs/rpi.h | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/include/configs/rpi.h b/include/configs/rpi.h
+index 9ce41767a9..77cb35e249 100644
+--- a/include/configs/rpi.h
++++ b/include/configs/rpi.h
+@@ -149,9 +149,7 @@
+ #define BOOT_TARGET_DEVICES(func) \
+ 	func(MMC, mmc, 0) \
+ 	func(MMC, mmc, 1) \
+-	func(USB, usb, 0) \
+-	func(PXE, pxe, na) \
+-	func(DHCP, dhcp, na)
++	func(USB, usb, 0)
+ #include <config_distro_bootcmd.h>
+ 
+ #define CONFIG_EXTRA_ENV_SETTINGS \
+-- 
+2.23.0.rc1
+

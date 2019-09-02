@@ -120,10 +120,12 @@ def parse_args():
     )
     dump_cmd.add_argument(
         "--ca-ttl",
+        default="8750h",
         help="Issuer TTL."
     )
     dump_cmd.add_argument(
         "--cert-ttl",
+        default="4375h",
         help="End entity certificate TTL."
     )
     dump_cmd.add_argument(

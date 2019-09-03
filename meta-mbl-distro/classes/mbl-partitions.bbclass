@@ -580,9 +580,10 @@ python __anonymous() {
         part_info["fs_freq"] = _process_var_with_default(d, part_name, "FS_FREQ")
         part_info["fs_passno"] = _process_var_with_default(d, part_name, "FS_PASSNO")
         part_info["fs_part_numbers"] = []
-        for p in part_info["offsets_KiB"]:
+        for i, p in enumerate(part_info["offsets_KiB"]):
             new_fs_part_number = _next_fs_part_number(prev_fs_part_number)
             part_info["fs_part_numbers"].append(new_fs_part_number)
+            d.setVar("MBL_{}_FS_PART_NUMBER_BANK{}".format(part_name, i + 1), str(new_fs_part_number))
             prev_fs_part_number = new_fs_part_number
 
     d.setVar("MBL_PARTITION_INFOS", part_infos)

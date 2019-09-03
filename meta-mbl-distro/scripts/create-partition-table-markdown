@@ -1,0 +1,303 @@
+#!/usr/bin/env python3
+# Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+import pathlib
+import sys
+
+# Set the PYTHONPATH so we can import openembedded scripts/lib modules.
+oe_scripts_path = (
+    pathlib.Path(__file__).resolve().parent.parent.parent.parent
+    / "openembedded-core"
+    / "scripts"
+)
+
+lib_path = oe_scripts_path / "lib"
+sys.path.insert(0, str(lib_path))
+
+import scriptpath
+import scriptutils
+
+# This is needed so we can import bitbake modules.
+bitbakepath = scriptpath.add_bitbake_lib_path()
+
+import bb.tinfoil
+
+SCRIPT_NAME = pathlib.Path(__file__).name
+
+
+def get_var_for_part(d, var_name, part_name, default=None):
+    """
+    Get the value of a BitBake variable for a partition.
+
+    The per-partition variables that MBL defines have names of the form
+    MBL_<part_name>_<var_name>. This function gets the value of one of these
+    variables.
+
+    Args:
+    * d: a BitBake datastore.
+    * var_name: the name of the property to get.
+    * part_name: the name of the partition for which to get the property.
+    * default: the value returned when the requested variable is not set.
+    """
+    full_var_name = "MBL_{}_{}".format(part_name, var_name)
+    val_str = d.getVar(full_var_name, True)
+    if val_str is None and default is not None:
+        return default
+    return val_str
+
+
+def format_size(size_KiB):
+    """
+    Format a size/offset for display.
+
+    Args:
+    * size_KiB: the size/offset in KiB.
+    """
+    # If the size isn't a multiple of 0.5MiB, print it in KiB
+    if size_KiB % 512:
+        return "{}KiB".format(size_KiB)
+    # If the size is a multiple of 1MiB, print it in MiB
+    if not size_KiB % 1024:
+        return "{}MiB".format(size_KiB // 1024)
+    # Otherwise, print it in MiB with one decimal place. The digit after the
+    # decimal point should always be "5", otherwise one of the two earlier
+    # cases should have been used.
+    size_MiB = float(size_KiB) / float(1024)
+    return "{:.1f}MiB".format(size_MiB)
+
+
+def get_part_number_col(d, part_name, bank):
+    """
+    Get the content of the "Partition Number" table cell for the given
+    partition name and bank.
+
+    Only file system partitions that are in the partition table have partition
+    numbers. For other partitions, return "-", meaning "Not applicable".
+    """
+    if int(get_var_for_part(d, "NO_FS", part_name, "0")):
+        return "-"
+    return get_var_for_part(d, "FS_PART_NUMBER_BANK{}".format(bank), part_name)
+
+
+def get_name_col(d, part_name, bank):
+    """
+    Get the content of the "Name/label" table cell for the given partition name
+    and bank.
+    """
+    label_str = ""
+    name_str = ""
+    if part_name == "WKS_BOOTLOADER1" and int(
+        get_var_for_part(d, "IS_BL2", part_name, "0")
+    ):
+        name_str = "BL2"
+    elif part_name == "WKS_BOOTLOADER2" and int(
+        get_var_for_part(d, "IS_BL3", part_name, "0")
+    ):
+        name_str = "BL3"
+    elif part_name == "BANK_AND_UPDATE_STATE":
+        name_str = "Bank/Update state"
+    else:
+        label_str = get_var_for_part(d, "LABEL", part_name)
+        name_str = label_str or part_name
+
+    bank_str = ""
+    if int(get_var_for_part(d, "IS_BANKED", part_name, default="0")):
+        if label_str:
+            bank_str = str(bank)
+        else:
+            bank_str = " (Bank {})".format(bank)
+    return "{}{}".format(name_str, bank_str)
+
+
+def get_offset_col(d, part_name, bank):
+    """
+    Get the content of the "Offset" table cell for the given partition name and
+    bank.
+    """
+    offset_KiB = int(
+        get_var_for_part(d, "OFFSET_BANK{}_KiB".format(bank), part_name)
+    )
+    return format_size(offset_KiB)
+
+
+def get_size_col(d, part_name, bank):
+    """
+    Get the content of the "Size" table cell for the given partition name and
+    bank.
+    """
+    size_KiB = int(get_var_for_part(d, "SIZE_KiB", part_name))
+    return format_size(size_KiB)
+
+
+def get_partition_type_col(d, part_name, bank):
+    """
+    Get the content of the "Partition type" table cell for the given partition
+    name and bank.
+    """
+    if int(get_var_for_part(d, "NO_FS", part_name, default="0")):
+        return "Raw"
+    part_number = int(
+        get_var_for_part(d, "FS_PART_NUMBER_BANK{}".format(bank), part_name)
+    )
+    if part_number < 4:
+        return "Primary"
+    else:
+        return "Logical"
+
+
+def get_file_system_type_col(d, part_name, bank):
+    """
+    Get the content of the "File system type" table cell for the given
+    partition name and bank.
+    """
+    if int(get_var_for_part(d, "NO_FS", part_name, default="0")):
+        return "-"
+    return get_var_for_part(d, "FSTYPE", part_name)
+
+
+def get_notes_col(d, part_name, bank):
+    """
+    Get the content of the "Notes" table cell for the given partition name and
+    bank.
+    """
+    return "-"
+
+
+# A sorted list of tuples that specifies the headings for each table column and
+# a function to get the content for a cell in that column.
+COLUMN_SPECS = (
+    ("Number", get_part_number_col),
+    ("Label/Name", get_name_col),
+    ("Offset", get_offset_col),
+    ("Size", get_size_col),
+    ("Partition type", get_partition_type_col),
+    ("File system type", get_file_system_type_col),
+    ("Notes", get_notes_col),
+)
+
+
+def format_table_cell(value, col_width):
+    """
+    Format a text value to be the Markdown content of a table cell.
+
+    Args:
+    * value: The text value of the table cell.
+    * col_width: The width (in chars) of the table column.
+    """
+    return "{:{width}}".format(value, width=str(col_width))
+
+
+def format_table_row(values, col_widths):
+    """
+    Format a sequence of values to be the Markdown content of a table row.
+
+    Args:
+    * values: The sequence of text values for the table row cells.
+    * col_widths: The sequence of column widths for the table's columns.
+    """
+    return "| {} |".format(
+        " | ".join(map(format_table_cell, values, col_widths))
+    )
+
+
+def create_table_row(d, part_name, bank):
+    """
+    Create the data for a non-heading table row.
+    """
+    return [cs[1](d, part_name, bank) for cs in COLUMN_SPECS]
+
+
+def create_table_heading_rows(d):
+    """
+    Create the data for the table's heading rows.
+    """
+    return [
+        [cs[0] for cs in COLUMN_SPECS],
+        ["-" * len(cs[0]) for cs in COLUMN_SPECS],
+    ]
+
+
+def create_extended_part_row():
+    """
+    Create the data for a table row for the "extended" partition.
+    """
+    return ["4", "-", "-", "-", "Extended", "-", "-"]
+
+
+def is_part_skipped(d, part_name):
+    """
+    Return true if the named partition should not have an entry in the table.
+    """
+    return (
+        bool(int(get_var_for_part(d, "SKIP", part_name, default="0")))
+        or part_name == "MBR"
+    )
+
+
+def is_part_banked(d, part_name):
+    """
+    Return true if the named partition has two banks.
+    """
+    return bool(int(get_var_for_part(d, "IS_BANKED", part_name, default="0")))
+
+
+def should_insert_extended_part_before(d, part_name, bank):
+    """
+    Return true if a row for the "Extended" partition should be inserted into
+    the table before the given partition.
+    """
+    return get_part_number_col(d, part_name, bank) == "5"
+
+
+def get_part_banks(d, part_name):
+    """
+    Return a list of the banks of the named partition.
+    """
+    if is_part_banked(d, part_name):
+        return [1, 2]
+    return [1]
+
+
+def create_table(d):
+    """
+    Create the data for the partition Markdown table.
+
+    Returns a list of lists containing the values for each cell of the table.
+    """
+    rows = create_table_heading_rows(d)
+
+    part_names = [
+        n
+        for n in d.getVar("MBL_PARTITION_NAMES").split()
+        if not is_part_skipped(d, n)
+    ]
+    for part_name in part_names:
+        for bank in get_part_banks(d, part_name):
+            if should_insert_extended_part_before(d, part_name, bank):
+                rows.append(create_extended_part_row())
+            rows.append(create_table_row(d, part_name, bank))
+
+    return rows
+
+
+def print_table(table):
+    """
+    Print the partition Markdown table to stdout.
+    """
+    col_widths = [len(max(col, key=len)) for col in zip(*table)]
+    for row in table:
+        print(format_table_row(row, col_widths))
+
+
+def main():
+    with bb.tinfoil.Tinfoil() as tinfoil:
+        tinfoil.prepare(config_only=False)
+        d = tinfoil.parse_recipe("mbl-image-development")
+        table = create_table(d)
+        print_table(table)
+
+
+if __name__ == "__main__":
+    main()

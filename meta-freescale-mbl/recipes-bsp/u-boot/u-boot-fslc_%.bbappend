@@ -24,6 +24,16 @@ LIC_FILES_CHKSUM = "file://Licenses/README;md5=30503fd321432fc713238f582193b78e"
 
 DEPENDS += "flex-native bison-native"
 
+do_configure_prepend_imx7s-warp-mbl() {
+    # change default boot partition
+    sed -i 's/[#]define[[:space:]]*CONFIG_SYS_MMC_IMG_LOAD_PART[[:space:]]*.*/#define CONFIG_SYS_MMC_IMG_LOAD_PART ${UBOOT_DEFAULT_BOOT_PARTITION}/' ${S}/include/configs/warp7.h
+}
+
+do_configure_prepend_imx7d-pico-mbl() {
+    # change default boot partition
+    sed -i 's/[#]define[[:space:]]*CONFIG_SYS_MMC_IMG_LOAD_PART[[:space:]]*.*/#define CONFIG_SYS_MMC_IMG_LOAD_PART ${UBOOT_DEFAULT_BOOT_PARTITION}/' ${S}/include/configs/pico-imx7d.h
+}
+
 do_compile_append_imx7s-warp-mbl() {
 	# Copy device tree to default name for fit image signature verification usage.
 	cp ${B}/dts/dt.dtb ${B}/${UBOOT_DTB_BINARY}

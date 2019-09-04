@@ -21,6 +21,9 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/u-boot-imx:"
 
 
 do_configure_prepend_imx8mmevk-mbl() {
+    # change default boot partition
+    sed -i 's/[#]define[[:space:]]*CONFIG_SYS_MMC_IMG_LOAD_PART[[:space:]]*.*/#define CONFIG_SYS_MMC_IMG_LOAD_PART ${UBOOT_DEFAULT_BOOT_PARTITION}/' ${S}/include/configs/imx8mq_evk.h
+    
     # When setting UBOOT_CONFIG variable the do_configure defined in
     # u-boot.inc in oe-core doesn't call the merge_config.sh.
     # We added this workaround to call the merge_config.sh and prevent

@@ -19,6 +19,9 @@ PACKAGECONFIG[noconsole] = ""
 PACKAGECONFIG[silent] = ""
 PACKAGECONFIG[minimal] = ""
 
+# Default partitions to read the boot.scr (FIT image)
+UBOOT_DEFAULT_BOOT_PARTITION ?= "1"
+
 python __anonymous() {
     if bb.utils.contains('PACKAGECONFIG','noconsole', True, False, d) and bb.utils.contains('PACKAGECONFIG','silent', True, False, d):
         raise bb.parse.SkipRecipe("The u-boot PACKAGECONFIG options 'noconsole' and 'silent' are mutually exclusive")

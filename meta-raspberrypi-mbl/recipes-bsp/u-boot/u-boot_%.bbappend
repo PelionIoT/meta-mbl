@@ -19,6 +19,11 @@ SRC_URI_append_raspberrypi3-mbl = " \
 		${@bb.utils.contains('PACKAGECONFIG', 'minimal', ' file://0001-rpi3-disable-PXE-and-DHCP-boot.patch', '', d)} \
 "
 
+do_configure_prepend_raspberrypi3-mbl() {
+    # change default boot partition
+    sed -i 's/setenv devplist 1/setenv devplist ${UBOOT_DEFAULT_BOOT_PARTITION}/' ${S}/include/config_distro_bootcmd.h
+}
+
 do_compile_append_raspberrypi3-mbl() {
     # Copy device tree to default name for fit image signature verification usage.
     cp dts/dt.dtb ${UBOOT_DTB_BINARY}

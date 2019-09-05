@@ -1,0 +1,49 @@
+From 476fc86142f058c7190733243f48c5c0115157e9 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 12 Aug 2019 14:16:00 +0100
+Subject: [PATCH 3/3] core: imx: Use core_mmu_get_va() to access CAAM regs
+
+The CAAM may not be mapped linearly with a 1:1 mapping to the physical
+address. Ensure we go through core_mmu_get_va() for this case.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ core/arch/arm/plat-imx/imx_caam.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/core/arch/arm/plat-imx/imx_caam.c b/core/arch/arm/plat-imx/imx_caam.c
+index aec9030..e18ec1f 100644
+--- a/core/arch/arm/plat-imx/imx_caam.c
++++ b/core/arch/arm/plat-imx/imx_caam.c
+@@ -10,11 +10,13 @@
+ #include <kernel/generic_boot.h>
+ #include <platform_config.h>
+ #include <stdint.h>
++#include <mm/core_memprot.h>
+ 
+ void init_caam(void)
+ {
+ 	struct imx_caam_ctrl *caam = (struct imx_caam_ctrl *)(vaddr_t)CAAM_BASE;
+ 	uint32_t reg;
++	vaddr_t addr;
+ 	int i;
+ 
+ 	/*
+@@ -32,9 +34,12 @@ void init_caam(void)
+ 	 * This code below simply sets a default for the case where no
+ 	 * runtime OP-TEE CAAM code will be run
+ 	 */
++
+ 	for (i = 0; i < CAAM_NUM_JOB_RINGS; i++) {
+-		reg = io_read32((vaddr_t)&caam->jr[i].jrmidr_ms);
++		addr = core_mmu_get_va((paddr_t)&caam->jr[i].jrmidr_ms,
++				       MEM_AREA_IO_SEC);
++		reg = io_read32(addr);
+ 		reg |= JROWN_NS | JROWN_MID;
+-		io_write32((vaddr_t)&caam->jr[i].jrmidr_ms, reg);
++		io_write32(addr, reg);
+ 	}
+ }
+-- 
+2.7.4
+

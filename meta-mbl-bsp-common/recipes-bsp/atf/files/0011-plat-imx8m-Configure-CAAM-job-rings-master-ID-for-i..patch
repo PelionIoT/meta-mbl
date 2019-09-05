@@ -1,0 +1,49 @@
+From c968fc95150d8bcfaecf1b4e5608ac5e29811d2d Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Fri, 31 May 2019 11:10:53 +0100
+Subject: [PATCH 11/34] plat: imx8m: Configure CAAM job rings master ID for
+ i.MX8MM
+
+Commit 45a95e390859 ("imx: Configure CAAM job rings master ID for i.MX8MQ")
+fixes up the job-ring ownership permissions for the i.MX8MQ. This same fix
+is applicable and required for the i.MX8MM.
+
+Apply the same fix now.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/imx8m/imx8mm/imx8mm_bl31_setup.c    | 4 ++++
+ plat/imx/imx8m/imx8mm/include/platform_def.h | 5 +++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/plat/imx/imx8m/imx8mm/imx8mm_bl31_setup.c b/plat/imx/imx8m/imx8mm/imx8mm_bl31_setup.c
+index 31cfba8..078fe0c 100644
+--- a/plat/imx/imx8m/imx8mm/imx8mm_bl31_setup.c
++++ b/plat/imx/imx8m/imx8mm/imx8mm_bl31_setup.c
+@@ -82,6 +82,10 @@ void bl31_early_platform_setup2(u_register_t arg0, u_register_t arg1,
+ 		mmio_write_32(IMX_CSU_BASE + i * 4, 0x00ff00ff);
+ 	}
+ 
++	/* config CAAM JRaMID set MID to Cortex A */
++	mmio_write_32(CAAM_JR0MID, CAAM_NS_MID);
++	mmio_write_32(CAAM_JR1MID, CAAM_NS_MID);
++	mmio_write_32(CAAM_JR2MID, CAAM_NS_MID);
+ 
+ 	console_imx_uart_register(IMX_BOOT_UART_BASE, IMX_BOOT_UART_CLK_IN_HZ,
+ 		IMX_CONSOLE_BAUDRATE, &console);
+diff --git a/plat/imx/imx8m/imx8mm/include/platform_def.h b/plat/imx/imx8m/imx8mm/include/platform_def.h
+index b636bb9..b9e76c0 100644
+--- a/plat/imx/imx8m/imx8mm/include/platform_def.h
++++ b/plat/imx/imx8m/imx8mm/include/platform_def.h
+@@ -124,3 +124,8 @@
+ #define COUNTER_FREQUENCY		8000000 /* 8MHz */
+ 
+ #define IMX_WDOG_B_RESET
++
++#define CAAM_JR0MID			U(0x30900010)
++#define CAAM_JR1MID			U(0x30900018)
++#define CAAM_JR2MID			U(0x30900020)
++#define CAAM_NS_MID			U(0x1)
+-- 
+2.7.4
+

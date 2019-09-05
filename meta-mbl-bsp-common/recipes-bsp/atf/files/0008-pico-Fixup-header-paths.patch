@@ -1,0 +1,98 @@
+From 012627778099cba44eea2e2f6ef787ffec650d57 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Tue, 28 May 2019 18:27:28 +0100
+Subject: [PATCH 08/34] pico: Fixup header paths
+
+Between the older versions of ATF and the never version we are moving to
+here, the header paths have changed.
+
+Minor update to fix.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/imx7/picopi/picopi_bl2_el3_setup.c       | 14 +++++++-------
+ plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c |  2 +-
+ plat/imx/imx7/picopi/picopi_image_load.c          |  2 +-
+ plat/imx/imx7/picopi/picopi_io_storage.c          | 12 ++++++------
+ 4 files changed, 15 insertions(+), 15 deletions(-)
+
+diff --git a/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c b/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c
+index 54fd58b..76c3224 100644
+--- a/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c
++++ b/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c
+@@ -7,16 +7,16 @@
+ #include <arch_helpers.h>
+ #include <assert.h>
+ #include <common/bl_common.h>
+-#include <console.h>
++#include <drivers/console.h>
+ #include <common/debug.h>
+ #include <common/desc_image_load.h>
+-#include <mmc.h>
+-#include <mmio.h>
+-#include <optee_utils.h>
++#include <drivers/mmc.h>
++#include <lib/mmio.h>
++#include <lib/optee_utils.h>
+ #include <platform_def.h>
+-#include <utils.h>
+-#include <xlat_mmu_helpers.h>
+-#include <xlat_tables_defs.h>
++#include <lib/utils.h>
++#include <lib/xlat_tables/xlat_mmu_helpers.h>
++#include <lib/xlat_tables/xlat_tables_defs.h>
+ #include <imx_aips.h>
+ #include <imx_caam.h>
+ #include <imx_clock.h>
+diff --git a/plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c b/plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c
+index d070d51..397b30a 100644
+--- a/plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c
++++ b/plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c
+@@ -6,7 +6,7 @@
+ 
+ #include <common/bl_common.h>
+ #include <common/desc_image_load.h>
+-#include <platform.h>
++#include <plat/common/platform.h>
+ #include <platform_def.h>
+ 
+ static bl_mem_params_node_t bl2_mem_params_descs[] = {
+diff --git a/plat/imx/imx7/picopi/picopi_image_load.c b/plat/imx/imx7/picopi/picopi_image_load.c
+index 47459b8..c3e47b9 100644
+--- a/plat/imx/imx7/picopi/picopi_image_load.c
++++ b/plat/imx/imx7/picopi/picopi_image_load.c
+@@ -6,7 +6,7 @@
+ 
+ #include <common/bl_common.h>
+ #include <common/desc_image_load.h>
+-#include <platform.h>
++#include <plat/common/platform.h>
+ 
+ void plat_flush_next_bl_params(void)
+ {
+diff --git a/plat/imx/imx7/picopi/picopi_io_storage.c b/plat/imx/imx7/picopi/picopi_io_storage.c
+index 1df44d1..60ff3fd 100644
+--- a/plat/imx/imx7/picopi/picopi_io_storage.c
++++ b/plat/imx/imx7/picopi/picopi_io_storage.c
+@@ -5,12 +5,12 @@
+  */
+ #include <assert.h>
+ #include <common/debug.h>
+-#include <mmc.h>
+-#include <firmware_image_package.h>
+-#include <io_block.h>
+-#include <io_driver.h>
+-#include <io_fip.h>
+-#include <io_memmap.h>
++#include <drivers/mmc.h>
++#include <tools_share/firmware_image_package.h>
++#include <drivers/io/io_block.h>
++#include <drivers/io/io_driver.h>
++#include <drivers/io/io_fip.h>
++#include <drivers/io/io_memmap.h>
+ #include <platform_def.h>
+ 
+ static const io_dev_connector_t *fip_dev_con;
+-- 
+2.7.4
+

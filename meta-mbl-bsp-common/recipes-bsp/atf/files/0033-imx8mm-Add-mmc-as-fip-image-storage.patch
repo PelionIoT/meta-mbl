@@ -1,0 +1,246 @@
+From 3af2e48977ae3116bb1ffbcc2e632243494bb14a Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Mon, 5 Aug 2019 15:52:33 +0800
+Subject: [PATCH 33/34] imx8mm: Add mmc as fip image storage
+
+- Add SD device and add it to io map storage.
+- move timer init earlier because SD driver need delay function.
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+Change-Id: I3b2b8914460fd2ccd97dd7f30cf233b4df4f6eab
+---
+ plat/imx/imx8m/imx8mm/imx8mm_bl2_el3_setup.c | 28 ++++++++++--
+ plat/imx/imx8m/imx8mm/imx8mm_io_storage.c    | 68 +++++++++++++++++++++++++++-
+ plat/imx/imx8m/imx8mm/include/platform_def.h | 11 +++--
+ 3 files changed, 98 insertions(+), 9 deletions(-)
+
+diff --git a/plat/imx/imx8m/imx8mm/imx8mm_bl2_el3_setup.c b/plat/imx/imx8m/imx8mm/imx8mm_bl2_el3_setup.c
+index c087cd3..2c3a5f2 100644
+--- a/plat/imx/imx8m/imx8mm/imx8mm_bl2_el3_setup.c
++++ b/plat/imx/imx8m/imx8mm/imx8mm_bl2_el3_setup.c
+@@ -9,11 +9,13 @@
+ #include <assert.h>
+ #include <common/bl_common.h>
+ #include <drivers/console.h>
++#include <drivers/mmc.h>
+ #include <common/debug.h>
+ #include <context.h>
+ #include <stdbool.h>
+ #include <drivers/generic_delay_timer.h>
+ #include <lib/mmio.h>
++#include <lib/utils.h>
+ #include <plat/common/platform.h>
+ #include <platform_def.h>
+ #include <imx8mm_private.h>
+@@ -22,6 +24,7 @@
+ #include <lib/optee_utils.h>
+ 
+ #include <imx_uart.h>
++#include <imx_usdhc.h>
+ 
+ static void imx8mm_aips_config(void)
+ {
+@@ -62,6 +65,20 @@ static void imx8mm_aips_config(void)
+ 	mmio_write_32(0x32df0050, 0x0);
+ }
+ 
++static void imx8mm_usdhc_setup(void)
++{
++	imx_usdhc_params_t params;
++	struct mmc_device_info info;
++
++	zeromem(&params, sizeof(imx_usdhc_params_t));
++	params.reg_base = PLAT_IMX8MM_BOOT_MMC_BASE;
++	params.clk_rate = 50000000;
++	params.bus_width = MMC_BUS_WIDTH_1;
++	info.mmc_dev_type = MMC_IS_SD;
++	info.ocr_voltage = OCR_3_3_3_4 | OCR_3_2_3_3;
++	imx_usdhc_init(&params, &info);
++}
++
+ void bl2_el3_early_platform_setup(u_register_t arg1, u_register_t arg2,
+ 				  u_register_t arg3, u_register_t arg4)
+ {
+@@ -79,6 +96,13 @@ void bl2_el3_early_platform_setup(u_register_t arg1, u_register_t arg2,
+ 	console_imx_uart_register(IMX_BOOT_UART_BASE, IMX_BOOT_UART_CLK_IN_HZ,
+ 		IMX_CONSOLE_BAUDRATE, &console);
+ 
++	generic_delay_timer_init();
++
++	/* select the CKIL source to 32K OSC */
++	mmio_write_32(0x30360124, 0x1);
++
++	imx8mm_usdhc_setup();
++
+ 	/* Open handles to a FIP image */
+ 	plat_imx8mm_io_setup();
+ 
+@@ -90,10 +114,6 @@ void bl2_el3_plat_arch_setup(void)
+ 
+ void bl2_platform_setup(void)
+ {
+-	generic_delay_timer_init();
+-
+-	/* select the CKIL source to 32K OSC */
+-	mmio_write_32(0x30360124, 0x1);
+ }
+ 
+ int bl2_plat_handle_post_image_load(unsigned int image_id)
+diff --git a/plat/imx/imx8m/imx8mm/imx8mm_io_storage.c b/plat/imx/imx8m/imx8mm/imx8mm_io_storage.c
+index a44bb7e..bd43aaf 100644
+--- a/plat/imx/imx8m/imx8mm/imx8mm_io_storage.c
++++ b/plat/imx/imx8m/imx8mm/imx8mm_io_storage.c
+@@ -7,23 +7,52 @@
+ #include <assert.h>
+ #include <tools_share/firmware_image_package.h>
+ #include <platform_def.h>
++#include <drivers/io/io_block.h>
+ #include <drivers/io/io_fip.h>
+ #include <drivers/io/io_driver.h>
+ #include <drivers/io/io_memmap.h>
++#include <drivers/mmc.h>
+ #include <tbbr_img_def.h>
+ #include <lib/utils_def.h>
+ 
+ static const io_dev_connector_t *fip_dev_con;
+ static uintptr_t fip_dev_handle;
+ 
++#ifndef IMX8MM_FIP_MMAP
++static const io_dev_connector_t *mmc_dev_con;
++static uintptr_t mmc_dev_handle;
++
++static const io_block_spec_t mmc_fip_spec = {
++	.offset = IMX8MM_FIP_MMC_BASE,
++	.length = IMX8MM_FIP_SIZE
++};
++
++static const io_block_dev_spec_t mmc_dev_spec = {
++	/* It's used as temp buffer in block driver. */
++	.buffer		= {
++		.offset	= IMX8MM_FIP_BASE,
++		/* do we need a new value? */
++		.length = IMX8MM_FIP_SIZE
++	},
++	.ops		= {
++		.read	= mmc_read_blocks,
++		.write	= mmc_write_blocks,
++	},
++	.block_size	= MMC_BLOCK_SIZE,
++};
++
++static int open_mmc(const uintptr_t spec);
++
++#else
+ static const io_dev_connector_t *memmap_dev_con;
+ static uintptr_t memmap_dev_handle;
+ 
+ static const io_block_spec_t fip_block_spec = {
+-	.offset = FIP_BASE,
+-	.length = FIP_SIZE
++	.offset = IMX8MM_FIP_BASE,
++	.length = IMX8MM_FIP_SIZE
+ };
+ static int open_memmap(const uintptr_t spec);
++#endif
+ 
+ static int open_fip(const uintptr_t spec);
+ 
+@@ -88,11 +117,19 @@ struct plat_io_policy {
+ };
+ 
+ static const struct plat_io_policy policies[] = {
++#ifndef IMX8MM_FIP_MMAP
++	[FIP_IMAGE_ID] = {
++		&mmc_dev_handle,
++		(uintptr_t)&mmc_fip_spec,
++		open_mmc
++	},
++#else
+ 	[FIP_IMAGE_ID] = {
+ 		&memmap_dev_handle,
+ 		(uintptr_t)&fip_block_spec,
+ 		open_memmap
+ 	},
++#endif
+ 	[BL31_IMAGE_ID] = {
+ 		&fip_dev_handle,
+ 		(uintptr_t)&bl31_uuid_spec,
+@@ -179,6 +216,21 @@ static int open_fip(const uintptr_t spec)
+ 	return result;
+ }
+ 
++#ifndef IMX8MM_FIP_MMAP
++static int open_mmc(const uintptr_t spec)
++{
++	int result;
++	uintptr_t local_handle;
++
++	result = io_dev_init(mmc_dev_handle, (uintptr_t)NULL);
++	if (result == 0) {
++		result = io_open(mmc_dev_handle, spec, &local_handle);
++		if (result == 0)
++			io_close(local_handle);
++	}
++	return result;
++}
++#else
+ static int open_memmap(const uintptr_t spec)
+ {
+ 	int result;
+@@ -194,6 +246,7 @@ static int open_memmap(const uintptr_t spec)
+ 	}
+ 	return result;
+ }
++#endif
+ 
+ int plat_get_image_source(unsigned int image_id, uintptr_t *dev_handle,
+ 			  uintptr_t *image_spec)
+@@ -216,12 +269,23 @@ int plat_get_image_source(unsigned int image_id, uintptr_t *dev_handle,
+ void plat_imx8mm_io_setup(void)
+ {
+ 	int result __unused;
++
++#ifndef IMX8MM_FIP_MMAP
++	result = register_io_dev_block(&mmc_dev_con);
++	assert(result == 0);
++
++	result = io_dev_open(mmc_dev_con, (uintptr_t)&mmc_dev_spec,
++			     &mmc_dev_handle);
++	assert(result == 0);
++
++#else
+ 	result = register_io_dev_memmap(&memmap_dev_con);
+ 	assert(result == 0);
+ 
+ 	result = io_dev_open(memmap_dev_con, (uintptr_t)NULL,
+ 			     &memmap_dev_handle);
+ 	assert(result == 0);
++#endif
+ 
+ 	result = register_io_dev_fip(&fip_dev_con);
+ 	assert(result == 0);
+diff --git a/plat/imx/imx8m/imx8mm/include/platform_def.h b/plat/imx/imx8m/imx8mm/include/platform_def.h
+index f1d8879..1698570 100644
+--- a/plat/imx/imx8m/imx8mm/include/platform_def.h
++++ b/plat/imx/imx8m/imx8mm/include/platform_def.h
+@@ -36,9 +36,14 @@
+ #define BL2_LIMIT			U(0x940000)
+ #define BL31_BASE			U(0x900000)
+ #define BL31_LIMIT			U(0x920000)
+-#define FIP_BASE			U(0x40310000)
+-#define FIP_SIZE			U(0x000100000)
+-#define FIP_LIMIT			U(FIP_BASE + FIP_SIZE)
++#define IMX8MM_FIP_BASE			U(0x40310000)
++#define IMX8MM_FIP_SIZE			U(0x000100000)
++#define IMX8MM_FIP_LIMIT		U(FIP_BASE + FIP_SIZE)
++
++/* Define FIP image location on eMMC */
++#define IMX8MM_FIP_MMC_BASE		FIP_ROM_OFFSET
++
++#define PLAT_IMX8MM_BOOT_MMC_BASE	U(0x30B50000) /* SD */
+ #else
+ #define BL31_BASE			U(0x920000)
+ #define BL31_LIMIT			U(0x940000)
+-- 
+2.7.4
+

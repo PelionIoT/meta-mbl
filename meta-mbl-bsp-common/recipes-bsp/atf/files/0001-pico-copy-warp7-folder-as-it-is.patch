@@ -1,0 +1,1273 @@
+From 4c36bd8388b9648879aefe111a879c32c1655c2b Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Mon, 10 Dec 2018 12:11:59 +0800
+Subject: [PATCH 01/34] pico: copy warp7 folder as it is
+
+Copy warp7 folder as it is to start pico-pi development.
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/imx7/picopi/aarch32/warp7_helpers.S     |  59 +++++
+ plat/imx/imx7/picopi/include/platform_def.h      | 217 ++++++++++++++++
+ plat/imx/imx7/picopi/platform.mk                 | 147 +++++++++++
+ plat/imx/imx7/picopi/warp7_bl2_el3_setup.c       | 303 +++++++++++++++++++++++
+ plat/imx/imx7/picopi/warp7_bl2_mem_params_desc.c |  90 +++++++
+ plat/imx/imx7/picopi/warp7_image_load.c          |  24 ++
+ plat/imx/imx7/picopi/warp7_io_storage.c          | 276 +++++++++++++++++++++
+ plat/imx/imx7/picopi/warp7_private.h             |  15 ++
+ plat/imx/imx7/picopi/warp7_rotpk.S               |  15 ++
+ plat/imx/imx7/picopi/warp7_trusted_boot.c        |  32 +++
+ 10 files changed, 1178 insertions(+)
+ create mode 100644 plat/imx/imx7/picopi/aarch32/warp7_helpers.S
+ create mode 100644 plat/imx/imx7/picopi/include/platform_def.h
+ create mode 100644 plat/imx/imx7/picopi/platform.mk
+ create mode 100644 plat/imx/imx7/picopi/warp7_bl2_el3_setup.c
+ create mode 100644 plat/imx/imx7/picopi/warp7_bl2_mem_params_desc.c
+ create mode 100644 plat/imx/imx7/picopi/warp7_image_load.c
+ create mode 100644 plat/imx/imx7/picopi/warp7_io_storage.c
+ create mode 100644 plat/imx/imx7/picopi/warp7_private.h
+ create mode 100644 plat/imx/imx7/picopi/warp7_rotpk.S
+ create mode 100644 plat/imx/imx7/picopi/warp7_trusted_boot.c
+
+diff --git a/plat/imx/imx7/picopi/aarch32/warp7_helpers.S b/plat/imx/imx7/picopi/aarch32/warp7_helpers.S
+new file mode 100644
+index 0000000..3695b32
+--- /dev/null
++++ b/plat/imx/imx7/picopi/aarch32/warp7_helpers.S
+@@ -0,0 +1,59 @@
++/*
++ * Copyright (c) Linaro 2018 Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <arch.h>
++#include <asm_macros.S>
++#include <assert_macros.S>
++#include <platform_def.h>
++#include <imx_hab.h>
++
++	.globl	platform_mem_init
++	.globl	plat_get_my_entrypoint
++	.globl	plat_crash_console_init
++	.globl	plat_crash_console_putc
++	.globl	plat_crash_console_flush
++	.globl	plat_panic_handler
++
++	/* ---------------------------------------------
++	 * int plat_mem_init(void)
++	 * Function to initialize memory.
++	 * The HAB hands off the DDR controller already
++	 * setup and ready to use.
++	 * Implement the mandatory function as a NOP
++	 * ---------------------------------------------
++	 */
++func platform_mem_init
++	bx	lr
++endfunc platform_mem_init
++
++func plat_get_my_entrypoint
++	mov	r0, #0
++	bx	lr
++endfunc plat_get_my_entrypoint
++
++func plat_crash_console_init
++	mov_imm	r0, PLAT_WARP7_BOOT_UART_BASE
++	mov_imm	r1, PLAT_WARP7_BOOT_UART_CLK_IN_HZ
++	mov_imm	r2, PLAT_WARP7_CONSOLE_BAUDRATE
++	b	imx_crash_uart_init
++endfunc plat_crash_console_init
++
++func plat_crash_console_putc
++	mov_imm r1, PLAT_WARP7_BOOT_UART_BASE
++	b	imx_crash_uart_putc
++endfunc plat_crash_console_putc
++
++func plat_crash_console_flush
++	/* Placeholder */
++	mov	r0, #0
++	bx	lr
++endfunc plat_crash_console_flush
++
++func plat_panic_handler
++	mov	r3, #HAB_ROM_VECTOR_TABLE_FAILSAFE
++	ldr	r3, [r3, #0]
++	blx	r3
++endfunc plat_panic_handler
+diff --git a/plat/imx/imx7/picopi/include/platform_def.h b/plat/imx/imx7/picopi/include/platform_def.h
+new file mode 100644
+index 0000000..658aee1
+--- /dev/null
++++ b/plat/imx/imx7/picopi/include/platform_def.h
+@@ -0,0 +1,217 @@
++/*
++ * Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef __PLATFORM_DEF_H__
++#define __PLATFORM_DEF_H__
++
++#include <arch.h>
++#include <common/tbbr/tbbr_img_def.h>
++#include <plat/common/common_def.h>
++
++#define PLATFORM_STACK_SIZE		0x1000
++
++#define PLATFORM_MAX_CPUS_PER_CLUSTER	2
++#define PLATFORM_CLUSTER_COUNT		1
++#define PLATFORM_CLUSTER0_CORE_COUNT	PLATFORM_MAX_CPUS_PER_CLUSTER
++#define PLATFORM_CLUSTER1_CORE_COUNT	0
++
++#define PLATFORM_CORE_COUNT		(PLATFORM_CLUSTER0_CORE_COUNT + \
++					 PLATFORM_CLUSTER1_CORE_COUNT)
++
++#define WARP7_PRIMARY_CPU		0
++
++#define PLAT_NUM_PWR_DOMAINS		(PLATFORM_CLUSTER_COUNT + \
++					PLATFORM_CORE_COUNT)
++#define PLAT_MAX_PWR_LVL		MPIDR_AFFLVL1
++
++#define PLAT_MAX_RET_STATE		1
++#define PLAT_MAX_OFF_STATE		2
++
++/* Local power state for power domains in Run state. */
++#define PLAT_LOCAL_STATE_RUN		0
++
++/* Local power state for retention. Valid only for CPU power domains */
++#define PLAT_LOCAL_STATE_RET		1
++
++/*
++ * Local power state for OFF/power-down. Valid for CPU and cluster power
++ * domains.
++ */
++#define PLAT_LOCAL_STATE_OFF		2
++
++/*
++ * Macros used to parse state information from State-ID if it is using the
++ * recommended encoding for State-ID.
++ */
++#define PLAT_LOCAL_PSTATE_WIDTH		4
++#define PLAT_LOCAL_PSTATE_MASK		((1 << PLAT_LOCAL_PSTATE_WIDTH) - 1)
++
++/*
++ * Some data must be aligned on the biggest cache line size in the platform.
++ * This is known only to the platform as it might have a combination of
++ * integrated and external caches.
++ * i.MX7 has a 32 byte cacheline size
++ * i.MX 7Solo Applications Processor Reference Manual, Rev. 0.1, 08/2016 pg 244
++ */
++#define CACHE_WRITEBACK_SHIFT		4
++#define CACHE_WRITEBACK_GRANULE		(1 << CACHE_WRITEBACK_SHIFT)
++
++/*
++ * Partition memory into secure BootROM, OCRAM_S, non-secure DRAM, secure DRAM
++ */
++#define BOOT_ROM_BASE			0x00000000
++#define BOOT_ROM_SIZE			0x00020000
++
++#define OCRAM_S_BASE			0x00180000
++#define OCRAM_S_SIZE			0x00008000
++
++/* Controller maps 2GB, board contains 512 MB. 0x80000000 - 0xa0000000 */
++#define DRAM_BASE			0x80000000
++#define DRAM_SIZE			0x20000000
++#define DRAM_LIMIT			(DRAM_BASE + DRAM_SIZE)
++
++/* Place OPTEE at minus 32 MB from the end of memory. 0x9e000000 - 0xa0000000 */
++#define WARP7_OPTEE_SIZE		0x02000000
++#define WARP7_OPTEE_BASE		(DRAM_LIMIT - WARP7_OPTEE_SIZE)
++#define WARP7_OPTEE_LIMIT		(WARP7_OPTEE_BASE + WARP7_OPTEE_SIZE)
++
++/* Place ATF directly beneath OPTEE. 0x9df00000 - 0x9e000000 */
++#define BL2_RAM_SIZE			0x00100000
++#define BL2_RAM_BASE			(WARP7_OPTEE_BASE - BL2_RAM_SIZE)
++#define BL2_RAM_LIMIT			(BL2_RAM_BASE + BL2_RAM_SIZE)
++
++/* Optional Mailbox. Only relevant on i.MX7D. 0x9deff000 - 0x9df00000*/
++#define SHARED_RAM_SIZE			0x00001000
++#define SHARED_RAM_BASE			(BL2_RAM_BASE - SHARED_RAM_SIZE)
++#define SHARED_RAM_LIMIT		(SHARED_RAM_BASE + SHARED_RAM_SIZE)
++
++/* Define the absolute location of u-boot 0x87800000 - 0x87900000 */
++#define WARP7_UBOOT_SIZE		0x00100000
++#define WARP7_UBOOT_BASE		(DRAM_BASE + 0x7800000)
++#define WARP7_UBOOT_LIMIT		(WARP7_UBOOT_BASE + WARP7_UBOOT_SIZE)
++
++/* Define FIP image absolute location 0x80000000 - 0x80100000 */
++#define WARP7_FIP_SIZE			0x00100000
++#define WARP7_FIP_BASE			(DRAM_BASE)
++#define WARP7_FIP_LIMIT			(WARP7_FIP_BASE + WARP7_FIP_SIZE)
++
++/* Define FIP image location at 1MB offset */
++#define WARP7_FIP_MMC_BASE		(1024 * 1024)
++
++/* Define the absolute location of DTB 0x83000000 - 0x83100000 */
++#define WARP7_DTB_SIZE			0x00100000
++#define WARP7_DTB_BASE			(DRAM_BASE + 0x03000000)
++#define WARP7_DTB_LIMIT			(WARP7_DTB_BASE + WARP7_DTB_SIZE)
++
++/*
++ * BL2 specific defines.
++ *
++ * Put BL2 just below BL3-1. BL2_BASE is calculated using the current BL2 debug
++ * size plus a little space for growth.
++ */
++#define BL2_BASE		BL2_RAM_BASE
++#define BL2_LIMIT		(BL2_RAM_BASE + BL2_RAM_SIZE)
++
++/*
++ * BL3-2/OPTEE
++ */
++# define BL32_BASE		WARP7_OPTEE_BASE
++# define BL32_LIMIT		(WARP7_OPTEE_BASE + WARP7_OPTEE_SIZE)
++
++/*
++ * BL3-3/U-BOOT
++ */
++#define BL33_BASE		WARP7_UBOOT_BASE
++#define BL33_LIMIT		(WARP7_UBOOT_BASE + WARP7_UBOOT_SIZE)
++
++/*
++ * ATF's view of memory
++ *
++ * 0xa0000000 +-----------------+
++ *            |       DDR       | BL32/OPTEE
++ * 0x9e000000 +-----------------+
++ *            |       DDR       | BL23 ATF
++ * 0x9df00000 +-----------------+
++ *            |       DDR       | Shared MBOX RAM
++ * 0x9de00000 +-----------------+
++ *            |       DDR       | Unallocated
++ * 0x87900000 +-----------------+
++ *            |       DDR       | BL33/U-BOOT
++ * 0x87800000 +-----------------+
++ *            |       DDR       | Unallocated
++ * 0x83100000 +-----------------+
++ *            |       DDR       | DTB
++ * 0x83000000 +-----------------+
++ *            |       DDR       | Unallocated
++ * 0x80100000 +-----------------+
++ *            |       DDR       | FIP
++ * 0x80000000 +-----------------+
++ *            |     SOC I/0     |
++ * 0x00a00000 +-----------------+
++ *            |      OCRAM      | Not used
++ * 0x00900000 +-----------------+
++ *            |     SOC I/0     |
++ * 0x00188000 +-----------------+
++ *            |     OCRAM_S     | Not used
++ * 0x00180000 +-----------------+
++ *            |     SOC I/0     |
++ * 0x00020000 +-----------------+
++ *            |     BootROM     | BL1
++ * 0x00000000 +-----------------+
++ */
++
++#define PLAT_PHY_ADDR_SPACE_SIZE	(1ULL << 32)
++#define PLAT_VIRT_ADDR_SPACE_SIZE	(1ULL << 32)
++#define MAX_MMAP_REGIONS		10
++#define MAX_XLAT_TABLES			6
++#define MAX_IO_DEVICES			2
++#define MAX_IO_HANDLES			3
++#define MAX_IO_BLOCK_DEVICES		1
++
++/* UART defines */
++#if PLAT_WARP7_UART == 1
++#define PLAT_WARP7_UART_BASE		MXC_UART1_BASE
++#elif PLAT_WARP7_UART == 6
++#define IMX_UART_DTE
++#define PLAT_WARP7_UART_BASE		MXC_UART6_BASE
++#else
++#error "define PLAT_WARP7_UART=1 or PLAT_WARP7_UART=6"
++#endif
++
++#define PLAT_WARP7_BOOT_UART_BASE	PLAT_WARP7_UART_BASE
++#define PLAT_WARP7_BOOT_UART_CLK_IN_HZ	24000000
++#define PLAT_WARP7_CONSOLE_BAUDRATE	115200
++
++/* MMC defines */
++#ifndef PLAT_WARP7_SD
++#define PLAT_WARP7_SD 3
++#endif
++
++#if PLAT_WARP7_SD == 1
++#define PLAT_WARP7_BOOT_MMC_BASE	USDHC1_BASE
++#endif /* PLAT_WARP7_SD == 1 */
++
++#if PLAT_WARP7_SD == 2
++#define PLAT_WARP7_BOOT_MMC_BASE	USDHC2_BASE
++#endif /* PLAT_WARP7_SD == 2 */
++
++#if PLAT_WARP7_SD == 3
++#define PLAT_WARP7_BOOT_MMC_BASE	USDHC3_BASE
++#endif /* PLAT_WARP7_SD == 3 */
++
++/*
++ * GIC related constants
++ */
++#define GICD_BASE			0x31001000
++#define GICC_BASE			0x31002000
++#define GICR_BASE			0
++
++/*
++ * System counter
++ */
++#define SYS_COUNTER_FREQ_IN_TICKS	8000000		/* 8 MHz */
++
++#endif /* __PLATFORM_DEF_H__ */
+diff --git a/plat/imx/imx7/picopi/platform.mk b/plat/imx/imx7/picopi/platform.mk
+new file mode 100644
+index 0000000..d0f4da3
+--- /dev/null
++++ b/plat/imx/imx7/picopi/platform.mk
+@@ -0,0 +1,147 @@
++#
++# Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
++#
++# SPDX-License-Identifier: BSD-3-Clause
++#
++
++# Architecture
++$(eval $(call add_define,ARMV7_SUPPORTS_LARGE_PAGE_ADDRESSING))
++
++# Tune compiler for Cortex-A7
++ifeq ($(notdir $(CC)),armclang)
++    TF_CFLAGS	+=	-mfpu=neon
++    ASFLAGS	+=	-mfpu=neon
++else ifneq ($(findstring clang,$(notdir $(CC))),)
++    TF_CFLAGS	+=	-mfpu=neon
++    ASFLAGS	+=	-mfpu=neon
++else
++    TF_CFLAGS	+=	-mfpu=neon
++    ASFLAGS	+=	-mfpu=neon
++endif
++
++# Platform
++PLAT_INCLUDES		:=	-Idrivers/imx/uart			\
++				-Iinclude/common/tbbr			\
++				-Iinclude/plat/arm/common/		\
++				-Iplat/imx/common/include/		\
++				-Iplat/imx/imx7/warp7/include		\
++				-Idrivers/imx/timer			\
++				-Idrivers/imx/usdhc			\
++				-Iplat/imx/imx7/include
++
++# Translation tables library
++include lib/xlat_tables_v2/xlat_tables.mk
++
++BL2_SOURCES		+=	common/desc_image_load.c			\
++				drivers/console/aarch32/console.S		\
++				drivers/delay_timer/delay_timer.c		\
++				drivers/mmc/mmc.c				\
++				drivers/io/io_block.c				\
++				drivers/io/io_fip.c				\
++				drivers/io/io_memmap.c				\
++				drivers/io/io_storage.c				\
++				drivers/imx/timer/imx_gpt.c			\
++				drivers/imx/uart/imx_uart.c			\
++				drivers/imx/uart/imx_crash_uart.S		\
++				drivers/imx/usdhc/imx_usdhc.c			\
++				lib/aarch32/arm32_aeabi_divmod.c		\
++				lib/aarch32/arm32_aeabi_divmod_a32.S		\
++				lib/cpus/aarch32/cortex_a7.S			\
++				lib/optee/optee_utils.c				\
++				plat/imx/common/imx_aips.c			\
++				plat/imx/common/imx_caam.c			\
++				plat/imx/common/imx_clock.c			\
++				plat/imx/common/imx_csu.c			\
++				plat/imx/common/imx_io_mux.c			\
++				plat/imx/common/imx_snvs.c			\
++				plat/imx/common/imx_wdog.c			\
++				plat/imx/common/imx7_clock.c		\
++				plat/imx/imx7/warp7/aarch32/warp7_helpers.S	\
++				plat/imx/imx7/warp7/warp7_bl2_el3_setup.c	\
++				plat/imx/imx7/warp7/warp7_bl2_mem_params_desc.c \
++				plat/imx/imx7/warp7/warp7_io_storage.c		\
++				plat/imx/imx7/warp7/warp7_image_load.c		\
++				${XLAT_TABLES_LIB_SRCS}
++
++ifneq (${TRUSTED_BOARD_BOOT},0)
++
++include drivers/auth/mbedtls/mbedtls_crypto.mk
++include drivers/auth/mbedtls/mbedtls_x509.mk
++
++AUTH_SOURCES	:=	drivers/auth/auth_mod.c			\
++			drivers/auth/crypto_mod.c		\
++			drivers/auth/img_parser_mod.c		\
++			drivers/auth/tbbr/tbbr_cot.c
++
++BL2_SOURCES		+=	${AUTH_SOURCES}					\
++				plat/common/tbbr/plat_tbbr.c			\
++				plat/imx/imx7/warp7/warp7_trusted_boot.c	\
++				plat/imx/imx7/warp7/warp7_rotpk.S
++
++ROT_KEY             = $(BUILD_PLAT)/rot_key.pem
++ROTPK_HASH          = $(BUILD_PLAT)/rotpk_sha256.bin
++
++$(eval $(call add_define_val,ROTPK_HASH,'"$(ROTPK_HASH)"'))
++$(eval $(call MAKE_LIB_DIRS))
++
++$(BUILD_PLAT)/bl2/warp7_rotpk.o: $(ROTPK_HASH)
++
++certificates: $(ROT_KEY)
++
++$(ROT_KEY):
++	@echo "  OPENSSL $@"
++	@if [ ! -f $(ROT_KEY) ]; then \
++		openssl genrsa 2048 > $@ 2>/dev/null; \
++	fi
++
++$(ROTPK_HASH): $(ROT_KEY)
++	@echo "  OPENSSL $@"
++	$(Q)openssl rsa -in $< -pubout -outform DER 2>/dev/null |\
++	openssl dgst -sha256 -binary > $@ 2>/dev/null
++endif
++
++# Build config flags
++# ------------------
++
++WORKAROUND_CVE_2017_5715	:= 0
++
++# Enable reset to BL31 by default
++RESET_TO_BL31			:= 0
++
++# Non-TF Boot ROM
++BL2_AT_EL3			:= 1
++
++# Indicate single-core
++COLD_BOOT_SINGLE_CPU		:= 1
++
++# Have different sections for code and rodata
++SEPARATE_CODE_AND_RODATA	:= 1
++
++# Use Coherent memory
++USE_COHERENT_MEM		:= 1
++
++# PLAT_WARP7_UART
++PLAT_WARP7_UART			:=1
++$(eval $(call add_define,PLAT_WARP7_UART))
++
++# Add the build options to pack BLx images and kernel device tree
++# in the FIP if the platform requires.
++ifneq ($(BL2),)
++$(eval $(call TOOL_ADD_PAYLOAD,${BUILD_PLAT}/tb_fw.crt,--tb-fw-cert))
++endif
++ifneq ($(BL32_EXTRA1),)
++$(eval $(call TOOL_ADD_IMG,BL32_EXTRA1,--tos-fw-extra1))
++endif
++ifneq ($(BL32_EXTRA2),)
++$(eval $(call TOOL_ADD_IMG,BL32_EXTRA2,--tos-fw-extra2))
++endif
++ifneq ($(HW_CONFIG),)
++$(eval $(call TOOL_ADD_IMG,HW_CONFIG,--hw-config))
++endif
++
++# Verify build config
++# -------------------
++
++ifeq (${ARCH},aarch64)
++  $(error Error: AArch64 not supported on i.mx7)
++endif
+diff --git a/plat/imx/imx7/picopi/warp7_bl2_el3_setup.c b/plat/imx/imx7/picopi/warp7_bl2_el3_setup.c
+new file mode 100644
+index 0000000..10c4160
+--- /dev/null
++++ b/plat/imx/imx7/picopi/warp7_bl2_el3_setup.c
+@@ -0,0 +1,303 @@
++/*
++ * Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <arch_helpers.h>
++#include <assert.h>
++#include <bl_common.h>
++#include <console.h>
++#include <debug.h>
++#include <desc_image_load.h>
++#include <mmc.h>
++#include <mmio.h>
++#include <optee_utils.h>
++#include <platform_def.h>
++#include <utils.h>
++#include <xlat_mmu_helpers.h>
++#include <xlat_tables_defs.h>
++#include <imx_aips.h>
++#include <imx_caam.h>
++#include <imx_clock.h>
++#include <imx_csu.h>
++#include <imx_gpt.h>
++#include <imx_io_mux.h>
++#include <imx_uart.h>
++#include <imx_snvs.h>
++#include <imx_usdhc.h>
++#include <imx_wdog.h>
++#include "warp7_private.h"
++
++#define UART1_CLK_SELECT (CCM_TARGET_ROOT_ENABLE |\
++			  CCM_TRGT_MUX_UART1_CLK_ROOT_OSC_24M)
++
++#define UART6_CLK_SELECT (CCM_TARGET_ROOT_ENABLE |\
++			  CCM_TRGT_MUX_UART6_CLK_ROOT_OSC_24M)
++
++#define USDHC_CLK_SELECT (CCM_TARGET_ROOT_ENABLE |\
++			  CCM_TRGT_MUX_NAND_USDHC_BUS_CLK_ROOT_AHB |\
++			  CCM_TARGET_POST_PODF(2))
++
++#define WDOG_CLK_SELECT (CCM_TARGET_ROOT_ENABLE |\
++			 CCM_TRGT_MUX_WDOG_CLK_ROOT_OSC_24M)
++
++#define USB_CLK_SELECT (CCM_TARGET_ROOT_ENABLE |\
++			CCM_TRGT_MUX_USB_HSIC_CLK_ROOT_SYS_PLL)
++
++uintptr_t plat_get_ns_image_entrypoint(void)
++{
++	return WARP7_UBOOT_BASE;
++}
++
++static uint32_t warp7_get_spsr_for_bl32_entry(void)
++{
++	return SPSR_MODE32(MODE32_svc, SPSR_T_ARM, SPSR_E_LITTLE,
++			   DISABLE_ALL_EXCEPTIONS);
++}
++
++static uint32_t warp7_get_spsr_for_bl33_entry(void)
++{
++	return SPSR_MODE32(MODE32_svc,
++			   plat_get_ns_image_entrypoint() & 0x1,
++			   SPSR_E_LITTLE, DISABLE_ALL_EXCEPTIONS);
++}
++
++#ifndef AARCH32_SP_OPTEE
++#error "Must build with OPTEE support included"
++#endif
++
++int bl2_plat_handle_post_image_load(unsigned int image_id)
++{
++	int err = 0;
++	bl_mem_params_node_t *bl_mem_params = get_bl_mem_params_node(image_id);
++	bl_mem_params_node_t *hw_cfg_mem_params = NULL;
++
++	bl_mem_params_node_t *pager_mem_params = NULL;
++	bl_mem_params_node_t *paged_mem_params = NULL;
++
++	assert(bl_mem_params);
++
++	switch (image_id) {
++	case BL32_IMAGE_ID:
++		pager_mem_params = get_bl_mem_params_node(BL32_EXTRA1_IMAGE_ID);
++		assert(pager_mem_params);
++
++		paged_mem_params = get_bl_mem_params_node(BL32_EXTRA2_IMAGE_ID);
++		assert(paged_mem_params);
++
++		err = parse_optee_header(&bl_mem_params->ep_info,
++					 &pager_mem_params->image_info,
++					 &paged_mem_params->image_info);
++		if (err != 0)
++			WARN("OPTEE header parse error.\n");
++
++		/*
++		 * When ATF loads the DTB the address of the DTB is passed in
++		 * arg2, if an hw config image is present use the base address
++		 * as DTB address an pass it as arg2
++		 */
++		hw_cfg_mem_params = get_bl_mem_params_node(HW_CONFIG_ID);
++
++		bl_mem_params->ep_info.args.arg0 =
++					bl_mem_params->ep_info.args.arg1;
++		bl_mem_params->ep_info.args.arg1 = 0;
++		if (hw_cfg_mem_params)
++			bl_mem_params->ep_info.args.arg2 =
++					hw_cfg_mem_params->image_info.image_base;
++		else
++			bl_mem_params->ep_info.args.arg2 = 0;
++		bl_mem_params->ep_info.args.arg3 = 0;
++		bl_mem_params->ep_info.spsr = warp7_get_spsr_for_bl32_entry();
++		break;
++
++	case BL33_IMAGE_ID:
++		/* AArch32 only core: OP-TEE expects NSec EP in register LR */
++		pager_mem_params = get_bl_mem_params_node(BL32_IMAGE_ID);
++		assert(pager_mem_params);
++		pager_mem_params->ep_info.lr_svc = bl_mem_params->ep_info.pc;
++
++		/* BL33 expects to receive the primary CPU MPID (through r0) */
++		bl_mem_params->ep_info.args.arg0 = 0xffff & read_mpidr();
++		bl_mem_params->ep_info.spsr = warp7_get_spsr_for_bl33_entry();
++		break;
++
++	default:
++		/* Do nothing in default case */
++		break;
++	}
++
++	return err;
++}
++
++void bl2_el3_plat_arch_setup(void)
++{
++	/* Setup the MMU here */
++}
++
++#define WARP7_UART1_TX_MUX \
++	IOMUXC_SW_MUX_CTL_PAD_UART1_TX_DATA_ALT0_UART1_TX_DATA
++
++#define WARP7_UART1_TX_FEATURES \
++	(IOMUXC_SW_PAD_CTL_PAD_UART1_TX_DATA_PS_3_100K_PU	| \
++	 IOMUXC_SW_PAD_CTL_PAD_UART1_TX_DATA_PE_EN		| \
++	 IOMUXC_SW_PAD_CTL_PAD_UART1_TX_DATA_HYS_EN		| \
++	 IOMUXC_SW_PAD_CTL_PAD_UART1_TX_DATA_DSE_1_X4)
++
++#define WARP7_UART1_RX_MUX \
++	IOMUXC_SW_MUX_CTL_PAD_UART1_RX_DATA_ALT0_UART1_RX_DATA
++
++#define WARP7_UART1_RX_FEATURES \
++	(IOMUXC_SW_PAD_CTL_PAD_UART1_RX_DATA_PS_3_100K_PU	| \
++	 IOMUXC_SW_PAD_CTL_PAD_UART1_RX_DATA_PE_EN		| \
++	 IOMUXC_SW_PAD_CTL_PAD_UART1_RX_DATA_HYS_EN		| \
++	 IOMUXC_SW_PAD_CTL_PAD_UART1_RX_DATA_DSE_1_X4)
++
++#define WARP7_UART6_TX_MUX \
++	IOMUXC_SW_MUX_CTL_PAD_ECSPI1_MOSI_ALT1_UART6_TX_DATA
++
++#define WARP7_UART6_TX_FEATURES \
++	(IOMUXC_SW_PAD_CTL_PAD_ECSPI1_MOSI_PS_3_100K_PU		| \
++	 IOMUXC_SW_PAD_CTL_PAD_ECSPI1_MOSI_PE_EN		| \
++	 IOMUXC_SW_PAD_CTL_PAD_ECSPI1_MOSI_HYS_EN		| \
++	 IOMUXC_SW_PAD_CTL_PAD_ECSPI1_MOSI_DSE_1_X4)
++
++#define WARP7_UART6_RX_MUX \
++	IOMUXC_SW_MUX_CTL_PAD_ECSPI1_SCLK_ALT1_UART6_RX_DATA
++
++#define WARP7_UART6_RX_FEATURES \
++	(IOMUXC_SW_PAD_CTL_PAD_ECSPI1_SCLK_PS_3_100K_PU		| \
++	 IOMUXC_SW_PAD_CTL_PAD_ECSPI1_SCLK_PE_EN		| \
++	 IOMUXC_SW_PAD_CTL_PAD_ECSPI1_SCLK_HYS_EN		| \
++	 IOMUXC_SW_PAD_CTL_PAD_ECSPI1_SCLK_DSE_1_X4)
++
++static void warp7_setup_pinmux(void)
++{
++	/* Configure UART1 TX */
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_UART1_TX_DATA_OFFSET,
++					 WARP7_UART1_TX_MUX);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_UART1_TX_DATA_OFFSET,
++				     WARP7_UART1_TX_FEATURES);
++
++	/* Configure UART1 RX */
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_UART1_RX_DATA_OFFSET,
++					 WARP7_UART1_RX_MUX);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_UART1_RX_DATA_OFFSET,
++				     WARP7_UART1_RX_FEATURES);
++
++	/* Configure UART6 TX */
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_ECSPI1_MOSI_OFFSET,
++					 WARP7_UART6_TX_MUX);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_ECSPI1_MOSI_OFFSET,
++				     WARP7_UART6_TX_FEATURES);
++
++	/* Configure UART6 RX */
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_ECSPI1_SCLK_OFFSET,
++					 WARP7_UART6_RX_MUX);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_ECSPI1_SCLK_OFFSET,
++				     WARP7_UART6_RX_FEATURES);
++}
++
++static void warp7_usdhc_setup(void)
++{
++	imx_usdhc_params_t params;
++	struct mmc_device_info info;
++
++	zeromem(&params, sizeof(imx_usdhc_params_t));
++	params.reg_base = PLAT_WARP7_BOOT_MMC_BASE;
++	params.clk_rate = 25000000;
++	params.bus_width = MMC_BUS_WIDTH_8;
++	info.mmc_dev_type = MMC_IS_EMMC;
++	imx_usdhc_init(&params, &info);
++}
++
++static void warp7_setup_system_counter(void)
++{
++	unsigned long freq = SYS_COUNTER_FREQ_IN_TICKS;
++
++	/* Set the frequency table index to our target frequency */
++	write_cntfrq(freq);
++
++	/* Enable system counter @ frequency table index 0, halt on debug */
++	mmio_write_32(SYS_CNTCTL_BASE + CNTCR_OFF,
++		      CNTCR_FCREQ(0) | CNTCR_HDBG | CNTCR_EN);
++}
++
++static void warp7_setup_wdog_clocks(void)
++{
++	uint32_t wdog_en_bits = (uint32_t)WDOG_CLK_SELECT;
++
++	imx_clock_set_wdog_clk_root_bits(wdog_en_bits);
++	imx_clock_enable_wdog(0);
++	imx_clock_enable_wdog(1);
++	imx_clock_enable_wdog(2);
++	imx_clock_enable_wdog(3);
++}
++
++static void warp7_setup_usb_clocks(void)
++{
++	uint32_t usb_en_bits = (uint32_t)USB_CLK_SELECT;
++
++	imx_clock_set_usb_clk_root_bits(usb_en_bits);
++	imx_clock_enable_usb(CCM_CCGR_ID_USB_IPG);
++	imx_clock_enable_usb(CCM_CCGR_ID_USB_PHY_480MCLK);
++	imx_clock_enable_usb(CCM_CCGR_ID_USB_OTG1_PHY);
++	imx_clock_enable_usb(CCM_CCGR_ID_USB_OTG2_PHY);
++}
++/*
++ * bl2_el3_early_platform_setup()
++ * MMU off
++ */
++void bl2_el3_early_platform_setup(u_register_t arg1, u_register_t arg2,
++				  u_register_t arg3, u_register_t arg4)
++{
++	uint32_t uart1_en_bits = (uint32_t)UART1_CLK_SELECT;
++	uint32_t uart6_en_bits = (uint32_t)UART6_CLK_SELECT;
++	uint32_t usdhc_clock_sel = PLAT_WARP7_SD - 1;
++
++	/* Initialize the AIPS */
++	imx_aips_init();
++	imx_csu_init();
++	imx_snvs_init();
++	imx_gpt_ops_init(GPT1_BASE_ADDR);
++
++	/* Initialize clocks, regulators, pin-muxes etc */
++	imx_clock_init();
++	imx_clock_enable_uart(0, uart1_en_bits);
++	imx_clock_enable_uart(5, uart6_en_bits);
++	imx_clock_enable_usdhc(usdhc_clock_sel, USDHC_CLK_SELECT);
++	warp7_setup_system_counter();
++	warp7_setup_wdog_clocks();
++	warp7_setup_usb_clocks();
++
++	/* Setup pin-muxes */
++	warp7_setup_pinmux();
++
++	/* Init UART, storage and friends */
++	console_init(PLAT_WARP7_BOOT_UART_BASE, PLAT_WARP7_BOOT_UART_CLK_IN_HZ,
++		     PLAT_WARP7_CONSOLE_BAUDRATE);
++	warp7_usdhc_setup();
++
++	/* Open handles to persistent storage */
++	plat_warp7_io_setup();
++
++	/* Setup higher-level functionality CAAM, RTC etc */
++	imx_caam_init();
++	imx_wdog_init();
++
++	/* Print out the expected memory map */
++	VERBOSE("\tOPTEE      0x%08x-0x%08x\n", WARP7_OPTEE_BASE, WARP7_OPTEE_LIMIT);
++	VERBOSE("\tATF/BL2    0x%08x-0x%08x\n", BL2_RAM_BASE, BL2_RAM_LIMIT);
++	VERBOSE("\tSHRAM      0x%08x-0x%08x\n", SHARED_RAM_BASE, SHARED_RAM_LIMIT);
++	VERBOSE("\tFIP        0x%08x-0x%08x\n", WARP7_FIP_BASE, WARP7_FIP_LIMIT);
++	VERBOSE("\tDTB        0x%08x-0x%08x\n", WARP7_DTB_BASE, WARP7_DTB_LIMIT);
++	VERBOSE("\tUBOOT/BL33 0x%08x-0x%08x\n", WARP7_UBOOT_BASE, WARP7_UBOOT_LIMIT);
++}
++
++/*
++ * bl2_platform_setup()
++ * MMU on - enabled by bl2_el3_plat_arch_setup()
++ */
++void bl2_platform_setup(void)
++{
++}
+diff --git a/plat/imx/imx7/picopi/warp7_bl2_mem_params_desc.c b/plat/imx/imx7/picopi/warp7_bl2_mem_params_desc.c
+new file mode 100644
+index 0000000..12254d4
+--- /dev/null
++++ b/plat/imx/imx7/picopi/warp7_bl2_mem_params_desc.c
+@@ -0,0 +1,90 @@
++/*
++ * Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <bl_common.h>
++#include <desc_image_load.h>
++#include <platform.h>
++#include <platform_def.h>
++
++static bl_mem_params_node_t bl2_mem_params_descs[] = {
++	{
++		.image_id = BL32_IMAGE_ID,
++
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
++				      entry_point_info_t,
++				      SECURE | EXECUTABLE | EP_FIRST_EXE),
++		.ep_info.pc = BL32_BASE,
++
++		SET_STATIC_PARAM_HEAD(image_info, PARAM_EP, VERSION_2,
++				      image_info_t, 0),
++
++		.image_info.image_base = WARP7_OPTEE_BASE,
++		.image_info.image_max_size = WARP7_OPTEE_SIZE,
++
++		.next_handoff_image_id = BL33_IMAGE_ID,
++	},
++	{
++		.image_id = HW_CONFIG_ID,
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_IMAGE_BINARY,
++				      VERSION_2, entry_point_info_t, SECURE | NON_EXECUTABLE),
++		SET_STATIC_PARAM_HEAD(image_info, PARAM_IMAGE_BINARY,
++				      VERSION_2, image_info_t, 0),
++		.image_info.image_base = WARP7_DTB_BASE,
++		.image_info.image_max_size = WARP7_DTB_SIZE,
++		.next_handoff_image_id = INVALID_IMAGE_ID,
++	},
++	{
++		.image_id = BL32_EXTRA1_IMAGE_ID,
++
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
++				      entry_point_info_t,
++				      SECURE | NON_EXECUTABLE),
++
++		SET_STATIC_PARAM_HEAD(image_info, PARAM_EP, VERSION_2,
++				      image_info_t, IMAGE_ATTRIB_SKIP_LOADING),
++		.image_info.image_base = WARP7_OPTEE_BASE,
++		.image_info.image_max_size = WARP7_OPTEE_SIZE,
++
++		.next_handoff_image_id = INVALID_IMAGE_ID,
++	},
++	{
++		/* This is a zero sized image so we don't set base or size */
++		.image_id = BL32_EXTRA2_IMAGE_ID,
++
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP,
++				      VERSION_2, entry_point_info_t,
++				      SECURE | NON_EXECUTABLE),
++
++		SET_STATIC_PARAM_HEAD(image_info, PARAM_EP,
++				      VERSION_2, image_info_t,
++				      IMAGE_ATTRIB_SKIP_LOADING),
++		.next_handoff_image_id = INVALID_IMAGE_ID,
++	},
++	{
++		.image_id = BL33_IMAGE_ID,
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
++				      entry_point_info_t,
++				      NON_SECURE | EXECUTABLE),
++		# ifdef PRELOADED_BL33_BASE
++			.ep_info.pc = PRELOADED_BL33_BASE,
++
++			SET_STATIC_PARAM_HEAD(image_info, PARAM_EP,
++					      VERSION_2, image_info_t,
++					      IMAGE_ATTRIB_SKIP_LOADING),
++		# else
++			.ep_info.pc = BL33_BASE,
++
++			SET_STATIC_PARAM_HEAD(image_info, PARAM_EP,
++					      VERSION_2, image_info_t, 0),
++			.image_info.image_base = WARP7_UBOOT_BASE,
++			.image_info.image_max_size = WARP7_UBOOT_SIZE,
++		# endif /* PRELOADED_BL33_BASE */
++
++		.next_handoff_image_id = INVALID_IMAGE_ID,
++	}
++};
++
++REGISTER_BL_IMAGE_DESCS(bl2_mem_params_descs);
+diff --git a/plat/imx/imx7/picopi/warp7_image_load.c b/plat/imx/imx7/picopi/warp7_image_load.c
+new file mode 100644
+index 0000000..1e3a2b0
+--- /dev/null
++++ b/plat/imx/imx7/picopi/warp7_image_load.c
+@@ -0,0 +1,24 @@
++/*
++ * Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <bl_common.h>
++#include <desc_image_load.h>
++#include <platform.h>
++
++void plat_flush_next_bl_params(void)
++{
++	flush_bl_params_desc();
++}
++
++bl_load_info_t *plat_get_bl_image_load_info(void)
++{
++	return get_bl_load_info_from_mem_params_desc();
++}
++
++bl_params_t *plat_get_next_bl_params(void)
++{
++	return get_next_bl_params_from_mem_params_desc();
++}
+diff --git a/plat/imx/imx7/picopi/warp7_io_storage.c b/plat/imx/imx7/picopi/warp7_io_storage.c
+new file mode 100644
+index 0000000..0c88039
+--- /dev/null
++++ b/plat/imx/imx7/picopi/warp7_io_storage.c
+@@ -0,0 +1,276 @@
++/*
++ * Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++#include <assert.h>
++#include <debug.h>
++#include <mmc.h>
++#include <firmware_image_package.h>
++#include <io_block.h>
++#include <io_driver.h>
++#include <io_fip.h>
++#include <io_memmap.h>
++#include <platform_def.h>
++
++static const io_dev_connector_t *fip_dev_con;
++static uintptr_t fip_dev_handle;
++
++#ifndef WARP7_FIP_MMAP
++static const io_dev_connector_t *mmc_dev_con;
++static uintptr_t mmc_dev_handle;
++
++static const io_block_spec_t mmc_fip_spec = {
++	.offset = WARP7_FIP_MMC_BASE,
++	.length = WARP7_FIP_SIZE
++};
++
++static const io_block_dev_spec_t mmc_dev_spec = {
++	/* It's used as temp buffer in block driver. */
++	.buffer		= {
++		.offset	= WARP7_FIP_BASE,
++		/* do we need a new value? */
++		.length = WARP7_FIP_SIZE
++	},
++	.ops		= {
++		.read	= mmc_read_blocks,
++		.write	= mmc_write_blocks,
++	},
++	.block_size	= MMC_BLOCK_SIZE,
++};
++
++static int open_mmc(const uintptr_t spec);
++
++#else
++static const io_dev_connector_t *memmap_dev_con;
++static uintptr_t memmap_dev_handle;
++
++static const io_block_spec_t fip_block_spec = {
++	.offset = WARP7_FIP_BASE,
++	.length = WARP7_FIP_SIZE
++};
++static int open_memmap(const uintptr_t spec);
++#endif
++static int open_fip(const uintptr_t spec);
++
++static const io_uuid_spec_t bl32_uuid_spec = {
++	.uuid = UUID_SECURE_PAYLOAD_BL32,
++};
++
++static const io_uuid_spec_t hw_config_uuid_spec = {
++	.uuid = UUID_HW_CONFIG,
++};
++
++static const io_uuid_spec_t bl32_extra1_uuid_spec = {
++	.uuid = UUID_SECURE_PAYLOAD_BL32_EXTRA1,
++};
++
++static const io_uuid_spec_t bl32_extra2_uuid_spec = {
++	.uuid = UUID_SECURE_PAYLOAD_BL32_EXTRA2,
++};
++
++static const io_uuid_spec_t bl33_uuid_spec = {
++	.uuid = UUID_NON_TRUSTED_FIRMWARE_BL33,
++};
++
++#if TRUSTED_BOARD_BOOT
++static const io_uuid_spec_t tb_fw_cert_uuid_spec = {
++	.uuid = UUID_TRUSTED_BOOT_FW_CERT,
++};
++
++static const io_uuid_spec_t trusted_key_cert_uuid_spec = {
++	.uuid = UUID_TRUSTED_KEY_CERT,
++};
++
++static const io_uuid_spec_t tos_fw_key_cert_uuid_spec = {
++	.uuid = UUID_TRUSTED_OS_FW_KEY_CERT,
++};
++
++static const io_uuid_spec_t tos_fw_cert_uuid_spec = {
++	.uuid = UUID_TRUSTED_OS_FW_CONTENT_CERT,
++};
++
++static const io_uuid_spec_t nt_fw_key_cert_uuid_spec = {
++	.uuid = UUID_NON_TRUSTED_FW_KEY_CERT,
++};
++
++static const io_uuid_spec_t nt_fw_cert_uuid_spec = {
++	.uuid = UUID_NON_TRUSTED_FW_CONTENT_CERT,
++};
++#endif /* TRUSTED_BOARD_BOOT */
++
++/* TODO: this structure is replicated multiple times. rationalize it ! */
++struct plat_io_policy {
++	uintptr_t *dev_handle;
++	uintptr_t image_spec;
++	int (*check)(const uintptr_t spec);
++};
++
++static const struct plat_io_policy policies[] = {
++#ifndef WARP7_FIP_MMAP
++	[FIP_IMAGE_ID] = {
++		&mmc_dev_handle,
++		(uintptr_t)&mmc_fip_spec,
++		open_mmc
++	},
++#else
++	[FIP_IMAGE_ID] = {
++		&memmap_dev_handle,
++		(uintptr_t)&fip_block_spec,
++		open_memmap
++	},
++#endif
++	[BL32_IMAGE_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&bl32_uuid_spec,
++		open_fip
++	},
++	[BL32_EXTRA1_IMAGE_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&bl32_extra1_uuid_spec,
++		open_fip
++	},
++	[BL32_EXTRA2_IMAGE_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&bl32_extra2_uuid_spec,
++		open_fip
++	},
++	[HW_CONFIG_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&hw_config_uuid_spec,
++		open_fip
++	},
++	[BL33_IMAGE_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&bl33_uuid_spec,
++		open_fip
++	},
++#if TRUSTED_BOARD_BOOT
++	[TRUSTED_BOOT_FW_CERT_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&tb_fw_cert_uuid_spec,
++		open_fip
++	},
++	[TRUSTED_KEY_CERT_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&trusted_key_cert_uuid_spec,
++		open_fip
++	},
++	[TRUSTED_OS_FW_KEY_CERT_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&tos_fw_key_cert_uuid_spec,
++		open_fip
++	},
++	[NON_TRUSTED_FW_KEY_CERT_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&nt_fw_key_cert_uuid_spec,
++		open_fip
++	},
++	[TRUSTED_OS_FW_CONTENT_CERT_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&tos_fw_cert_uuid_spec,
++		open_fip
++	},
++	[NON_TRUSTED_FW_CONTENT_CERT_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&nt_fw_cert_uuid_spec,
++		open_fip
++	},
++#endif /* TRUSTED_BOARD_BOOT */
++};
++
++static int open_fip(const uintptr_t spec)
++{
++	int result;
++	uintptr_t local_image_handle;
++
++	/* See if a Firmware Image Package is available */
++	result = io_dev_init(fip_dev_handle, (uintptr_t)FIP_IMAGE_ID);
++	if (result == 0) {
++		result = io_open(fip_dev_handle, spec, &local_image_handle);
++		if (result == 0) {
++			VERBOSE("Using FIP\n");
++			io_close(local_image_handle);
++		}
++	}
++	return result;
++}
++
++#ifndef WARP7_FIP_MMAP
++static int open_mmc(const uintptr_t spec)
++{
++	int result;
++	uintptr_t local_handle;
++
++	result = io_dev_init(mmc_dev_handle, (uintptr_t)NULL);
++	if (result == 0) {
++		result = io_open(mmc_dev_handle, spec, &local_handle);
++		if (result == 0)
++			io_close(local_handle);
++	}
++	return result;
++}
++#else
++static int open_memmap(const uintptr_t spec)
++{
++	int result;
++	uintptr_t local_image_handle;
++
++	result = io_dev_init(memmap_dev_handle, (uintptr_t)NULL);
++	if (result == 0) {
++		result = io_open(memmap_dev_handle, spec, &local_image_handle);
++		if (result == 0) {
++			VERBOSE("Using Memmap\n");
++			io_close(local_image_handle);
++		}
++	}
++	return result;
++}
++#endif
++
++int plat_get_image_source(unsigned int image_id, uintptr_t *dev_handle,
++			  uintptr_t *image_spec)
++{
++	int result;
++	const struct plat_io_policy *policy;
++
++	assert(image_id < ARRAY_SIZE(policies));
++
++	policy = &policies[image_id];
++	result = policy->check(policy->image_spec);
++	assert(result == 0);
++
++	*image_spec = policy->image_spec;
++	*dev_handle = *policy->dev_handle;
++
++	return result;
++}
++
++void plat_warp7_io_setup(void)
++{
++	int result __unused;
++
++#ifndef WARP7_FIP_MMAP
++	result = register_io_dev_block(&mmc_dev_con);
++	assert(result == 0);
++
++	result = io_dev_open(mmc_dev_con, (uintptr_t)&mmc_dev_spec,
++			     &mmc_dev_handle);
++	assert(result == 0);
++
++#else
++	result = register_io_dev_memmap(&memmap_dev_con);
++	assert(result == 0);
++
++	result = io_dev_open(memmap_dev_con, (uintptr_t)NULL,
++			     &memmap_dev_handle);
++	assert(result == 0);
++
++#endif
++	result = register_io_dev_fip(&fip_dev_con);
++	assert(result == 0);
++
++	result = io_dev_open(fip_dev_con, (uintptr_t)NULL,
++			     &fip_dev_handle);
++	assert(result == 0);
++}
+diff --git a/plat/imx/imx7/picopi/warp7_private.h b/plat/imx/imx7/picopi/warp7_private.h
+new file mode 100644
+index 0000000..c93acac
+--- /dev/null
++++ b/plat/imx/imx7/picopi/warp7_private.h
+@@ -0,0 +1,15 @@
++/*
++ * Copyright (c) 2015-2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef __WARP7_PRIVATE_H__
++#define __WARP7_PRIVATE_H__
++
++/*******************************************************************************
++ * Function and variable prototypes
++ ******************************************************************************/
++void plat_warp7_io_setup(void);
++
++#endif /*__WARP7_PRIVATE_H__ */
+diff --git a/plat/imx/imx7/picopi/warp7_rotpk.S b/plat/imx/imx7/picopi/warp7_rotpk.S
+new file mode 100644
+index 0000000..f74b6d2
+--- /dev/null
++++ b/plat/imx/imx7/picopi/warp7_rotpk.S
+@@ -0,0 +1,15 @@
++/*
++ * Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++	.global warp7_rotpk_hash
++	.global warp7_rotpk_hash_end
++warp7_rotpk_hash:
++	/* DER header */
++	.byte 0x30, 0x31, 0x30, 0x0D, 0x06, 0x09, 0x60, 0x86, 0x48
++	.byte 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20
++	/* SHA256 */
++	.incbin ROTPK_HASH
++warp7_rotpk_hash_end:
+diff --git a/plat/imx/imx7/picopi/warp7_trusted_boot.c b/plat/imx/imx7/picopi/warp7_trusted_boot.c
+new file mode 100644
+index 0000000..3c054f4
+--- /dev/null
++++ b/plat/imx/imx7/picopi/warp7_trusted_boot.c
+@@ -0,0 +1,32 @@
++/*
++ * Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <debug.h>
++#include <platform.h>
++
++extern char warp7_rotpk_hash[], warp7_rotpk_hash_end[];
++
++int plat_get_rotpk_info(void *cookie, void **key_ptr, unsigned int *key_len,
++			unsigned int *flags)
++{
++	*key_ptr = warp7_rotpk_hash;
++	*key_len = warp7_rotpk_hash_end - warp7_rotpk_hash;
++	*flags = ROTPK_IS_HASH;
++
++	return 0;
++}
++
++int plat_get_nv_ctr(void *cookie, unsigned int *nv_ctr)
++{
++	*nv_ctr = 0;
++
++	return 0;
++}
++
++int plat_set_nv_ctr(void *cookie, unsigned int nv_ctr)
++{
++	return 1;
++}
+-- 
+2.7.4
+

@@ -1,0 +1,198 @@
+From 1593f712f59ca5845ca8d2b1b4a531dfbde52cc5 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Thu, 30 May 2019 16:22:40 +0100
+Subject: [PATCH 17/34] plat: imx8mm: Enable Trusted Boot
+
+This patch enables Trusted Boot on the i.MX8MM with BL2 doing image
+verification from a FIP prior to hand-over to BL31.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/imx8m/imx8mm/imx8mm_io_storage.c   | 22 +++++++++++++++--
+ plat/imx/imx8m/imx8mm/imx8mm_rotpk.S        | 15 ++++++++++++
+ plat/imx/imx8m/imx8mm/imx8mm_trusted_boot.c | 36 ++++++++++++++++++++++++++++
+ plat/imx/imx8m/imx8mm/platform.mk           | 37 +++++++++++++++++++++++++++++
+ 4 files changed, 108 insertions(+), 2 deletions(-)
+ create mode 100644 plat/imx/imx8m/imx8mm/imx8mm_rotpk.S
+ create mode 100644 plat/imx/imx8m/imx8mm/imx8mm_trusted_boot.c
+
+diff --git a/plat/imx/imx8m/imx8mm/imx8mm_io_storage.c b/plat/imx/imx8m/imx8mm/imx8mm_io_storage.c
+index 559339b..a44bb7e 100644
+--- a/plat/imx/imx8m/imx8mm/imx8mm_io_storage.c
++++ b/plat/imx/imx8m/imx8mm/imx8mm_io_storage.c
+@@ -47,7 +47,7 @@ static const io_uuid_spec_t bl33_uuid_spec = {
+ 	.uuid = UUID_NON_TRUSTED_FIRMWARE_BL33,
+ };
+ 
+-#if 0 && TRUSTED_BOARD_BOOT
++#if TRUSTED_BOARD_BOOT
+ static const io_uuid_spec_t tb_fw_cert_uuid_spec = {
+ 	.uuid = UUID_TRUSTED_BOOT_FW_CERT,
+ };
+@@ -56,6 +56,10 @@ static const io_uuid_spec_t trusted_key_cert_uuid_spec = {
+ 	.uuid = UUID_TRUSTED_KEY_CERT,
+ };
+ 
++static const io_uuid_spec_t soc_fw_key_cert_uuid_spec = {
++	.uuid = UUID_SOC_FW_KEY_CERT,
++};
++
+ static const io_uuid_spec_t tos_fw_key_cert_uuid_spec = {
+ 	.uuid = UUID_TRUSTED_OS_FW_KEY_CERT,
+ };
+@@ -64,6 +68,10 @@ static const io_uuid_spec_t tos_fw_cert_uuid_spec = {
+ 	.uuid = UUID_TRUSTED_OS_FW_CONTENT_CERT,
+ };
+ 
++static const io_uuid_spec_t soc_fw_content_cert_uuid_spec = {
++	.uuid = UUID_SOC_FW_CONTENT_CERT,
++};
++
+ static const io_uuid_spec_t nt_fw_key_cert_uuid_spec = {
+ 	.uuid = UUID_NON_TRUSTED_FW_KEY_CERT,
+ };
+@@ -110,12 +118,17 @@ static const struct plat_io_policy policies[] = {
+ 		(uintptr_t)&bl33_uuid_spec,
+ 		open_fip
+ 	},
+-#if 0 && TRUSTED_BOARD_BOOT
++#if TRUSTED_BOARD_BOOT
+ 	[TRUSTED_BOOT_FW_CERT_ID] = {
+ 		&fip_dev_handle,
+ 		(uintptr_t)&tb_fw_cert_uuid_spec,
+ 		open_fip
+ 	},
++	[SOC_FW_KEY_CERT_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&soc_fw_key_cert_uuid_spec,
++		open_fip
++	},
+ 	[TRUSTED_KEY_CERT_ID] = {
+ 		&fip_dev_handle,
+ 		(uintptr_t)&trusted_key_cert_uuid_spec,
+@@ -131,6 +144,11 @@ static const struct plat_io_policy policies[] = {
+ 		(uintptr_t)&nt_fw_key_cert_uuid_spec,
+ 		open_fip
+ 	},
++	[SOC_FW_CONTENT_CERT_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&soc_fw_content_cert_uuid_spec,
++		open_fip
++	},
+ 	[TRUSTED_OS_FW_CONTENT_CERT_ID] = {
+ 		&fip_dev_handle,
+ 		(uintptr_t)&tos_fw_cert_uuid_spec,
+diff --git a/plat/imx/imx8m/imx8mm/imx8mm_rotpk.S b/plat/imx/imx8m/imx8mm/imx8mm_rotpk.S
+new file mode 100644
+index 0000000..4de13f0
+--- /dev/null
++++ b/plat/imx/imx8m/imx8mm/imx8mm_rotpk.S
+@@ -0,0 +1,15 @@
++/*
++ * Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++	.global imx8mm_rotpk_hash
++	.global imx8mm_rotpk_hash_end
++imx8mm_rotpk_hash:
++	/* DER header */
++	.byte 0x30, 0x31, 0x30, 0x0D, 0x06, 0x09, 0x60, 0x86, 0x48
++	.byte 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20
++	/* SHA256 */
++	.incbin ROTPK_HASH
++imx8mm_rotpk_hash_end:
+diff --git a/plat/imx/imx8m/imx8mm/imx8mm_trusted_boot.c b/plat/imx/imx8m/imx8mm/imx8mm_trusted_boot.c
+new file mode 100644
+index 0000000..d7cfed6
+--- /dev/null
++++ b/plat/imx/imx8m/imx8mm/imx8mm_trusted_boot.c
+@@ -0,0 +1,36 @@
++/*
++ * Copyright (c) 2019, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <plat/common/platform.h>
++
++extern char imx8mm_rotpk_hash[], imx8mm_rotpk_hash_end[];
++
++int plat_get_rotpk_info(void *cookie, void **key_ptr, unsigned int *key_len,
++			unsigned int *flags)
++{
++	*key_ptr = imx8mm_rotpk_hash;
++	*key_len = imx8mm_rotpk_hash_end - imx8mm_rotpk_hash;
++	*flags = ROTPK_IS_HASH;
++
++	return 0;
++}
++
++int plat_get_nv_ctr(void *cookie, unsigned int *nv_ctr)
++{
++	*nv_ctr = 0;
++
++	return 0;
++}
++
++int plat_set_nv_ctr(void *cookie, unsigned int nv_ctr)
++{
++	return 1;
++}
++
++int plat_get_mbedtls_heap(void **heap_addr, size_t *heap_size)
++{
++	return get_mbedtls_heap_helper(heap_addr, heap_size);
++}
+diff --git a/plat/imx/imx8m/imx8mm/platform.mk b/plat/imx/imx8m/imx8mm/platform.mk
+index e86936f..3f75d95 100644
+--- a/plat/imx/imx8m/imx8mm/platform.mk
++++ b/plat/imx/imx8m/imx8mm/platform.mk
+@@ -91,6 +91,43 @@ ifneq (${SPD},none)
+ $(eval $(call add_define,TEE_IMX8))
+ endif
+ 
++ifneq (${TRUSTED_BOARD_BOOT},0)
++
++include drivers/auth/mbedtls/mbedtls_crypto.mk
++include drivers/auth/mbedtls/mbedtls_x509.mk
++
++AUTH_SOURCES	:=	drivers/auth/auth_mod.c			\
++			drivers/auth/crypto_mod.c		\
++			drivers/auth/img_parser_mod.c		\
++			drivers/auth/tbbr/tbbr_cot.c
++
++BL2_SOURCES		+=	${AUTH_SOURCES}					\
++				plat/common/tbbr/plat_tbbr.c			\
++				plat/imx/imx8m/imx8mm/imx8mm_trusted_boot.c	\
++				plat/imx/imx8m/imx8mm/imx8mm_rotpk.S
++
++ROT_KEY             = $(BUILD_PLAT)/rot_key.pem
++ROTPK_HASH          = $(BUILD_PLAT)/rotpk_sha256.bin
++
++$(eval $(call add_define_val,ROTPK_HASH,'"$(ROTPK_HASH)"'))
++$(eval $(call MAKE_LIB_DIRS))
++
++$(BUILD_PLAT)/bl2/imx8mm_rotpk.o: $(ROTPK_HASH)
++
++certificates: $(ROT_KEY)
++
++$(ROT_KEY): | $(BUILD_PLAT)
++	@echo "  OPENSSL $@"
++	@if [ ! -f $(ROT_KEY) ]; then \
++		openssl genrsa 2048 > $@ 2>/dev/null; \
++	fi
++
++$(ROTPK_HASH): $(ROT_KEY)
++	@echo "  OPENSSL $@"
++	$(Q)openssl rsa -in $< -pubout -outform DER 2>/dev/null |\
++	openssl dgst -sha256 -binary > $@ 2>/dev/null
++endif
++
+ USE_COHERENT_MEM	:=	1
+ RESET_TO_BL31		:=	1
+ A53_DISABLE_NON_TEMPORAL_HINT := 0
+-- 
+2.7.4
+

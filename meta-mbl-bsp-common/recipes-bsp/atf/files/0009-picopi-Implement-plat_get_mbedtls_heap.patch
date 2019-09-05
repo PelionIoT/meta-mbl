@@ -1,0 +1,31 @@
+From 1ff4456b226289c75157d8f8641a496ccbec26cf Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Wed, 29 May 2019 16:35:20 +0100
+Subject: [PATCH 09/34] picopi: Implement plat_get_mbedtls_heap
+
+Commit 2374ab1799be ("Mbed TLS: Remove weak heap implementation") places a
+requirement on a platform to provide plat_get_mbedtls_heap().
+
+This commit make that provision for imx7 pico.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/imx7/picopi/picopi_trusted_boot.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/plat/imx/imx7/picopi/picopi_trusted_boot.c b/plat/imx/imx7/picopi/picopi_trusted_boot.c
+index 7658596..49aecb1 100644
+--- a/plat/imx/imx7/picopi/picopi_trusted_boot.c
++++ b/plat/imx/imx7/picopi/picopi_trusted_boot.c
+@@ -30,3 +30,8 @@ int plat_set_nv_ctr(void *cookie, unsigned int nv_ctr)
+ {
+ 	return 1;
+ }
++
++int plat_get_mbedtls_heap(void **heap_addr, size_t *heap_size)
++{
++	return get_mbedtls_heap_helper(heap_addr, heap_size);
++}
+-- 
+2.7.4
+

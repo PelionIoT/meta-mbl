@@ -1,0 +1,220 @@
+From b9ef1e3e1e2fcbe9014c843820a9d07fc06edcd7 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 29 Jul 2019 13:45:51 +0100
+Subject: [PATCH 28/34] plat: imx7: imx6_clock: Add a simple i.MX6 clock setup
+
+This patch adds a simple i.MX6 clock setup layer. We turn on all clocks by
+default. Later on the runtime OS can switch off/on clocks as necessary.
+To begin with though all clocks on makes initial bringup easier and less
+error prone.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/common/imx6_clock.c         |  26 ++++++
+ plat/imx/common/include/imx6_clock.h | 161 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 187 insertions(+)
+ create mode 100644 plat/imx/common/imx6_clock.c
+ create mode 100644 plat/imx/common/include/imx6_clock.h
+
+diff --git a/plat/imx/common/imx6_clock.c b/plat/imx/common/imx6_clock.c
+new file mode 100644
+index 0000000..2ca7a70
+--- /dev/null
++++ b/plat/imx/common/imx6_clock.c
+@@ -0,0 +1,26 @@
++/*
++ * Copyright (c) 2019, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++#include <stdint.h>
++#include <stdbool.h>
++
++#include <arch.h>
++#include <lib/mmio.h>
++
++#include <imx_regs.h>
++#include <imx6_clock.h>
++
++void imx6_clock_init(void)
++{
++	struct ccm *ccm = ((struct ccm *)CCM_BASE);
++
++	mmio_write_32((uintptr_t)&ccm->ccm_ccgr0, 0xFFFFFFFF);
++	mmio_write_32((uintptr_t)&ccm->ccm_ccgr1, 0xFFFFFFFF);
++	mmio_write_32((uintptr_t)&ccm->ccm_ccgr2, 0xFFFFFFFF);
++	mmio_write_32((uintptr_t)&ccm->ccm_ccgr3, 0xFFFFFFFF);
++	mmio_write_32((uintptr_t)&ccm->ccm_ccgr4, 0xFFFFFFFF);
++	mmio_write_32((uintptr_t)&ccm->ccm_ccgr5, 0xFFFFFFFF);
++	mmio_write_32((uintptr_t)&ccm->ccm_ccgr6, 0xFFFFFFFF);
++}
+diff --git a/plat/imx/common/include/imx6_clock.h b/plat/imx/common/include/imx6_clock.h
+new file mode 100644
+index 0000000..c271acc
+--- /dev/null
++++ b/plat/imx/common/include/imx6_clock.h
+@@ -0,0 +1,161 @@
++/*
++ * Copyright (c) 2019, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef IMX_CLOCK_H
++#define IMX_CLOCK_H
++
++#include <stdint.h>
++#include <stdbool.h>
++
++enum {
++	CCM_CCGR_ID_ADC = 32,
++	CCM_CCGR_ID_AIPS1TZ = 10,
++	CCM_CCGR_ID_AIPS2TZ = 11,
++	CCM_CCGR_ID_AIPS3TZ = 12,
++	CCM_CCGR_ID_APBHDMA = 20,
++	CCM_CCGR_ID_CAAM = 36,
++	CCM_CCGR_ID_CM4 = 1,
++	CCM_CCGR_ID_CSI = 73,
++	CCM_CCGR_ID_CSU = 45,
++	CCM_CCGR_ID_DAP = 47,
++	CCM_CCGR_ID_DBGMON = 46,
++	CCM_CCGR_ID_DDRC = 19,
++	CCM_CCGR_ID_ECSPI1 = 120,
++	CCM_CCGR_ID_ECSPI2 = 121,
++	CCM_CCGR_ID_ECSPI3 = 122,
++	CCM_CCGR_ID_ECSPI4 = 123,
++	CCM_CCGR_ID_EIM = 22,
++	CCM_CCGR_ID_ENET1 = 112,
++	CCM_CCGR_ID_ENET2 = 113,
++	CCM_CCGR_ID_EPDC = 74,
++	CCM_CCGR_ID_FLEXCAN1 = 116,
++	CCM_CCGR_ID_FLEXCAN2 = 117,
++	CCM_CCGR_ID_FLEXTIMER1 = 128,
++	CCM_CCGR_ID_FLEXTIMER2 = 129,
++	CCM_CCGR_ID_GPIO1 = 160,
++	CCM_CCGR_ID_GPIO2 = 161,
++	CCM_CCGR_ID_GPIO3 = 162,
++	CCM_CCGR_ID_GPIO4 = 163,
++	CCM_CCGR_ID_GPIO5 = 164,
++	CCM_CCGR_ID_GPIO6 = 165,
++	CCM_CCGR_ID_GPIO7 = 166,
++	CCM_CCGR_ID_GPT1 = 124,
++	CCM_CCGR_ID_GPT2 = 125,
++	CCM_CCGR_ID_GPT3 = 126,
++	CCM_CCGR_ID_GPT4 = 127,
++	CCM_CCGR_ID_I2C1 = 136,
++	CCM_CCGR_ID_I2C2 = 137,
++	CCM_CCGR_ID_I2C3 = 138,
++	CCM_CCGR_ID_I2C4 = 139,
++	CCM_CCGR_ID_IOMUXC1 = 168,
++	CCM_CCGR_ID_IOMUXC2 = 169,
++	CCM_CCGR_ID_KPP = 120,
++	CCM_CCGR_ID_LCDIF = 75,
++	CCM_CCGR_ID_MIPI_CSI = 100,
++	CCM_CCGR_ID_MIPI_DSI = 101,
++	CCM_CCGR_ID_MIPI_PHY = 102,
++	CCM_CCGR_ID_MU = 39,
++	CCM_CCGR_ID_OCOTP = 35,
++	CCM_CCGR_ID_OCRAM = 17,
++	CCM_CCGR_ID_OCRAM_S = 18,
++	CCM_CCGR_ID_PCIE = 96,
++	CCM_CCGR_ID_PCIE_PHY = 96,
++	CCM_CCGR_ID_PERFMON1 = 68,
++	CCM_CCGR_ID_PERFMON2 = 69,
++	CCM_CCGR_ID_PWM1 = 132,
++	CCM_CCGR_ID_PWM2 = 133,
++	CCM_CCGR_ID_PWM3 = 134,
++	CCM_CCGR_ID_PMM4 = 135,
++	CCM_CCGR_ID_PXP = 76,
++	CCM_CCGR_ID_QOS1 = 42,
++	CCM_CCGR_ID_QOS2 = 43,
++	CCM_CCGR_ID_QOS3 = 44,
++	CCM_CCGR_ID_QUADSPI = 21,
++	CCM_CCGR_ID_RDC = 38,
++	CCM_CCGR_ID_ROMCP = 16,
++	CCM_CCGR_ID_SAI1 = 140,
++	CCM_CCGR_ID_SAI2 = 141,
++	CCM_CCGR_ID_SAI3 = 142,
++	CCM_CCGR_ID_SCTR = 34,
++	CCM_CCGR_ID_SDMA = 72,
++	CCM_CCGR_ID_SEC = 49,
++	CCM_CCGR_ID_SEMA42_1 = 64,
++	CCM_CCGR_ID_SEMA42_2 = 65,
++	CCM_CCGR_ID_SIM_DISPLAY = 5,
++	CCM_CCGR_ID_SIM_ENET = 6,
++	CCM_CCGR_ID_SIM_M = 7,
++	CCM_CCGR_ID_SIM_MAIN = 4,
++	CCM_CCGR_ID_SIM_S = 8,
++	CCM_CCGR_ID_SIM_WAKEUP = 9,
++	CCM_CCGR_ID_SIM1 = 144,
++	CCM_CCGR_ID_SIM2 = 145,
++	CCM_CCGR_ID_SIM_NAND = 20,
++	CCM_CCGR_ID_DISPLAY_CM4 = 1,
++	CCM_CCGR_ID_DRAM = 19,
++	CCM_CCGR_ID_SNVS = 37,
++	CCM_CCGR_ID_SPBA = 12,
++	CCM_CCGR_ID_TRACE = 48,
++	CCM_CCGR_ID_TZASC = 19,
++	CCM_CCGR_ID_UART1 = 148,
++	CCM_CCGR_ID_UART2 = 149,
++	CCM_CCGR_ID_UART3 = 150,
++	CCM_CCGR_ID_UART4 = 151,
++	CCM_CCGR_ID_UART5 = 152,
++	CCM_CCGR_ID_UART6 = 153,
++	CCM_CCGR_ID_UART7 = 154,
++	CCM_CCGR_ID_USB_HS = 40,
++	CCM_CCGR_ID_USB_IPG = 104,
++	CCM_CCGR_ID_USB_PHY_480MCLK = 105,
++	CCM_CCGR_ID_USB_OTG1_PHY = 106,
++	CCM_CCGR_ID_USB_OTG2_PHY = 107,
++	CCM_CCGR_ID_USBHDC1 = 108,
++	CCM_CCGR_ID_USBHDC2 = 109,
++	CCM_CCGR_ID_USBHDC3 = 110,
++	CCM_CCGR_ID_WDOG1 = 156,
++	CCM_CCGR_ID_WDOG2 = 157,
++	CCM_CCGR_ID_WDOG3 = 158,
++	CCM_CCGR_ID_WDOG4 = 159,
++};
++
++struct ccm {
++	uint32_t ccm_ccr;
++	uint32_t ccm_ccdr;
++	uint32_t ccm_csr;
++	uint32_t ccm_ccsr;
++	uint32_t ccm_cacrr;
++	uint32_t ccm_cbcdr;
++	uint32_t ccm_cbcmr;
++	uint32_t ccm_cscmr1;
++	uint32_t ccm_cscmr2;
++	uint32_t ccm_cscdr1;
++	uint32_t ccm_cs1cdr;
++	uint32_t ccm_cs2cdr;
++	uint32_t ccm_cdcdr;
++	uint32_t ccm_chsccdr;
++	uint32_t ccm_cscdr2;
++	uint32_t ccm_cscdr3;
++	uint32_t ccm_res0[2];
++	uint32_t ccm_cdhipr;
++	uint32_t ccm_res1[2];
++	uint32_t ccm_clpcr;
++	uint32_t ccm_cisr;
++	uint32_t ccm_cimr;
++	uint32_t ccm_ccosr;
++	uint32_t ccm_cgpr;
++	uint32_t ccm_ccgr0;
++	uint32_t ccm_ccgr1;
++	uint32_t ccm_ccgr2;
++	uint32_t ccm_ccgr3;
++	uint32_t ccm_ccgr4;
++	uint32_t ccm_ccgr5;
++	uint32_t ccm_ccgr6;
++	uint32_t ccm_res2;
++	uint32_t ccm_cmeor;
++};
++
++void imx6_clock_init(void);
++
++#endif /* IMX_CLOCK_H */
+-- 
+2.7.4
+

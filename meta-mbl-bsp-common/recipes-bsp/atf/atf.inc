@@ -9,14 +9,50 @@ DEPENDS += " openssl-native coreutils-native optee-os u-boot virtual/kernel"
 
 PROVIDES += "virtual/atf"
 
+FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+
 SRC_URI = " \
-    git://git.linaro.org/landing-teams/working/mbl/arm-trusted-firmware.git;protocol=https;nobranch=1;name=atf \
+    git://github.com/ARM-software/arm-trusted-firmware.git;protocol=https;nobranch=1;name=atf \
+    file://0001-pico-copy-warp7-folder-as-it-is.patch \
+    file://0002-picopi-Change-name-from-warp7-to-picopi.patch \
+    file://0003-pico-change-uart-pinmux-to-enable-serial-console.patch \
+    file://0004-pico-add-mmc-io-config.patch \
+    file://0005-pico-io_storage-Remove-DTB-from-FIP.patch \
+    file://0006-plat-picopi-Rebase-to-latest-master-branch-with-enab.patch \
+    file://0007-pico-fix-build-failure-due-to-header-path.patch \
+    file://0008-pico-Fixup-header-paths.patch \
+    file://0009-picopi-Implement-plat_get_mbedtls_heap.patch \
+    file://0010-plat-imx8m-Add-support-for-exeucting-a-TEE.patch \
+    file://0011-plat-imx8m-Configure-CAAM-job-rings-master-ID-for-i..patch \
+    file://0012-plat-imx8-Add-imx8mm_private.h-to-the-build.patch \
+    file://0013-plat-imx8-Add-image-io-storage-logic-for-MBL-TBB-FIP.patch \
+    file://0014-plat-imx8mm-Add-initial-defintions-to-facilitate-FIP.patch \
+    file://0015-plat-imx8-Add-image-load-logic-for-MBL-TBB-FIP-booti.patch \
+    file://0016-plat-imx8mm-Add-in-BL2-with-FIP.patch \
+    file://0017-plat-imx8mm-Enable-Trusted-Boot.patch \
+    file://0018-plat-imx8m-Set-AIPSTZ-config-for-when-TEE-is-switche.patch \
+    file://0019-plat-Add-FIP-offset-to-make-it-fexiable-to-change.patch \
+    file://0020-imx7-imx_regs-Define-the-number-of-AIPS-blocks-to-co.patch \
+    file://0021-imx7-imx_regs-Remove-AIPS4-defintion.patch \
+    file://0022-imx-imx_aips-Iterate-over-number-of-elements-defined.patch \
+    file://0023-imx7-imx_io_mux-Rename-common-imx_io_mux-to-imx7-spe.patch \
+    file://0024-plat-imx7-imx7_clock-Aggregate-imx7-clocks-into-one-.patch \
+    file://0025-imx-imx_wdog-Only-initialize-the-number-of-watchdogs.patch \
+    file://0026-imx-imx_io_mux-Remove-unuse-imx_io_mux.h-header.patch \
+    file://0027-imx-imx_clock-Remove-unuse-imx_clock.h-header.patch \
+    file://0028-plat-imx7-imx6_clock-Add-a-simple-i.MX6-clock-setup.patch \
+    file://0029-imx-imx_io_mux-Add-imx_io_muxc_set_pad_select_input.patch \
+    file://0030-imx6-imx6ul_picopi-atf_uboot_compat-Add-simple-compa.patch \
+    file://0031-imx6-imx6ul_picopi-Add-in-new-imx6ul-picopi-port.patch \
+    file://0032-drivers-imx-mxc_usdhc-Add-enhencement-for-IMX8.patch \
+    file://0033-imx8mm-Add-mmc-as-fip-image-storage.patch \
+    file://0034-imx8mm-increase-FIP-image-size.patch \
     git://github.com/ARMmbed/mbedtls.git;protocol=https;branch=development;name=mbedtls;destsuffix=mbedtls \
 "
 
 # MBL_ATF_VERSION should be updated to match version pointed to by SRCREV
 MBL_ATF_VERSION = "2.1"
-SRCREV_atf = "e5599535e10c12dee7a14769551996cb412425f5"
+SRCREV_atf = "89a4d269146c90e944ea36d4afb39b27d82b23e2"
 SRCREV_mbedtls = "1ab9b5714852c6810c0a0bfd8c3b5c60a9a15482"
 
 LICENSE = "BSD-3-Clause & Apache-2.0"

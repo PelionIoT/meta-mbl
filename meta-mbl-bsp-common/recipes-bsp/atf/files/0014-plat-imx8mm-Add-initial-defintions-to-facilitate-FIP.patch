@@ -1,0 +1,37 @@
+From 485d42b3470be950f0c454ccd6831bcd954e09b4 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Thu, 30 May 2019 13:58:53 +0100
+Subject: [PATCH 14/34] plat: imx8mm: Add initial defintions to facilitate FIP
+ layout
+
+Adds a number of definitions consistent with the established WaRP7
+equivalents specifying number of io_handles and block devices.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/imx8m/imx8mm/include/platform_def.h | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/plat/imx/imx8m/imx8mm/include/platform_def.h b/plat/imx/imx8m/imx8mm/include/platform_def.h
+index b9e76c0..7ac0a04 100644
+--- a/plat/imx/imx8m/imx8mm/include/platform_def.h
++++ b/plat/imx/imx8m/imx8mm/include/platform_def.h
+@@ -36,6 +36,7 @@
+ 
+ /* non-secure uboot base */
+ #define PLAT_NS_IMAGE_OFFSET		U(0x40200000)
++#define PLAT_NS_IMAGE_SIZE		U(0x00100000)
+ 
+ /* GICv3 base address */
+ #define PLAT_GICD_BASE			U(0x38800000)
+@@ -129,3 +130,7 @@
+ #define CAAM_JR1MID			U(0x30900018)
+ #define CAAM_JR2MID			U(0x30900020)
+ #define CAAM_NS_MID			U(0x1)
++
++#define MAX_IO_HANDLES			3U
++#define MAX_IO_DEVICES			2U
++#define MAX_IO_BLOCK_DEVICES		1U
+-- 
+2.7.4
+

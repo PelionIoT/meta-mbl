@@ -1,0 +1,42 @@
+From 1b300edd152c87a8fdd57e8ed447bbc234331cb1 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 29 Jul 2019 12:52:52 +0100
+Subject: [PATCH 25/34] imx: imx_wdog: Only initialize the number of watchdogs
+ we have
+
+Depending on the SoC arch in question we have a variable number of
+watchdogs. The number of watchdogs is defined in the imx_regs.h for a given
+SoC arch.
+
+This patch incrementally initializes watchdogs depending on the number
+given in imx_regs.h.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/common/imx_wdog.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/plat/imx/common/imx_wdog.c b/plat/imx/common/imx_wdog.c
+index af6d767..81b9166 100644
+--- a/plat/imx/common/imx_wdog.c
++++ b/plat/imx/common/imx_wdog.c
+@@ -18,8 +18,16 @@ static void imx_wdog_power_down(unsigned long base)
+ 
+ void imx_wdog_init(void)
+ {
++#if (MXC_MAX_WDOG_NUM > 0)
+ 	imx_wdog_power_down(WDOG1_BASE);
++#endif
++#if (MXC_MAX_WDOG_NUM > 1)
+ 	imx_wdog_power_down(WDOG2_BASE);
++#endif
++#if (MXC_MAX_WDOG_NUM > 2)
+ 	imx_wdog_power_down(WDOG3_BASE);
++#endif
++#if (MXC_MAX_WDOG_NUM > 3)
+ 	imx_wdog_power_down(WDOG4_BASE);
++#endif
+ }
+-- 
+2.7.4
+

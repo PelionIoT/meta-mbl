@@ -1,0 +1,1873 @@
+From c7fc62d3c33bee9c18dcb3351e601fac21d2a5ff Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 29 Jul 2019 16:13:43 +0100
+Subject: [PATCH 31/34] imx6: imx6ul_picopi: Add in new imx6ul picopi port
+
+This patch adds in a port for the i.MX6UL Pico PI from Technexion.
+
+Right now only files that really differ from the i.MX7D pico are:
+
+- imx6ul_picopi_bl2_el3_setup.c
+- plat/imx/imx6/include/imx_regs.h
+- plat/imx/imx6/include/imx_io_mux.h
+
+There may be some more differences as we enable trusted boot but, for now
+this initial version differs only very slightly at the clock and mux level.
+The higher level FIP logic is unchanged and similarly the HAB failover
+works as it does on the i.MX7.
+
+In order to compile up the u-boot ddr intiialization code
+
+1. Populate plat/imx/imx6/common/uboot_ddr_init with patched u-boot files:
+   arch/arm/mach-imx/mx6/ddr.c
+   arch/arm/include/asm/arch-mx6/mx6-ddr.h
+   arch/arm/include/asm/arch-mx6/mx6ul-ddr.h
+
+2. Specify BUILD_UBOOT_DRAM_INIT=1 when building
+
+The resulting binary will be dual-license BSD/GPL-2.0+.
+
+See board documentation for further details.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ .../imx6ul_picopi/aarch32/imx6ul_picopi_helpers.S  |  59 +++
+ .../imx6ul_picopi/imx6ul_picopi_bl2_el3_setup.c    | 305 +++++++++++++++
+ .../imx6ul_picopi_bl2_mem_params_desc.c            |  80 ++++
+ .../imx6/imx6ul_picopi/imx6ul_picopi_image_load.c  |  24 ++
+ .../imx6/imx6ul_picopi/imx6ul_picopi_io_storage.c  | 276 +++++++++++++
+ .../imx/imx6/imx6ul_picopi/imx6ul_picopi_private.h |  15 +
+ plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_rotpk.S  |  15 +
+ .../imx6ul_picopi/imx6ul_picopi_trusted_boot.c     |  37 ++
+ plat/imx/imx6/imx6ul_picopi/include/platform_def.h | 213 ++++++++++
+ plat/imx/imx6/imx6ul_picopi/platform.mk            | 165 ++++++++
+ plat/imx/imx6/include/imx_hab_arch.h               |  12 +
+ plat/imx/imx6/include/imx_io_mux.h                 | 427 +++++++++++++++++++++
+ plat/imx/imx6/include/imx_regs.h                   | 103 +++++
+ 13 files changed, 1731 insertions(+)
+ create mode 100644 plat/imx/imx6/imx6ul_picopi/aarch32/imx6ul_picopi_helpers.S
+ create mode 100644 plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_bl2_el3_setup.c
+ create mode 100644 plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_bl2_mem_params_desc.c
+ create mode 100644 plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_image_load.c
+ create mode 100644 plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_io_storage.c
+ create mode 100644 plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_private.h
+ create mode 100644 plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_rotpk.S
+ create mode 100644 plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_trusted_boot.c
+ create mode 100644 plat/imx/imx6/imx6ul_picopi/include/platform_def.h
+ create mode 100644 plat/imx/imx6/imx6ul_picopi/platform.mk
+ create mode 100644 plat/imx/imx6/include/imx_hab_arch.h
+ create mode 100644 plat/imx/imx6/include/imx_io_mux.h
+ create mode 100644 plat/imx/imx6/include/imx_regs.h
+
+diff --git a/plat/imx/imx6/imx6ul_picopi/aarch32/imx6ul_picopi_helpers.S b/plat/imx/imx6/imx6ul_picopi/aarch32/imx6ul_picopi_helpers.S
+new file mode 100644
+index 0000000..ff48f24
+--- /dev/null
++++ b/plat/imx/imx6/imx6ul_picopi/aarch32/imx6ul_picopi_helpers.S
+@@ -0,0 +1,59 @@
++/*
++ * Copyright (c) Linaro 2018 Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <arch.h>
++#include <asm_macros.S>
++#include <assert_macros.S>
++#include <platform_def.h>
++#include <imx_hab.h>
++
++	.globl	platform_mem_init
++	.globl	plat_get_my_entrypoint
++	.globl	plat_crash_console_init
++	.globl	plat_crash_console_putc
++	.globl	plat_crash_console_flush
++	.globl	plat_panic_handler
++
++	/* ---------------------------------------------
++	 * int plat_mem_init(void)
++	 * Function to initialize memory.
++	 * The HAB hands off the DDR controller already
++	 * setup and ready to use.
++	 * Implement the mandatory function as a NOP
++	 * ---------------------------------------------
++	 */
++func platform_mem_init
++	bx	lr
++endfunc platform_mem_init
++
++func plat_get_my_entrypoint
++	mov	r0, #0
++	bx	lr
++endfunc plat_get_my_entrypoint
++
++func plat_crash_console_init
++	mov_imm	r0, PLAT_PICOPI_BOOT_UART_BASE
++	mov_imm	r1, PLAT_PICOPI_BOOT_UART_CLK_IN_HZ
++	mov_imm	r2, PLAT_PICOPI_CONSOLE_BAUDRATE
++	b	imx_crash_uart_init
++endfunc plat_crash_console_init
++
++func plat_crash_console_putc
++	mov_imm r1, PLAT_PICOPI_BOOT_UART_BASE
++	b	imx_crash_uart_putc
++endfunc plat_crash_console_putc
++
++func plat_crash_console_flush
++	/* Placeholder */
++	mov	r0, #0
++	bx	lr
++endfunc plat_crash_console_flush
++
++func plat_panic_handler
++	mov	r3, #HAB_ROM_VECTOR_TABLE_FAILSAFE
++	ldr	r3, [r3, #0]
++	blx	r3
++endfunc plat_panic_handler
+diff --git a/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_bl2_el3_setup.c b/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_bl2_el3_setup.c
+new file mode 100644
+index 0000000..12bb7e6
+--- /dev/null
++++ b/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_bl2_el3_setup.c
+@@ -0,0 +1,305 @@
++/*
++ * Copyright (c) 2019, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++#include <arch_helpers.h>
++#include <assert.h>
++#include <common/bl_common.h>
++#include <drivers/console.h>
++#include <common/debug.h>
++#include <common/desc_image_load.h>
++#include <drivers/mmc.h>
++#include <lib/mmio.h>
++#include <lib/optee_utils.h>
++#include <platform_def.h>
++#include <lib/utils.h>
++#include <lib/xlat_tables/xlat_mmu_helpers.h>
++#include <lib/xlat_tables/xlat_tables_defs.h>
++#include <imx_aips.h>
++#include <imx6_clock.h>
++#include <imx_csu.h>
++#include <imx_gpt.h>
++#include <imx_io_mux.h>
++#include <imx_uart.h>
++#include <imx_snvs.h>
++#include <imx_usdhc.h>
++#include <imx_wdog.h>
++#if defined(UBOOT_DRAM_INIT)
++#include <imx6ul_pico_init_dram.h>
++#endif
++#include "imx6ul_picopi_private.h"
++
++uintptr_t plat_get_ns_image_entrypoint(void)
++{
++	return PICOPI_UBOOT_BASE;
++}
++
++static uint32_t imx6ul_picopi_get_spsr_for_bl32_entry(void)
++{
++	return SPSR_MODE32(MODE32_svc, SPSR_T_ARM, SPSR_E_LITTLE,
++			   DISABLE_ALL_EXCEPTIONS);
++}
++
++static uint32_t imx6ul_picopi_get_spsr_for_bl33_entry(void)
++{
++	return SPSR_MODE32(MODE32_svc,
++			   plat_get_ns_image_entrypoint() & 0x1,
++			   SPSR_E_LITTLE, DISABLE_ALL_EXCEPTIONS);
++}
++
++#ifndef AARCH32_SP_OPTEE
++#error "Must build with OPTEE support included"
++#endif
++
++int bl2_plat_handle_post_image_load(unsigned int image_id)
++{
++	int err = 0;
++	bl_mem_params_node_t *bl_mem_params = get_bl_mem_params_node(image_id);
++	bl_mem_params_node_t *hw_cfg_mem_params = NULL;
++
++	bl_mem_params_node_t *pager_mem_params = NULL;
++	bl_mem_params_node_t *paged_mem_params = NULL;
++
++	assert(bl_mem_params);
++
++	switch (image_id) {
++	case BL32_IMAGE_ID:
++		pager_mem_params = get_bl_mem_params_node(BL32_EXTRA1_IMAGE_ID);
++		assert(pager_mem_params);
++
++		paged_mem_params = get_bl_mem_params_node(BL32_EXTRA2_IMAGE_ID);
++		assert(paged_mem_params);
++
++		err = parse_optee_header(&bl_mem_params->ep_info,
++					 &pager_mem_params->image_info,
++					 &paged_mem_params->image_info);
++		if (err != 0)
++			WARN("OPTEE header parse error.\n");
++
++		/*
++		 * When ATF loads the DTB the address of the DTB is passed in
++		 * arg2, if an hw config image is present use the base address
++		 * as DTB address an pass it as arg2
++		 */
++		hw_cfg_mem_params = get_bl_mem_params_node(HW_CONFIG_ID);
++
++		bl_mem_params->ep_info.args.arg0 =
++					bl_mem_params->ep_info.args.arg1;
++		bl_mem_params->ep_info.args.arg1 = 0;
++		if (hw_cfg_mem_params)
++			bl_mem_params->ep_info.args.arg2 =
++					hw_cfg_mem_params->image_info.image_base;
++		else
++			bl_mem_params->ep_info.args.arg2 = 0;
++		bl_mem_params->ep_info.args.arg3 = 0;
++		bl_mem_params->ep_info.spsr = imx6ul_picopi_get_spsr_for_bl32_entry();
++		break;
++
++	case BL33_IMAGE_ID:
++		/* AArch32 only core: OP-TEE expects NSec EP in register LR */
++		pager_mem_params = get_bl_mem_params_node(BL32_IMAGE_ID);
++		assert(pager_mem_params);
++		pager_mem_params->ep_info.lr_svc = bl_mem_params->ep_info.pc;
++
++		/* BL33 expects to receive the primary CPU MPID (through r0) */
++		bl_mem_params->ep_info.args.arg0 = 0xffff & read_mpidr();
++		bl_mem_params->ep_info.spsr = imx6ul_picopi_get_spsr_for_bl33_entry();
++		break;
++
++	default:
++		/* Do nothing in default case */
++		break;
++	}
++
++	return err;
++}
++
++void bl2_el3_plat_arch_setup(void)
++{
++	/* Setup the MMU here */
++}
++
++#define PICOPI_SD1_FEATURES \
++	(IOMUXC_SW_PAD_CTL_PAD_HYS				| \
++	 IOMUXC_SW_PAD_CTL_PAD_PUS_3_22K_OHM_PULL_UP		| \
++	 IOMUXC_SW_PAD_CTL_PAD_PUE_1_PULL			| \
++	 IOMUXC_SW_PAD_CTL_PAD_PKE_1_PULL_KEEPER_ENABLED	| \
++	 IOMUXC_SW_PAD_CTL_PAD_SPEED_0_LOW_50MHZ		| \
++	 IOMUXC_SW_PAD_CTL_PAD_DSE_3_R0_3			| \
++	 IOMUXC_SW_PAD_CTL_PAD_SRE_1_FAST_SLEW_RATE)
++
++#define PICOPI_UART6_TX_PAD_FEATURES \
++	(IOMUXC_SW_PAD_CTL_PAD_PUS_3_22K_OHM_PULL_UP		| \
++	 IOMUXC_SW_PAD_CTL_PAD_PUE_1_PULL			| \
++	 IOMUXC_SW_PAD_CTL_PAD_PKE_1_PULL_KEEPER_ENABLED	| \
++	 IOMUXC_SW_PAD_CTL_PAD_SPEED_2_MEDIUM_100MHZ		| \
++	 IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6			| \
++	 IOMUXC_SW_PAD_CTL_PAD_SRE_1_FAST_SLEW_RATE)
++
++#define PICOPI_UART6_RX_PAD_FEATURES PICOPI_UART6_TX_PAD_FEATURES
++
++static void imx6ul_picopi_setup_pinmux(void)
++{
++	/* Configure UART6 TX */
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_CSI_MCLK_CSI_MCLK_OFFSET,
++					 IOMUXC_SW_MUX_CTL_PAD_CSI_MCLK_CSI_MCLK_ALT8_UART6_TX);
++
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_CSI_MCLK_CSI_MCLK_OFFSET,
++				     PICOPI_UART6_TX_PAD_FEATURES);
++	/* Configure UART6 RX */
++	imx_io_muxc_set_pad_select_input(IOMUXC_UART6_RX_DATA_SELECT_INPUT_OFFSET,
++					 IOMUXC_UART6_RX_DATA_SELECT_INPUT_CSI_PIXCLK_ALT8);
++
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_CSI_PIXCLK_CSI_PIXCLK_OFFSET,
++					 IOMUXC_SW_MUX_CTL_PAD_CSI_PIXCLK_CSI_PIXCLK_ALT8_UART6_RX);
++
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_CSI_PIXCLK_CSI_PIXCLK_OFFSET,
++				     PICOPI_UART6_RX_PAD_FEATURES);
++
++	/* Configure USDHC1 in pin order clk, cmd, data0-data7*/
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD1_CLK_USDHC1_CLK_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD1_CMD_USDHC1_CMD_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD1_DATA0_USDHC1_DATA0_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD1_DATA1_USDHC1_DATA1_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD1_DATA2_USDHC1_DATA2_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD1_DATA3_USDHC1_DATA3_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_NAND_READY_B_RAWNAND_READY_B_OFFSET,
++					 IOMUXC_SW_MUX_CTL_PAD_NAND_READY_B_RAWNAND_READY_B_ALT1_USDHC1_DATA4);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE0_B_OFFSET,
++					 IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE0_B_ALT1_USDHC1_DATA5);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_NAND_CE1_B_RAWNAND_CE1_B_OFFSET,
++					 IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE1_B_ALT1_USDHC1_DATA6);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_NAND_CLE_RAWNAND_CLE_OFFSET,
++					 IOMUXC_SW_MUX_CTL_PAD_NAND_CLE_RAWNAND_CLE_ALT1_USDHC1_DATA7);
++
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD1_CLK_USDHC1_CLK_OFFSET,
++				     PICOPI_SD1_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD1_CMD_USDHC1_CMD_OFFSET,
++				     PICOPI_SD1_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD1_DATA0_USDHC1_DATA0_OFFSET,
++				     PICOPI_SD1_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD1_DATA1_USDHC1_DATA1_OFFSET,
++				     PICOPI_SD1_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD1_DATA2_USDHC1_DATA2_OFFSET,
++				     PICOPI_SD1_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD1_DATA3_USDHC1_DATA3_OFFSET,
++				     PICOPI_SD1_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_NAND_READY_B_RAWNAND_READY_B_OFFSET,
++				     PICOPI_SD1_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_NAND_CE0_B_RAWNAND_CE0_B_OFFSET,
++				     PICOPI_SD1_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_NAND_CE1_B_RAWNAND_CE1_B_OFFSET,
++				     PICOPI_SD1_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_NAND_CLE_RAWNAND_CLE_OFFSET,
++				     PICOPI_SD1_FEATURES);
++
++	/* SDRAM pinmux */
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_DRAM_DQM0_OFFSET, IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_DRAM_DQM1_OFFSET, IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_RAS_B_OFFSET, IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_CAS_B_OFFSET, IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_ODT0_OFFSET, IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_ODT1_OFFSET, IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SDBA2_OFFSET, IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SDCLK0_P_OFFSET, IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SDQS0_P_OFFSET, IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SDQS1_P_OFFSET, IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_DRAM_RESET_OFFSET, IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6);
++
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_GRP_ADDDS_OFFSET, IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_GRP_DDRMODE_CTL_OFFSET, IOMUXC_SW_PAD_CTL_GRP_DDRMODE_DDR_INPUT);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_GRP_B0DS_OFFSET, IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_GRP_CTLDS_OFFSET, IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_CTL_GRP_B1DS_OFFSET, IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_GRP_DDRPKE_OFFSET, 0x00000000);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_GRP_DDRMODE_OFFSET, IOMUXC_SW_PAD_CTL_GRP_DDRMODE_DDR_INPUT);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_GRP_DDR_TYPE_OFFSET, IOMUXC_SW_PAD_CTL_GRP_DDR_TYPE_DDR_SEL_2_LPDDR2_MODE);
++}
++
++static void imx6ul_picopi_usdhc_setup(void)
++{
++	imx_usdhc_params_t params;
++	struct mmc_device_info info;
++
++	zeromem(&params, sizeof(imx_usdhc_params_t));
++	params.reg_base = PLAT_PICOPI_BOOT_MMC_BASE;
++	params.clk_rate = 25000000;
++	params.bus_width = MMC_BUS_WIDTH_8;
++	info.mmc_dev_type = MMC_IS_EMMC;
++	imx_usdhc_init(&params, &info);
++}
++
++
++static void imx6ul_picopi_setup_system_counter(void)
++{
++	unsigned long freq = SYS_COUNTER_FREQ_IN_TICKS;
++
++	/* Set the frequency table index to our target frequency */
++	write_cntfrq(freq);
++
++	/* Enable system counter @ frequency table index 0, halt on debug */
++	mmio_write_32(SYS_CNTCTL_BASE + CNTCR_OFF,
++		      CNTCR_FCREQ(0) | CNTCR_HDBG | CNTCR_EN);
++}
++
++/*
++ * bl2_el3_early_platform_setup()
++ * MMU off
++ */
++void bl2_el3_early_platform_setup(u_register_t arg1, u_register_t arg2,
++				  u_register_t arg3, u_register_t arg4)
++{
++	static console_imx_uart_t console;
++	int console_scope = CONSOLE_FLAG_BOOT | CONSOLE_FLAG_RUNTIME;
++
++	/* Initialize the AIPS */
++	imx_aips_init();
++	imx_snvs_init();
++	imx_gpt_ops_init(GPT1_BASE_ADDR);
++
++	/* Initialize clocks, regulators, pin-muxes etc */
++	imx6_clock_init();
++
++	/* Setup pin-muxes */
++	imx6ul_picopi_setup_pinmux();
++
++	/* Init UART, storage and friends */
++	console_imx_uart_register(PLAT_PICOPI_BOOT_UART_BASE,
++				  PLAT_PICOPI_BOOT_UART_CLK_IN_HZ,
++				  PLAT_PICOPI_CONSOLE_BAUDRATE,
++				  &console);
++	console_set_scope(&console.console, console_scope);
++
++#if defined(UBOOT_DRAM_INIT)
++	/* Initialize DRAM */
++	imx6ul_pico_init_dram();
++#endif
++
++	/* Init MMC layer */
++	imx6ul_picopi_usdhc_setup();
++
++	/* Open handles to persistent storage */
++	plat_imx6ul_picopi_io_setup();
++
++	/* Setup higher-level functionality wdog etc */
++	imx_wdog_init();
++
++	/* Need to do this in EL-0 */
++	imx6ul_picopi_setup_system_counter();
++
++	/* Print out the expected memory map */
++	VERBOSE("\tOPTEE      0x%08x-0x%08x\n", PICOPI_OPTEE_BASE, PICOPI_OPTEE_LIMIT);
++	VERBOSE("\tATF/BL2    0x%08x-0x%08x\n", BL2_RAM_BASE, BL2_RAM_LIMIT);
++	VERBOSE("\tFIP        0x%08x-0x%08x\n", PICOPI_FIP_BASE, PICOPI_FIP_LIMIT);
++	VERBOSE("\tDTB        0x%08x-0x%08x\n", PICOPI_DTB_BASE, PICOPI_DTB_LIMIT);
++	VERBOSE("\tUBOOT/BL33 0x%08x-0x%08x\n", PICOPI_UBOOT_BASE, PICOPI_UBOOT_LIMIT);
++}
++
++/*
++ * bl2_platform_setup()
++ * MMU on - enabled by bl2_el3_plat_arch_setup()
++ */
++void bl2_platform_setup(void)
++{
++}
+diff --git a/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_bl2_mem_params_desc.c b/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_bl2_mem_params_desc.c
+new file mode 100644
+index 0000000..397b30a
+--- /dev/null
++++ b/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_bl2_mem_params_desc.c
+@@ -0,0 +1,80 @@
++/*
++ * Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <common/bl_common.h>
++#include <common/desc_image_load.h>
++#include <plat/common/platform.h>
++#include <platform_def.h>
++
++static bl_mem_params_node_t bl2_mem_params_descs[] = {
++	{
++		.image_id = BL32_IMAGE_ID,
++
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
++				      entry_point_info_t,
++				      SECURE | EXECUTABLE | EP_FIRST_EXE),
++		.ep_info.pc = BL32_BASE,
++
++		SET_STATIC_PARAM_HEAD(image_info, PARAM_EP, VERSION_2,
++				      image_info_t, 0),
++
++		.image_info.image_base = PICOPI_OPTEE_BASE,
++		.image_info.image_max_size = PICOPI_OPTEE_SIZE,
++
++		.next_handoff_image_id = BL33_IMAGE_ID,
++	},
++	{
++		.image_id = BL32_EXTRA1_IMAGE_ID,
++
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
++				      entry_point_info_t,
++				      SECURE | NON_EXECUTABLE),
++
++		SET_STATIC_PARAM_HEAD(image_info, PARAM_EP, VERSION_2,
++				      image_info_t, IMAGE_ATTRIB_SKIP_LOADING),
++		.image_info.image_base = PICOPI_OPTEE_BASE,
++		.image_info.image_max_size = PICOPI_OPTEE_SIZE,
++
++		.next_handoff_image_id = INVALID_IMAGE_ID,
++	},
++	{
++		/* This is a zero sized image so we don't set base or size */
++		.image_id = BL32_EXTRA2_IMAGE_ID,
++
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP,
++				      VERSION_2, entry_point_info_t,
++				      SECURE | NON_EXECUTABLE),
++
++		SET_STATIC_PARAM_HEAD(image_info, PARAM_EP,
++				      VERSION_2, image_info_t,
++				      IMAGE_ATTRIB_SKIP_LOADING),
++		.next_handoff_image_id = INVALID_IMAGE_ID,
++	},
++	{
++		.image_id = BL33_IMAGE_ID,
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
++				      entry_point_info_t,
++				      NON_SECURE | EXECUTABLE),
++		# ifdef PRELOADED_BL33_BASE
++			.ep_info.pc = PRELOADED_BL33_BASE,
++
++			SET_STATIC_PARAM_HEAD(image_info, PARAM_EP,
++					      VERSION_2, image_info_t,
++					      IMAGE_ATTRIB_SKIP_LOADING),
++		# else
++			.ep_info.pc = BL33_BASE,
++
++			SET_STATIC_PARAM_HEAD(image_info, PARAM_EP,
++					      VERSION_2, image_info_t, 0),
++			.image_info.image_base = PICOPI_UBOOT_BASE,
++			.image_info.image_max_size = PICOPI_UBOOT_SIZE,
++		# endif /* PRELOADED_BL33_BASE */
++
++		.next_handoff_image_id = INVALID_IMAGE_ID,
++	}
++};
++
++REGISTER_BL_IMAGE_DESCS(bl2_mem_params_descs);
+diff --git a/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_image_load.c b/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_image_load.c
+new file mode 100644
+index 0000000..c3e47b9
+--- /dev/null
++++ b/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_image_load.c
+@@ -0,0 +1,24 @@
++/*
++ * Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <common/bl_common.h>
++#include <common/desc_image_load.h>
++#include <plat/common/platform.h>
++
++void plat_flush_next_bl_params(void)
++{
++	flush_bl_params_desc();
++}
++
++bl_load_info_t *plat_get_bl_image_load_info(void)
++{
++	return get_bl_load_info_from_mem_params_desc();
++}
++
++bl_params_t *plat_get_next_bl_params(void)
++{
++	return get_next_bl_params_from_mem_params_desc();
++}
+diff --git a/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_io_storage.c b/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_io_storage.c
+new file mode 100644
+index 0000000..ab509ad
+--- /dev/null
++++ b/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_io_storage.c
+@@ -0,0 +1,276 @@
++/*
++ * Copyright (c) 2019, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++#include <assert.h>
++#include <common/debug.h>
++#include <drivers/mmc.h>
++#include <tools_share/firmware_image_package.h>
++#include <drivers/io/io_block.h>
++#include <drivers/io/io_driver.h>
++#include <drivers/io/io_fip.h>
++#include <drivers/io/io_memmap.h>
++#include <platform_def.h>
++
++static const io_dev_connector_t *fip_dev_con;
++static uintptr_t fip_dev_handle;
++
++#ifndef PICOPI_FIP_MMAP
++static const io_dev_connector_t *mmc_dev_con;
++static uintptr_t mmc_dev_handle;
++
++static const io_block_spec_t mmc_fip_spec = {
++	.offset = PICOPI_FIP_MMC_BASE,
++	.length = PICOPI_FIP_SIZE
++};
++
++static const io_block_dev_spec_t mmc_dev_spec = {
++	/* It's used as temp buffer in block driver. */
++	.buffer		= {
++		.offset	= PICOPI_FIP_BASE,
++		/* do we need a new value? */
++		.length = PICOPI_FIP_SIZE
++	},
++	.ops		= {
++		.read	= mmc_read_blocks,
++		.write	= mmc_write_blocks,
++	},
++	.block_size	= MMC_BLOCK_SIZE,
++};
++
++static int open_mmc(const uintptr_t spec);
++
++#else
++static const io_dev_connector_t *memmap_dev_con;
++static uintptr_t memmap_dev_handle;
++
++static const io_block_spec_t fip_block_spec = {
++	.offset = PICOPI_FIP_BASE,
++	.length = PICOPI_FIP_SIZE
++};
++static int open_memmap(const uintptr_t spec);
++#endif
++static int open_fip(const uintptr_t spec);
++
++static const io_uuid_spec_t bl32_uuid_spec = {
++	.uuid = UUID_SECURE_PAYLOAD_BL32,
++};
++
++static const io_uuid_spec_t hw_config_uuid_spec = {
++	.uuid = UUID_HW_CONFIG,
++};
++
++static const io_uuid_spec_t bl32_extra1_uuid_spec = {
++	.uuid = UUID_SECURE_PAYLOAD_BL32_EXTRA1,
++};
++
++static const io_uuid_spec_t bl32_extra2_uuid_spec = {
++	.uuid = UUID_SECURE_PAYLOAD_BL32_EXTRA2,
++};
++
++static const io_uuid_spec_t bl33_uuid_spec = {
++	.uuid = UUID_NON_TRUSTED_FIRMWARE_BL33,
++};
++
++#if TRUSTED_BOARD_BOOT
++static const io_uuid_spec_t tb_fw_cert_uuid_spec = {
++	.uuid = UUID_TRUSTED_BOOT_FW_CERT,
++};
++
++static const io_uuid_spec_t trusted_key_cert_uuid_spec = {
++	.uuid = UUID_TRUSTED_KEY_CERT,
++};
++
++static const io_uuid_spec_t tos_fw_key_cert_uuid_spec = {
++	.uuid = UUID_TRUSTED_OS_FW_KEY_CERT,
++};
++
++static const io_uuid_spec_t tos_fw_cert_uuid_spec = {
++	.uuid = UUID_TRUSTED_OS_FW_CONTENT_CERT,
++};
++
++static const io_uuid_spec_t nt_fw_key_cert_uuid_spec = {
++	.uuid = UUID_NON_TRUSTED_FW_KEY_CERT,
++};
++
++static const io_uuid_spec_t nt_fw_cert_uuid_spec = {
++	.uuid = UUID_NON_TRUSTED_FW_CONTENT_CERT,
++};
++#endif /* TRUSTED_BOARD_BOOT */
++
++/* TODO: this structure is replicated multiple times. rationalize it ! */
++struct plat_io_policy {
++	uintptr_t *dev_handle;
++	uintptr_t image_spec;
++	int (*check)(const uintptr_t spec);
++};
++
++static const struct plat_io_policy policies[] = {
++#ifndef PICOPI_FIP_MMAP
++	[FIP_IMAGE_ID] = {
++		&mmc_dev_handle,
++		(uintptr_t)&mmc_fip_spec,
++		open_mmc
++	},
++#else
++	[FIP_IMAGE_ID] = {
++		&memmap_dev_handle,
++		(uintptr_t)&fip_block_spec,
++		open_memmap
++	},
++#endif
++	[BL32_IMAGE_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&bl32_uuid_spec,
++		open_fip
++	},
++	[BL32_EXTRA1_IMAGE_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&bl32_extra1_uuid_spec,
++		open_fip
++	},
++	[BL32_EXTRA2_IMAGE_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&bl32_extra2_uuid_spec,
++		open_fip
++	},
++	[HW_CONFIG_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&hw_config_uuid_spec,
++		open_fip
++	},
++	[BL33_IMAGE_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&bl33_uuid_spec,
++		open_fip
++	},
++#if TRUSTED_BOARD_BOOT
++	[TRUSTED_BOOT_FW_CERT_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&tb_fw_cert_uuid_spec,
++		open_fip
++	},
++	[TRUSTED_KEY_CERT_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&trusted_key_cert_uuid_spec,
++		open_fip
++	},
++	[TRUSTED_OS_FW_KEY_CERT_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&tos_fw_key_cert_uuid_spec,
++		open_fip
++	},
++	[NON_TRUSTED_FW_KEY_CERT_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&nt_fw_key_cert_uuid_spec,
++		open_fip
++	},
++	[TRUSTED_OS_FW_CONTENT_CERT_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&tos_fw_cert_uuid_spec,
++		open_fip
++	},
++	[NON_TRUSTED_FW_CONTENT_CERT_ID] = {
++		&fip_dev_handle,
++		(uintptr_t)&nt_fw_cert_uuid_spec,
++		open_fip
++	},
++#endif /* TRUSTED_BOARD_BOOT */
++};
++
++static int open_fip(const uintptr_t spec)
++{
++	int result;
++	uintptr_t local_image_handle;
++
++	/* See if a Firmware Image Package is available */
++	result = io_dev_init(fip_dev_handle, (uintptr_t)FIP_IMAGE_ID);
++	if (result == 0) {
++		result = io_open(fip_dev_handle, spec, &local_image_handle);
++		if (result == 0) {
++			VERBOSE("Using FIP\n");
++			io_close(local_image_handle);
++		}
++	}
++	return result;
++}
++
++#ifndef PICOPI_FIP_MMAP
++static int open_mmc(const uintptr_t spec)
++{
++	int result;
++	uintptr_t local_handle;
++
++	result = io_dev_init(mmc_dev_handle, (uintptr_t)NULL);
++	if (result == 0) {
++		result = io_open(mmc_dev_handle, spec, &local_handle);
++		if (result == 0)
++			io_close(local_handle);
++	}
++	return result;
++}
++#else
++static int open_memmap(const uintptr_t spec)
++{
++	int result;
++	uintptr_t local_image_handle;
++
++	result = io_dev_init(memmap_dev_handle, (uintptr_t)NULL);
++	if (result == 0) {
++		result = io_open(memmap_dev_handle, spec, &local_image_handle);
++		if (result == 0) {
++			VERBOSE("Using Memmap\n");
++			io_close(local_image_handle);
++		}
++	}
++	return result;
++}
++#endif
++
++int plat_get_image_source(unsigned int image_id, uintptr_t *dev_handle,
++			  uintptr_t *image_spec)
++{
++	int result;
++	const struct plat_io_policy *policy;
++
++	assert(image_id < ARRAY_SIZE(policies));
++
++	policy = &policies[image_id];
++	result = policy->check(policy->image_spec);
++	assert(result == 0);
++
++	*image_spec = policy->image_spec;
++	*dev_handle = *policy->dev_handle;
++
++	return result;
++}
++
++void plat_imx6ul_picopi_io_setup(void)
++{
++	int result __unused;
++
++#ifndef PICOPI_FIP_MMAP
++	result = register_io_dev_block(&mmc_dev_con);
++	assert(result == 0);
++
++	result = io_dev_open(mmc_dev_con, (uintptr_t)&mmc_dev_spec,
++			     &mmc_dev_handle);
++	assert(result == 0);
++
++#else
++	result = register_io_dev_memmap(&memmap_dev_con);
++	assert(result == 0);
++
++	result = io_dev_open(memmap_dev_con, (uintptr_t)NULL,
++			     &memmap_dev_handle);
++	assert(result == 0);
++
++#endif
++	result = register_io_dev_fip(&fip_dev_con);
++	assert(result == 0);
++
++	result = io_dev_open(fip_dev_con, (uintptr_t)NULL,
++			     &fip_dev_handle);
++	assert(result == 0);
++}
+diff --git a/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_private.h b/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_private.h
+new file mode 100644
+index 0000000..30f678a
+--- /dev/null
++++ b/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_private.h
+@@ -0,0 +1,15 @@
++/*
++ * Copyright (c) 2015-2019, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef __PICOPI_PRIVATE_H__
++#define __PICOPI_PRIVATE_H__
++
++/*******************************************************************************
++ * Function and variable prototypes
++ ******************************************************************************/
++void plat_imx6ul_picopi_io_setup(void);
++
++#endif /*__PICOPI_PRIVATE_H__ */
+diff --git a/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_rotpk.S b/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_rotpk.S
+new file mode 100644
+index 0000000..9aed219
+--- /dev/null
++++ b/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_rotpk.S
+@@ -0,0 +1,15 @@
++/*
++ * Copyright (c) 2019, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++	.global imx6ul_picopi_rotpk_hash
++	.global imx6ul_picopi_rotpk_hash_end
++imx6ul_picopi_rotpk_hash:
++	/* DER header */
++	.byte 0x30, 0x31, 0x30, 0x0D, 0x06, 0x09, 0x60, 0x86, 0x48
++	.byte 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20
++	/* SHA256 */
++	.incbin ROTPK_HASH
++imx6ul_picopi_rotpk_hash_end:
+diff --git a/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_trusted_boot.c b/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_trusted_boot.c
+new file mode 100644
+index 0000000..126e387
+--- /dev/null
++++ b/plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_trusted_boot.c
+@@ -0,0 +1,37 @@
++/*
++ * Copyright (c) 2019, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <common/debug.h>
++#include <plat/common/platform.h>
++
++extern char imx6ul_picopi_rotpk_hash[], imx6ul_picopi_rotpk_hash_end[];
++
++int plat_get_rotpk_info(void *cookie, void **key_ptr, unsigned int *key_len,
++			unsigned int *flags)
++{
++	*key_ptr = imx6ul_picopi_rotpk_hash;
++	*key_len = imx6ul_picopi_rotpk_hash_end - imx6ul_picopi_rotpk_hash;
++	*flags = ROTPK_IS_HASH;
++
++	return 0;
++}
++
++int plat_get_nv_ctr(void *cookie, unsigned int *nv_ctr)
++{
++	*nv_ctr = 0;
++
++	return 0;
++}
++
++int plat_set_nv_ctr(void *cookie, unsigned int nv_ctr)
++{
++	return 1;
++}
++
++int plat_get_mbedtls_heap(void **heap_addr, size_t *heap_size)
++{
++	return get_mbedtls_heap_helper(heap_addr, heap_size);
++}
+diff --git a/plat/imx/imx6/imx6ul_picopi/include/platform_def.h b/plat/imx/imx6/imx6ul_picopi/include/platform_def.h
+new file mode 100644
+index 0000000..fe0d3e7
+--- /dev/null
++++ b/plat/imx/imx6/imx6ul_picopi/include/platform_def.h
+@@ -0,0 +1,213 @@
++/*
++ * Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef __PLATFORM_DEF_H__
++#define __PLATFORM_DEF_H__
++
++#include <arch.h>
++#include <imx_regs.h>
++#include <common/tbbr/tbbr_img_def.h>
++#include <plat/common/common_def.h>
++
++#define PLATFORM_STACK_SIZE		0x1000
++
++#define PLATFORM_MAX_CPUS_PER_CLUSTER	2
++#define PLATFORM_CLUSTER_COUNT		1
++#define PLATFORM_CLUSTER0_CORE_COUNT	PLATFORM_MAX_CPUS_PER_CLUSTER
++#define PLATFORM_CLUSTER1_CORE_COUNT	0
++
++#define PLATFORM_CORE_COUNT		(PLATFORM_CLUSTER0_CORE_COUNT + \
++					 PLATFORM_CLUSTER1_CORE_COUNT)
++
++#define PICOPI_PRIMARY_CPU		0
++
++#define PLAT_NUM_PWR_DOMAINS		(PLATFORM_CLUSTER_COUNT + \
++					PLATFORM_CORE_COUNT)
++#define PLAT_MAX_PWR_LVL		MPIDR_AFFLVL1
++
++#define PLAT_MAX_RET_STATE		1
++#define PLAT_MAX_OFF_STATE		2
++
++/* Local power state for power domains in Run state. */
++#define PLAT_LOCAL_STATE_RUN		0
++
++/* Local power state for retention. Valid only for CPU power domains */
++#define PLAT_LOCAL_STATE_RET		1
++
++/*
++ * Local power state for OFF/power-down. Valid for CPU and cluster power
++ * domains.
++ */
++#define PLAT_LOCAL_STATE_OFF		2
++
++/*
++ * Macros used to parse state information from State-ID if it is using the
++ * recommended encoding for State-ID.
++ */
++#define PLAT_LOCAL_PSTATE_WIDTH		4
++#define PLAT_LOCAL_PSTATE_MASK		((1 << PLAT_LOCAL_PSTATE_WIDTH) - 1)
++
++/*
++ * Some data must be aligned on the biggest cache line size in the platform.
++ * This is known only to the platform as it might have a combination of
++ * integrated and external caches.
++ * i.MX7 has a 32 byte cacheline size
++ * i.MX 7Solo Applications Processor Reference Manual, Rev. 0.1, 08/2016 pg 244
++ */
++#define CACHE_WRITEBACK_SHIFT		4
++#define CACHE_WRITEBACK_GRANULE		(1 << CACHE_WRITEBACK_SHIFT)
++
++/*
++ * Partition memory into secure BootROM, OCRAM_S, non-secure DRAM, secure DRAM
++ */
++#define BOOT_ROM_BASE			0x00000000
++#define BOOT_ROM_SIZE			0x00020000
++
++#define OCRAM_BASE			0x00908000
++#define OCRAM_SIZE			0x00018000
++
++/* Controller maps 2GB, board contains 512 MB. 0x80000000 - 0xa0000000 */
++#define DRAM_BASE			0x80000000
++#define DRAM_SIZE			0x20000000
++#define DRAM_LIMIT			(DRAM_BASE + DRAM_SIZE)
++
++/* Place OPTEE at minus 32 MB from the end of memory. 0x9e000000 - 0xa0000000 */
++#define PICOPI_OPTEE_SIZE		0x02000000
++#define PICOPI_OPTEE_BASE		(DRAM_LIMIT - PICOPI_OPTEE_SIZE)
++#define PICOPI_OPTEE_LIMIT		(PICOPI_OPTEE_BASE + PICOPI_OPTEE_SIZE)
++
++/* Place ATF into OCRAM. 0x00908000 - 0x920000 */
++#define BL2_RAM_SIZE			OCRAM_SIZE
++#define BL2_RAM_BASE			OCRAM_BASE
++#define BL2_RAM_LIMIT			(BL2_RAM_BASE + BL2_RAM_SIZE)
++
++/* Mandatory shared RAM definition inside of OCRAM */
++#define SHARED_RAM_SIZE                 0x00001000
++#define SHARED_RAM_BASE                 (BL2_RAM_BASE - SHARED_RAM_SIZE)
++#define SHARED_RAM_LIMIT                (SHARED_RAM_BASE + SHARED_RAM_SIZE)
++
++/* Define the absolute location of u-boot 0x87800000 - 0x87900000 */
++#define PICOPI_UBOOT_SIZE		0x00100000
++#define PICOPI_UBOOT_BASE		(DRAM_BASE + 0x7800000)
++#define PICOPI_UBOOT_LIMIT		(PICOPI_UBOOT_BASE + PICOPI_UBOOT_SIZE)
++
++/* Define FIP image absolute location 0x80000000 - 0x80100000 */
++#define PICOPI_FIP_SIZE			0x00100000
++#define PICOPI_FIP_BASE			(DRAM_BASE)
++#define PICOPI_FIP_LIMIT		(PICOPI_FIP_BASE + PICOPI_FIP_SIZE)
++
++/* Define FIP image location at 1MB offset */
++#if defined(FIP_ROM_OFFSET)
++#define PICOPI_FIP_MMC_BASE		FIP_ROM_OFFSET
++#else
++#define PICOPI_FIP_MMC_BASE		(1024 * 1024)
++#endif
++
++/* Define the absolute location of DTB 0x83000000 - 0x83100000 */
++#define PICOPI_DTB_SIZE			0x00100000
++#define PICOPI_DTB_BASE			(DRAM_BASE + 0x03000000)
++#define PICOPI_DTB_LIMIT		(PICOPI_DTB_BASE + PICOPI_DTB_SIZE)
++
++/*
++ * BL2 specific defines.
++ *
++ * Put BL2 just below BL3-1. BL2_BASE is calculated using the current BL2 debug
++ * size plus a little space for growth.
++ */
++#define BL2_BASE		BL2_RAM_BASE
++#define BL2_LIMIT		(BL2_RAM_BASE + BL2_RAM_SIZE)
++
++/*
++ * BL3-2/OPTEE
++ */
++# define BL32_BASE		PICOPI_OPTEE_BASE
++# define BL32_LIMIT		(PICOPI_OPTEE_BASE + PICOPI_OPTEE_SIZE)
++
++/*
++ * BL3-3/U-BOOT
++ */
++#define BL33_BASE		PICOPI_UBOOT_BASE
++#define BL33_LIMIT		(PICOPI_UBOOT_BASE + PICOPI_UBOOT_SIZE)
++
++/*
++ * ATF's view of memory
++ *
++ * 0xa0000000 +-----------------+
++ *            |       DDR       | BL32/OPTEE
++ * 0x9e000000 +-----------------+
++ *            |       DDR       | 
++ * 0x9de00000 +-----------------+
++ *            |       DDR       | Unallocated
++ * 0x87900000 +-----------------+
++ *            |       DDR       | BL33/U-BOOT
++ * 0x87800000 +-----------------+
++ *            |       DDR       | Unallocated
++ * 0x83100000 +-----------------+
++ *            |       DDR       | DTB
++ * 0x83000000 +-----------------+
++ *            |       DDR       | Unallocated
++ * 0x80100000 +-----------------+
++ *            |       DDR       | FIP
++ * 0x80000000 +-----------------+
++ *            |     SOC I/0     |
++ * 0x00a00000 +-----------------+
++ *            |     SOC I/0     |
++ * 0x00920000 +-----------------+
++ *            |     OCRAM_S     | Shared MBOX RAM
++ * 0x0091F000 +-----------------+
++ *            |     OCRAM_S     | BL2
++ * 0x00908000 +-----------------+
++ *            |     SOC I/0     |
++ * 0x00020000 +-----------------+
++ *            |     BootROM     | BL1
++ * 0x00000000 +-----------------+
++ */
++
++#define PLAT_PHY_ADDR_SPACE_SIZE	(1ULL << 32)
++#define PLAT_VIRT_ADDR_SPACE_SIZE	(1ULL << 32)
++#define MAX_MMAP_REGIONS		10
++#define MAX_XLAT_TABLES			6
++#define MAX_IO_DEVICES			2
++#define MAX_IO_HANDLES			3
++#define MAX_IO_BLOCK_DEVICES		1
++
++/* UART defines */
++#define PLAT_PICOPI_UART_BASE		MXC_UART6_BASE
++
++#define PLAT_PICOPI_BOOT_UART_BASE	PLAT_PICOPI_UART_BASE
++#define PLAT_PICOPI_BOOT_UART_CLK_IN_HZ	80000000
++#define PLAT_PICOPI_CONSOLE_BAUDRATE	115200
++
++/* MMC defines */
++#ifndef PLAT_PICOPI_SD
++#define PLAT_PICOPI_SD 1
++#endif
++
++#if PLAT_PICOPI_SD == 1
++#define PLAT_PICOPI_BOOT_MMC_BASE	USDHC1_BASE
++#endif /* PLAT_PICOPI_SD == 1 */
++
++#if PLAT_PICOPI_SD == 2
++#define PLAT_PICOPI_BOOT_MMC_BASE	USDHC2_BASE
++#endif /* PLAT_PICOPI_SD == 2 */
++
++#if PLAT_PICOPI_SD == 3
++#define PLAT_PICOPI_BOOT_MMC_BASE	USDHC3_BASE
++#endif /* PLAT_PICOPI_SD == 3 */
++
++/*
++ * GIC related constants
++ */
++#define GICD_BASE			0x31001000
++#define GICC_BASE			0x31002000
++#define GICR_BASE			0
++
++/*
++ * System counter
++ */
++#define SYS_COUNTER_FREQ_IN_TICKS	8000000		/* 8 MHz */
++
++#endif /* __PLATFORM_DEF_H__ */
+diff --git a/plat/imx/imx6/imx6ul_picopi/platform.mk b/plat/imx/imx6/imx6ul_picopi/platform.mk
+new file mode 100644
+index 0000000..bec8615
+--- /dev/null
++++ b/plat/imx/imx6/imx6ul_picopi/platform.mk
+@@ -0,0 +1,165 @@
++#
++# Copyright (c) 2019, ARM Limited and Contributors. All rights reserved.
++#
++# SPDX-License-Identifier: BSD-3-Clause
++#
++
++# Architecture
++$(eval $(call add_define,ARMV7_SUPPORTS_LARGE_PAGE_ADDRESSING))
++
++# Tune compiler for Cortex-A7
++ifeq ($(notdir $(CC)),armclang)
++    TF_CFLAGS	+=	-mfpu=neon
++    ASFLAGS	+=	-mfpu=neon
++else ifneq ($(findstring clang,$(notdir $(CC))),)
++    TF_CFLAGS	+=	-mfpu=neon
++    ASFLAGS	+=	-mfpu=neon
++else
++    TF_CFLAGS	+=	-mfpu=neon
++    ASFLAGS	+=	-mfpu=neon
++endif
++
++# Platform
++PLAT_INCLUDES		:=	-Idrivers/imx/uart			\
++				-Iinclude/common/tbbr			\
++				-Iinclude/plat/arm/common/		\
++				-Iplat/imx/common/include/		\
++				-Iplat/imx/imx6/imx6ul_picopi/include	\
++				-Idrivers/imx/timer			\
++				-Idrivers/imx/usdhc			\
++				-Iplat/imx/imx6/include	
++
++# Translation tables library
++include lib/xlat_tables_v2/xlat_tables.mk
++
++BL2_SOURCES		+=	common/desc_image_load.c			\
++				drivers/console/aarch32/console.S		\
++				drivers/delay_timer/delay_timer.c		\
++				drivers/mmc/mmc.c				\
++				drivers/io/io_block.c				\
++				drivers/io/io_fip.c				\
++				drivers/io/io_memmap.c				\
++				drivers/io/io_storage.c				\
++				drivers/imx/timer/imx_gpt.c			\
++				drivers/imx/uart/imx_uart.c			\
++				drivers/imx/uart/imx_crash_uart.S		\
++				drivers/imx/usdhc/imx_usdhc.c			\
++				lib/aarch32/arm32_aeabi_divmod.c		\
++				lib/aarch32/arm32_aeabi_divmod_a32.S		\
++				lib/cpus/aarch32/cortex_a7.S			\
++				lib/optee/optee_utils.c				\
++				plat/imx/common/imx_aips.c			\
++				plat/imx/common/imx_caam.c			\
++				plat/imx/common/imx_csu.c			\
++				plat/imx/common/imx_io_mux.c			\
++				plat/imx/common/imx_snvs.c			\
++				plat/imx/common/imx_wdog.c			\
++				plat/imx/common/imx6_clock.c		\
++				plat/imx/imx6/imx6ul_picopi/aarch32/imx6ul_picopi_helpers.S	\
++				plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_bl2_el3_setup.c	\
++				plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_bl2_mem_params_desc.c \
++				plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_io_storage.c		\
++				plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_image_load.c		\
++				plat/imx/common/aarch32/imx_uart_console.S	\
++				${XLAT_TABLES_LIB_SRCS}
++
++# u-boot memory reference code
++ifneq (${BUILD_UBOOT_DRAM_INIT},)
++$(eval $(call add_define,CONFIG_MX6UL))
++$(eval $(call add_define,CONFIG_SPL_BUILD))
++$(eval $(call add_define,UBOOT_DRAM_INIT))
++
++PLAT_INCLUDES		+=	-Iplat/imx/imx6/common/uboot_ddr_init
++BL2_SOURCES		+=	plat/imx/imx6/common/uboot_ddr_init/ddr.c \
++				plat/imx/imx6/common/uboot_ddr_init/imx6ul_pico_init_dram.c
++endif
++
++ifneq (${TRUSTED_BOARD_BOOT},0)
++
++include drivers/auth/mbedtls/mbedtls_crypto.mk
++include drivers/auth/mbedtls/mbedtls_x509.mk
++
++AUTH_SOURCES	:=	drivers/auth/auth_mod.c			\
++			drivers/auth/crypto_mod.c		\
++			drivers/auth/img_parser_mod.c		\
++			drivers/auth/tbbr/tbbr_cot.c
++
++BL2_SOURCES		+=	${AUTH_SOURCES}					\
++				plat/common/tbbr/plat_tbbr.c			\
++				plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_trusted_boot.c	\
++				plat/imx/imx6/imx6ul_picopi/imx6ul_picopi_rotpk.S
++
++ROT_KEY             = $(BUILD_PLAT)/rot_key.pem
++ROTPK_HASH          = $(BUILD_PLAT)/rotpk_sha256.bin
++
++$(eval $(call add_define_val,ROTPK_HASH,'"$(ROTPK_HASH)"'))
++$(eval $(call MAKE_LIB_DIRS))
++
++$(BUILD_PLAT)/bl2/imx6ul_picopi_rotpk.o: $(ROTPK_HASH)
++
++certificates: $(ROT_KEY)
++
++$(ROT_KEY):
++	@echo "  OPENSSL $@"
++	@if [ ! -f $(ROT_KEY) ]; then \
++		openssl genrsa 2048 > $@ 2>/dev/null; \
++	fi
++
++$(ROTPK_HASH): $(ROT_KEY)
++	@echo "  OPENSSL $@"
++	$(Q)openssl rsa -in $< -pubout -outform DER 2>/dev/null |\
++	openssl dgst -sha256 -binary > $@ 2>/dev/null
++endif
++
++# Build config flags
++# ------------------
++
++WORKAROUND_CVE_2017_5715	:= 0
++
++# Enable reset to BL31 by default
++RESET_TO_BL31			:= 0
++
++# Non-TF Boot ROM
++BL2_AT_EL3			:= 1
++
++# Indicate single-core
++COLD_BOOT_SINGLE_CPU		:= 1
++
++# Have different sections for code and rodata
++SEPARATE_CODE_AND_RODATA	:= 1
++
++# Use Coherent memory
++USE_COHERENT_MEM		:= 1
++
++# Use multi console API
++MULTI_CONSOLE_API               := 1
++
++# PLAT_PICOPI_UART
++PLAT_PICOPI_UART			:=5
++$(eval $(call add_define,PLAT_PICOPI_UART))
++
++# Indicate IMX6UL
++IMX6UL				:= 1
++$(eval $(call add_define,IMX6UL))
++
++# Add the build options to pack BLx images and kernel device tree
++# in the FIP if the platform requires.
++ifneq ($(BL2),)
++$(eval $(call TOOL_ADD_PAYLOAD,${BUILD_PLAT}/tb_fw.crt,--tb-fw-cert))
++endif
++ifneq ($(BL32_EXTRA1),)
++$(eval $(call TOOL_ADD_IMG,BL32_EXTRA1,--tos-fw-extra1))
++endif
++ifneq ($(BL32_EXTRA2),)
++$(eval $(call TOOL_ADD_IMG,BL32_EXTRA2,--tos-fw-extra2))
++endif
++ifneq ($(HW_CONFIG),)
++$(eval $(call TOOL_ADD_IMG,HW_CONFIG,--hw-config))
++endif
++
++# Verify build config
++# -------------------
++
++ifeq (${ARCH},aarch64)
++  $(error Error: AArch64 not supported on i.mx7)
++endif
+diff --git a/plat/imx/imx6/include/imx_hab_arch.h b/plat/imx/imx6/include/imx_hab_arch.h
+new file mode 100644
+index 0000000..2a34c6a
+--- /dev/null
++++ b/plat/imx/imx6/include/imx_hab_arch.h
+@@ -0,0 +1,12 @@
++/*
++ * Copyright (C) 2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++#ifndef IMX_HAB_ARCH_H
++#define IMX_HAB_ARCH_H
++
++/* Define the offset the High Assurance Boot callback table is at */
++#define HAB_CALLBACK_OFFSET	0x100
++
++#endif /* IMX_HAB_ARCH_H */
+diff --git a/plat/imx/imx6/include/imx_io_mux.h b/plat/imx/imx6/include/imx_io_mux.h
+new file mode 100644
+index 0000000..6b48265
+--- /dev/null
++++ b/plat/imx/imx6/include/imx_io_mux.h
+@@ -0,0 +1,427 @@
++/*
++ * Copyright 2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef IMX_IO_MUX_H
++#define IMX_IO_MUX_H
++
++#include <stdint.h>
++
++/*
++ * i.MX 6UltraLite Applications Processor Reference Manual, Rev. 2, 03/2017
++ * Section 30.5 IOMUXC Memory Map/Register Definition
++ */
++#define IOMUXC_SW_MUX_CTL_PAD_BOOT_MODE0_GPIO5_IO10_OFFSET		0x0014
++#define IOMUXC_SW_MUX_CTL_PAD_BOOT_MODE1_GPIO5_IO11_OFFSET		0x0018
++#define IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER0_GPIO5_IO00_OFFSET		0x001C
++#define IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER1_GPIO5_IO01_OFFSET		0x0020
++#define IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER2_GPIO5_IO02_OFFSET		0x0024
++#define IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER3_GPIO5_IO03_OFFSET		0x0028
++#define IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER4_GPIO5_IO04_OFFSET		0x002C
++#define IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER5_GPIO5_IO05_OFFSET		0x0030
++#define IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER6_GPIO5_IO06_OFFSET		0x0034
++#define IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER7_GPIO5_IO07_OFFSET		0x0038
++#define IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER8_GPIO5_IO08_OFFSET		0x003C
++#define IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER9_GPIO5_IO09_OFFSET		0x0040
++#define IOMUXC_SW_MUX_CTL_PAD_JTAG_MOD_SJC_MOD_OFFSET			0x0044
++#define IOMUXC_SW_MUX_CTL_PAD_JTAG_TMS_SJC_TMS_OFFSET			0x0048
++#define IOMUXC_SW_MUX_CTL_PAD_JTAG_TDO_SJC_TDO_OFFSET			0x004C
++#define IOMUXC_SW_MUX_CTL_PAD_JTAG_TDI_SJC_TDI_OFFSET			0x0050
++#define IOMUXC_SW_MUX_CTL_PAD_JTAG_TCK_SJC_TCK_OFFSET			0x0054
++#define IOMUXC_SW_MUX_CTL_PAD_JTAG_TRST_B_SJC_TRSTB_OFFSET		0x0058
++#define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO00_I2C2_SCL_OFFSET		0x005C
++#define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO01_I2C2_SDA_OFFSET		0x0060
++#define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO02_I2C1_SCL_OFFSET		0x0064
++#define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO03_I2C1_SDA_OFFSET		0x0068
++#define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO04_ENET1_REF_CLK1_OFFSET		0x006C
++#define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO05_ENET2_REF_CLK2_OFFSET		0x0070
++#define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO06_ENET1_MDIO_OFFSET		0x0074
++#define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO07_ENET1_MDC_OFFSET		0x0078
++#define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO08_PWM1_OUT_OFFSET		0x007C
++#define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO09_PWM2_OUT_OFFSET		0x0080
++#define IOMUXC_SW_MUX_CTL_PAD_UART1_TX_DATA_UART1_DCE_TX_OFFSET		0x0084
++#define IOMUXC_SW_MUX_CTL_PAD_UART1_RX_DATA_UART1_DCE_RX_OFFSET		0x0088
++#define IOMUXC_SW_MUX_CTL_PAD_UART1_CTS_B_UART1_DCE_CTS_OFFSET		0x008C
++#define IOMUXC_SW_MUX_CTL_PAD_UART1_RTS_B_UART1_DCE_RTS_OFFSET		0x0090
++#define IOMUXC_SW_MUX_CTL_PAD_UART2_TX_DATA_UART2_DCE_TX_OFFSET		0x0094
++#define IOMUXC_SW_MUX_CTL_PAD_UART2_RX_DATA_UART2_DCE_RX_OFFSET		0x0098
++#define IOMUXC_SW_MUX_CTL_PAD_UART2_CTS_B_UART2_DCE_CTS_OFFSET		0x009C
++#define IOMUXC_SW_MUX_CTL_PAD_UART2_RTS_B_UART2_DCE_RTS_OFFSET		0x00A0
++#define IOMUXC_SW_MUX_CTL_PAD_UART3_TX_DATA_UART3_DCE_TX_OFFSET		0x00A4
++#define IOMUXC_SW_MUX_CTL_PAD_UART3_RX_DATA_UART3_DCE_RX_OFFSET		0x00A8
++#define IOMUXC_SW_MUX_CTL_PAD_UART3_CTS_B_UART3_DCE_CTS_OFFSET		0x00AC
++#define IOMUXC_SW_MUX_CTL_PAD_UART3_RTS_B_UART3_DCE_RTS_OFFSET		0x00B0
++#define IOMUXC_SW_MUX_CTL_PAD_UART4_TX_DATA_UART4_DCE_TX_OFFSET0	0x00B4
++#define IOMUXC_SW_MUX_CTL_PAD_UART4_RX_DATA_UART4_DCE_RX_OFFSET		0x00B8
++#define IOMUXC_SW_MUX_CTL_PAD_UART5_TX_DATA_UART5_DCE_TX_OFFSET		0x00BC
++#define IOMUXC_SW_MUX_CTL_PAD_UART5_RX_DATA_UART5_DCE_RX_OFFSET		0x00C0
++#define IOMUXC_SW_MUX_CTL_PAD_ENET1_RX_DATA0_ENET1_RDATA00_OFFSET	0x00C4
++#define IOMUXC_SW_MUX_CTL_PAD_ENET1_RX_DATA1_ENET1_RDATA01_OFFSET	0x00C8
++#define IOMUXC_SW_MUX_CTL_PAD_ENET1_RX_EN_ENET1_RX_EN_OFFSET		0x00CC
++#define IOMUXC_SW_MUX_CTL_PAD_ENET1_TX_DATA0_ENET1_TDATA00_OFFSET	0x00D0
++#define IOMUXC_SW_MUX_CTL_PAD_ENET1_TX_DATA1_ENET1_TDATA01_OFFSET	0x00D4
++#define IOMUXC_SW_MUX_CTL_PAD_ENET1_TX_EN_ENET1_TX_EN_OFFSET		0x00D8
++#define IOMUXC_SW_MUX_CTL_PAD_ENET1_TX_CLK_ENET1_TX_CLK_OFFSET		0x00DC
++#define IOMUXC_SW_MUX_CTL_PAD_ENET1_RX_ER_ENET1_RX_ER_OFFSET		0x00E0
++#define IOMUXC_SW_MUX_CTL_PAD_ENET2_RX_DATA0_ENET2_RDATA00_OFFSET	0x00E4
++#define IOMUXC_SW_MUX_CTL_PAD_ENET2_RX_DATA1_ENET2_RDATA01_OFFSET	0x00E8
++#define IOMUXC_SW_MUX_CTL_PAD_ENET2_RX_EN_ENET2_RX_EN_OFFSET		0x00EC
++#define IOMUXC_SW_MUX_CTL_PAD_ENET2_TX_DATA0_ENET2_TDATA00_OFFSET	0x00F0
++#define IOMUXC_SW_MUX_CTL_PAD_ENET2_TX_DATA1_ENET2_TDATA01_OFFSET	0x00F4
++#define IOMUXC_SW_MUX_CTL_PAD_ENET2_TX_EN_ENET2_TX_EN_OFFSET		0x00F8
++#define IOMUXC_SW_MUX_CTL_PAD_ENET2_TX_CLK_ENET2_TX_CLK_OFFSET		0x00FC
++#define IOMUXC_SW_MUX_CTL_PAD_ENET2_RX_ER_ENET2_RX_ER_OFFSET		0x0100
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_CLK_LCDIF_CLK_OFFSET			0x0104
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_ENABLE_LCDIF_ENABLE_OFFSET		0x0108
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_HSYNC_LCDIF_HSYNC_OFFSET		0x010C
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_VSYNC_LCDIF_VSYNC_OFFSET		0x0110
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_RESET_LCDIF_RESET_OFFSET		0x0114
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA00_LCDIF_DATA00_OFFSET		0x0118
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA01_LCDIF_DATA01_OFFSET		0x011C
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA02_LCDIF_DATA02_OFFSET		0x0120
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA03_LCDIF_DATA03_OFFSET		0x0124
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA04_LCDIF_DATA04_OFFSET		0x0128
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA05_LCDIF_DATA05_OFFSET		0x012C
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA06_LCDIF_DATA06_OFFSET		0x0130
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA07_LCDIF_DATA07_OFFSET		0x0134
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA08_LCDIF_DATA08_OFFSET		0x0138
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA09_LCDIF_DATA09_OFFSET		0x013C
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA10_LCDIF_DATA10_OFFSET		0x0140
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA11_LCDIF_DATA11_OFFSET		0x0144
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA12_LCDIF_DATA12_OFFSET		0x0148
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA13_LCDIF_DATA13_OFFSET		0x014C
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA14_LCDIF_DATA14_OFFSET		0x0150
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA15_LCDIF_DATA15_OFFSET		0x0154
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA16_LCDIF_DATA16_OFFSET		0x0158
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA17_LCDIF_DATA17_OFFSET		0x015C
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA18_LCDIF_DATA18_OFFSET		0x0160
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA19_LCDIF_DATA19_OFFSET		0x0164
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA20_LCDIF_DATA20_OFFSET		0x0168
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA21_LCDIF_DATA21_OFFSET		0x016C
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA22_LCDIF_DATA22_OFFSET		0x0170
++#define IOMUXC_SW_MUX_CTL_PAD_LCD_DATA23_LCDIF_DATA23_OFFSET		0x0174
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_RE_B_RAWNAND_RE_B_OFFSET		0x0178
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_WE_B_RAWNAND_WE_B_OFFSET		0x017C
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_DATA00_RAWNAND_DATA00_OFFSET		0x0180
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_DATA01_RAWNAND_DATA01_OFFSET		0x0184
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_DATA02_RAWNAND_DATA02_OFFSET		0x0188
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_DATA03_RAWNAND_DATA03_OFFSET		0x018C
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_DATA04_RAWNAND_DATA04_OFFSET		0x0190
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_DATA05_RAWNAND_DATA05_OFFSET		0x0194
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_DATA06_RAWNAND_DATA06_OFFSET		0x0198
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_DATA07_RAWNAND_DATA07_OFFSET		0x019C
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_ALE_RAWNAND_ALE_OFFSET		0x01A0
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_WP_B_RAWNAND_WP_B_OFFSET		0x01A4
++
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_READY_B_RAWNAND_READY_B_OFFSET	0x01A8
++
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_READY_B_RAWNAND_READY_B_ALT0_UART3_TX	0
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_READY_B_RAWNAND_READY_B_ALT1_USDHC1_DATA4	BIT(0)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_READY_B_RAWNAND_READY_B_ALT2_QSPI_A_DATA00	BIT(1)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_READY_B_RAWNAND_READY_B_ALT3_ECSPI3_SS0	BIT(1) | BIT(0)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_READY_B_RAWNAND_READY_B_ALT4_EIM_CS1_B	BIT(2)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_READY_B_RAWNAND_READY_B_ALT6_GPIO4_IO12	BIT(2) | BIT(1)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_READY_B_RAWNAND_READY_B_ALT8_UART3_TX	BIT(3)
++
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE0_B_OFFSET			0x01AC
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE0_B_ALT0_RAWNAND_CE0_B	0
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE0_B_ALT1_USDHC1_DATA5	BIT(0)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE0_B_ALT2_QSPI_A_DATA01	BIT(1)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE0_B_ALT3_ECSPI3_SCLK		BIT(1) | BIT(0)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE0_B_ALT4_EIM_DTACK_B		BIT(2)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE0_B_ALT6_GPIO4_IO13		BIT(2) | BIT(1)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE0_B_ALT8_UART3_RX		BIT(3)
++
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE1_B_RAWNAND_CE1_B_OFFSET			0x01B0
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE1_B_ALT0_RAWNAND_CE1_B	0
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE1_B_ALT1_USDHC1_DATA6	BIT(0)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE1_B_ALT2_QSPI_A_DATA02	BIT(1)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE1_B_ALT3_ECSPI3_MOSCI	BIT(1) | BIT(0)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE1_B_ALT4_EIM_ADDR18		BIT(2)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE1_B_ALT6_GPIO4_IO14		BIT(2) | BIT(1)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE1_B_ALT8_UART3_CTS_B		BIT(3)
++
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CLE_RAWNAND_CLE_OFFSET			0x01B4
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CLE_RAWNAND_CLE_ALT0_RAWNAND_CLE	0
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CLE_RAWNAND_CLE_ALT1_USDHC1_DATA7	BIT(0)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CLE_RAWNAND_CLE_ALT2_QSPI_A_DATA03	BIT(1)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CLE_RAWNAND_CLE_ALT3_ECSPI3_MISO	BIT(1) | BIT(0)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CLE_RAWNAND_CLE_ALT4_EIM_ADDR16	BIT(2)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CLE_RAWNAND_CLE_ALT6_GPIO4_IO15	BIT(2) | BIT(1)
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_CLE_RAWNAND_CLE_ALT8_UART3_RTS_B	BIT(3)
++
++#define IOMUXC_SW_MUX_CTL_PAD_NAND_DQS_RAWNAND_DQS_OFFSET		0x01B8
++#define IOMUXC_SW_MUX_CTL_PAD_SD1_CMD_USDHC1_CMD_OFFSET			0x01BC
++#define IOMUXC_SW_MUX_CTL_PAD_SD1_CLK_USDHC1_CLK_OFFSET			0x01C0
++#define IOMUXC_SW_MUX_CTL_PAD_SD1_DATA0_USDHC1_DATA0_OFFSET		0x01C4
++#define IOMUXC_SW_MUX_CTL_PAD_SD1_DATA1_USDHC1_DATA1_OFFSET		0x01C8
++#define IOMUXC_SW_MUX_CTL_PAD_SD1_DATA2_USDHC1_DATA2_OFFSET		0x01CC
++#define IOMUXC_SW_MUX_CTL_PAD_SD1_DATA3_USDHC1_DATA3_OFFSET		0x01D0
++
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_MCLK_CSI_MCLK_OFFSET			0x01D4
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_MCLK_CSI_MCLK_ALT0_CSI_MCLK		0
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_MCLK_CSI_MCLK_ALT1_USDHC2_CD_B	BIT(0)
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_MCLK_CSI_MCLK_ALT2_RAWNAND_CE2_B	BIT(1)
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_MCLK_CSI_MCLK_ALT3_I2C1_SDA		BIT(1) | BIT(0)
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_MCLK_CSI_MCLK_ALT4_EIM_CS0_B		BIT(2)
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_MCLK_CSI_MCLK_ALT5_GPIO4_IO17		BIT(2) | BIT(0)
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_MCLK_CSI_MCLK_ALT6_SNVS_HP_VIO_5_CTL	BIT(2) | BIT(1)
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_MCLK_CSI_MCLK_ALT8_UART6_TX		BIT(3)
++
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_PIXCLK_CSI_PIXCLK_OFFSET		0x01D8
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_PIXCLK_CSI_PIXCLK_ALT0_CSI_PIXCLK	0
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_PIXCLK_CSI_PIXCLK_ALT1_USDHC2_WP	BIT(0)
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_PIXCLK_CSI_PIXCLK_ALT2_RAWNAND_CE3_B	BIT(1)
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_PIXCLK_CSI_PIXCLK_ALT3_I2C1_SCL	BIT(1) | BIT(0)
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_PIXCLK_CSI_PIXCLK_ALT4_EIM_OE		BIT(2)
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_PIXCLK_CSI_PIXCLK_ALT5_GPIO4_IO18	BIT(2) | BIT(0)
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_PIXCLK_CSI_PIXCLK_ALT6_SNVS_HP_VIO_5	BIT(2) | BIT(1)
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_PIXCLK_CSI_PIXCLK_ALT8_UART6_RX	BIT(3)
++
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_VSYNC_CSI_VSYNC_OFFSET		0x01DC
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_DATA00_CSI_DATA02_OFFSET		0x01E4
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_DATA01_CSI_DATA03_OFFSET		0x01E8
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_DATA02_CSI_DATA04_OFFSET		0x01EC
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_DATA03_CSI_DATA05_OFFSET		0x01F0
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_DATA04_CSI_DATA06_OFFSET		0x01F4
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_DATA05_CSI_DATA07_OFFSET		0x01F8
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_DATA06_CSI_DATA08_OFFSET		0x01FC
++#define IOMUXC_SW_MUX_CTL_PAD_CSI_DATA07_CSI_DATA09_OFFSET		0x0200
++
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR00_OFFSET			0x0204
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR01_OFFSET			0x0208
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR02_OFFSET			0x020C
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR03_OFFSET			0x0210
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR04_OFFSET			0x0214
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR05_OFFSET			0x0218
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR06_OFFSET			0x021C
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR07_OFFSET			0x0220
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR08_OFFSET			0x0224
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR09_OFFSET			0x0228
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR10_OFFSET			0x022C
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR11_OFFSET			0x0230
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR12_OFFSET			0x0234
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR13_OFFSET			0x0238
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR14_OFFSET			0x023C
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_ADDR15_OFFSET			0x0240
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_DQM0_OFFSET				0x0244
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_DQM1_OFFSET				0x0248
++#define IOMUXC_SW_PAD_CTL_PAD_RAS_B_OFFSET				0x024C
++#define IOMUXC_SW_PAD_CTL_PAD_CAS_B_OFFSET				0x0250
++#define IOMUXC_SW_PAD_CTL_PAD_CS0_B_OFFSET				0x0254
++#define IOMUXC_SW_PAD_CTL_PAD_CS1_B_OFFSET				0x0258
++#define IOMUXC_SW_PAD_CTL_PAD_SDWE_B_OFFSET				0x025C
++#define IOMUXC_SW_PAD_CTL_PAD_ODT0_OFFSET				0x0260
++#define IOMUXC_SW_PAD_CTL_PAD_ODT1_OFFSET				0x0264
++#define IOMUXC_SW_PAD_CTL_PAD_SDBA0_OFFSET				0x0268
++#define IOMUXC_SW_PAD_CTL_PAD_SDBA1_OFFSET				0x026C
++#define IOMUXC_SW_PAD_CTL_PAD_SDBA2_OFFSET				0x0270
++#define IOMUXC_SW_PAD_CTL_PAD_SDCKE0_OFFSET				0x0274
++#define IOMUXC_SW_PAD_CTL_PAD_SDCKE1_OFFSET				0x0278
++#define IOMUXC_SW_PAD_CTL_PAD_SDCLK0_P_OFFSET				0x027C
++#define IOMUXC_SW_PAD_CTL_PAD_SDQS0_P_OFFSET				0x0280
++#define IOMUXC_SW_PAD_CTL_PAD_SDQS1_P_OFFSET				0x0284
++#define IOMUXC_SW_PAD_CTL_PAD_DRAM_RESET_OFFSET				0x0288
++
++/*
++ * The above offsets are all replicated from this base for each pin
++ * So we can calculate the IOMUXC_SW_PAD_CTRL_REGISTER_OFFSET given the
++ * IOMUXC_SW_MUX_CTL_PAD_REGISTER_OFFSET
++ */
++#define IOMUXC_SW_PAD_CTRL_BASE_OFFSET					0x028C
++#define IOMUXC_SW_PAD_CTL_PAD_BOOT_MODE0_GPIO5_IO10_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_BOOT_MODE0_GPIO5_IO10_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_BOOT_MODE1_GPIO5_IO11_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_BOOT_MODE1_GPIO5_IO11_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SNVS_TAMPER0_GPIO5_IO00_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER0_GPIO5_IO00_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SNVS_TAMPER1_GPIO5_IO01_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER1_GPIO5_IO01_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SNVS_TAMPER2_GPIO5_IO02_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER2_GPIO5_IO02_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SNVS_TAMPER3_GPIO5_IO03_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER3_GPIO5_IO03_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SNVS_TAMPER4_GPIO5_IO04_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER4_GPIO5_IO04_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SNVS_TAMPER5_GPIO5_IO05_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER5_GPIO5_IO05_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SNVS_TAMPER6_GPIO5_IO06_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER6_GPIO5_IO06_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SNVS_TAMPER7_GPIO5_IO07_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER7_GPIO5_IO07_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SNVS_TAMPER8_GPIO5_IO08_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER8_GPIO5_IO08_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SNVS_TAMPER9_GPIO5_IO09_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_SNVS_TAMPER9_GPIO5_IO09_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_JTAG_MOD_SJC_MOD_OFFSET			(IOMUXC_SW_MUX_CTL_PAD_JTAG_MOD_SJC_MOD_OFFSET	+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_JTAG_TMS_SJC_TMS_OFFSET			(IOMUXC_SW_MUX_CTL_PAD_JTAG_TMS_SJC_TMS_OFFSET	+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_JTAG_TDO_SJC_TDO_OFFSET			(IOMUXC_SW_MUX_CTL_PAD_JTAG_TDO_SJC_TDO_OFFSET	+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_JTAG_TDI_SJC_TDI_OFFSET			(IOMUXC_SW_MUX_CTL_PAD_JTAG_TDI_SJC_TDI_OFFSET	+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_JTAG_TCK_SJC_TCK_OFFSET			(IOMUXC_SW_MUX_CTL_PAD_JTAG_TCK_SJC_TCK_OFFSET	+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_JTAG_TRST_B_SJC_TRSTB_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_JTAG_TRST_B_SJC_TRSTB_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_GPIO1_IO00_I2C2_SCL_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO00_I2C2_SCL_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_GPIO1_IO01_I2C2_SDA_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO01_I2C2_SDA_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_GPIO1_IO02_I2C1_SCL_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO02_I2C1_SCL_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_GPIO1_IO03_I2C1_SDA_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO03_I2C1_SDA_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_GPIO1_IO04_ENET1_REF_CLK1_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO04_ENET1_REF_CLK1_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_GPIO1_IO05_ENET2_REF_CLK2_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO05_ENET2_REF_CLK2_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_GPIO1_IO06_ENET1_MDIO_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO06_ENET1_MDIO_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_GPIO1_IO07_ENET1_MDC_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO07_ENET1_MDC_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_GPIO1_IO08_PWM1_OUT_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO08_PWM1_OUT_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_GPIO1_IO09_PWM2_OUT_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO09_PWM2_OUT_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART1_TX_DATA_UART1_DCE_TX_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_UART1_TX_DATA_UART1_DCE_TX_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART1_RX_DATA_UART1_DCE_RX_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_UART1_RX_DATA_UART1_DCE_RX_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART1_CTS_B_UART1_DCE_CTS_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_UART1_CTS_B_UART1_DCE_CTS_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART1_RTS_B_UART1_DCE_RTS_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_UART1_RTS_B_UART1_DCE_RTS_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART2_TX_DATA_UART2_DCE_TX_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_UART2_TX_DATA_UART2_DCE_TX_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART2_RX_DATA_UART2_DCE_RX_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_UART2_RX_DATA_UART2_DCE_RX_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART2_CTS_B_UART2_DCE_CTS_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_UART2_CTS_B_UART2_DCE_CTS_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART2_RTS_B_UART2_DCE_RTS_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_UART2_RTS_B_UART2_DCE_RTS_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART3_TX_DATA_UART3_DCE_TX_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_UART3_TX_DATA_UART3_DCE_TX_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART3_RX_DATA_UART3_DCE_RX_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_UART3_RX_DATA_UART3_DCE_RX_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART3_CTS_B_UART3_DCE_CTS_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_UART3_CTS_B_UART3_DCE_CTS_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART3_RTS_B_UART3_DCE_RTS_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_UART3_RTS_B_UART3_DCE_RTS_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART4_TX_DATA_UART4_DCE_TX_OFFSET0	(IOMUXC_SW_MUX_CTL_PAD_UART4_TX_DATA_UART4_DCE_TX_OFFSET0+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART4_RX_DATA_UART4_DCE_RX_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_UART4_RX_DATA_UART4_DCE_RX_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART5_TX_DATA_UART5_DCE_TX_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_UART5_TX_DATA_UART5_DCE_TX_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_UART5_RX_DATA_UART5_DCE_RX_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_UART5_RX_DATA_UART5_DCE_RX_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET1_RX_DATA0_ENET1_RDATA00_OFFSET	(IOMUXC_SW_MUX_CTL_PAD_ENET1_RX_DATA0_ENET1_RDATA00_OFFSET+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET1_RX_DATA1_ENET1_RDATA01_OFFSET	(IOMUXC_SW_MUX_CTL_PAD_ENET1_RX_DATA1_ENET1_RDATA01_OFFSET+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET1_RX_EN_ENET1_RX_EN_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_ENET1_RX_EN_ENET1_RX_EN_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET1_TX_DATA0_ENET1_TDATA00_OFFSET	(IOMUXC_SW_MUX_CTL_PAD_ENET1_TX_DATA0_ENET1_TDATA00_OFFSET+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET1_TX_DATA1_ENET1_TDATA01_OFFSET	(IOMUXC_SW_MUX_CTL_PAD_ENET1_TX_DATA1_ENET1_TDATA01_OFFSET+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET1_TX_EN_ENET1_TX_EN_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_ENET1_TX_EN_ENET1_TX_EN_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET1_TX_CLK_ENET1_TX_CLK_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_ENET1_TX_CLK_ENET1_TX_CLK_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET1_RX_ER_ENET1_RX_ER_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_ENET1_RX_ER_ENET1_RX_ER_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET2_RX_DATA0_ENET2_RDATA00_OFFSET	(IOMUXC_SW_MUX_CTL_PAD_ENET2_RX_DATA0_ENET2_RDATA00_OFFSET+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET2_RX_DATA1_ENET2_RDATA01_OFFSET	(IOMUXC_SW_MUX_CTL_PAD_ENET2_RX_DATA1_ENET2_RDATA01_OFFSET+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET2_RX_EN_ENET2_RX_EN_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_ENET2_RX_EN_ENET2_RX_EN_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET2_TX_DATA0_ENET2_TDATA00_OFFSET	(IOMUXC_SW_MUX_CTL_PAD_ENET2_TX_DATA0_ENET2_TDATA00_OFFSET+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET2_TX_DATA1_ENET2_TDATA01_OFFSET	(IOMUXC_SW_MUX_CTL_PAD_ENET2_TX_DATA1_ENET2_TDATA01_OFFSET+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET2_TX_EN_ENET2_TX_EN_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_ENET2_TX_EN_ENET2_TX_EN_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET2_TX_CLK_ENET2_TX_CLK_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_ENET2_TX_CLK_ENET2_TX_CLK_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_ENET2_RX_ER_ENET2_RX_ER_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_ENET2_RX_ER_ENET2_RX_ER_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_CLK_LCDIF_CLK_OFFSET			(IOMUXC_SW_MUX_CTL_PAD_LCD_CLK_LCDIF_CLK_OFFSET		+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_ENABLE_LCDIF_ENABLE_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_ENABLE_LCDIF_ENABLE_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_HSYNC_LCDIF_HSYNC_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_HSYNC_LCDIF_HSYNC_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_VSYNC_LCDIF_VSYNC_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_VSYNC_LCDIF_VSYNC_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_RESET_LCDIF_RESET_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_RESET_LCDIF_RESET_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA00_LCDIF_DATA00_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA00_LCDIF_DATA00_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA01_LCDIF_DATA01_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA01_LCDIF_DATA01_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA02_LCDIF_DATA02_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA02_LCDIF_DATA02_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA03_LCDIF_DATA03_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA03_LCDIF_DATA03_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA04_LCDIF_DATA04_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA04_LCDIF_DATA04_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA05_LCDIF_DATA05_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA05_LCDIF_DATA05_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA06_LCDIF_DATA06_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA06_LCDIF_DATA06_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA07_LCDIF_DATA07_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA07_LCDIF_DATA07_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA08_LCDIF_DATA08_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA08_LCDIF_DATA08_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA09_LCDIF_DATA09_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA09_LCDIF_DATA09_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA10_LCDIF_DATA10_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA10_LCDIF_DATA10_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA11_LCDIF_DATA11_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA11_LCDIF_DATA11_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA12_LCDIF_DATA12_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA12_LCDIF_DATA12_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA13_LCDIF_DATA13_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA13_LCDIF_DATA13_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA14_LCDIF_DATA14_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA14_LCDIF_DATA14 _OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA15_LCDIF_DATA15_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA15_LCDIF_DATA15_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA16_LCDIF_DATA16_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA16_LCDIF_DATA16_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA17_LCDIF_DATA17_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA17_LCDIF_DATA17_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA18_LCDIF_DATA18_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA18_LCDIF_DATA18_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA19_LCDIF_DATA19_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA19_LCDIF_DATA19_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA20_LCDIF_DATA20_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA20_LCDIF_DATA20_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA21_LCDIF_DATA21_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA21_LCDIF_DATA21_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA22_LCDIF_DATA22_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA22_LCDIF_DATA22_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_LCD_DATA23_LCDIF_DATA23_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_LCD_DATA23_LCDIF_DATA23_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_RE_B_RAWNAND_RE_B_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_RE_B_RAWNAND_RE_B_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_WE_B_RAWNAND_WE_B_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_WE_B_RAWNAND_WE_B_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_DATA00_RAWNAND_DATA00_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_DATA00_RAWNAND_DATA00_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_DATA01_RAWNAND_DATA01_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_DATA01_RAWNAND_DATA01_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_DATA02_RAWNAND_DATA02_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_DATA02_RAWNAND_DATA02_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_DATA03_RAWNAND_DATA03_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_DATA03_RAWNAND_DATA03_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_DATA04_RAWNAND_DATA04_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_DATA04_RAWNAND_DATA04_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_DATA05_RAWNAND_DATA05_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_DATA05_RAWNAND_DATA05_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_DATA06_RAWNAND_DATA06_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_DATA06_RAWNAND_DATA06_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_DATA07_RAWNAND_DATA07_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_DATA07_RAWNAND_DATA07_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_ALE_RAWNAND_ALE_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_ALE_RAWNAND_ALE_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_WP_B_RAWNAND_WP_B_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_WP_B_RAWNAND_WP_B_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_READY_B_RAWNAND_READY_B_OFFSET	(IOMUXC_SW_MUX_CTL_PAD_NAND_READY_B_RAWNAND_READY_B_OFFSET+ IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_CE0_B_RAWNAND_CE0_B_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_CE0_B_RAWNAND_CE0_B_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_CE1_B_RAWNAND_CE1_B_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_CE1_B_RAWNAND_CE1_B_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_CLE_RAWNAND_CLE_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_CLE_RAWNAND_CLE_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_NAND_DQS_RAWNAND_DQS_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_NAND_DQS_RAWNAND_DQS_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SD1_CMD_USDHC1_CMD_OFFSET			(IOMUXC_SW_MUX_CTL_PAD_SD1_CMD_USDHC1_CMD_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SD1_CLK_USDHC1_CLK_OFFSET			(IOMUXC_SW_MUX_CTL_PAD_SD1_CLK_USDHC1_CLK_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SD1_DATA0_USDHC1_DATA0_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_SD1_DATA0_USDHC1_DATA0_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SD1_DATA1_USDHC1_DATA1_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_SD1_DATA1_USDHC1_DATA1_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SD1_DATA2_USDHC1_DATA2_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_SD1_DATA2_USDHC1_DATA2_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_SD1_DATA3_USDHC1_DATA3_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_SD1_DATA3_USDHC1_DATA3_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_CSI_MCLK_CSI_MCLK_OFFSET			(IOMUXC_SW_MUX_CTL_PAD_CSI_MCLK_CSI_MCLK_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_CSI_PIXCLK_CSI_PIXCLK_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_CSI_PIXCLK_CSI_PIXCLK_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_CSI_VSYNC_CSI_VSYNC_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_CSI_VSYNC_CSI_VSYNC_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_CSI_DATA00_CSI_DATA02_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_CSI_DATA00_CSI_DATA02_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_CSI_DATA01_CSI_DATA03_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_CSI_DATA01_CSI_DATA03_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_CSI_DATA02_CSI_DATA04_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_CSI_DATA02_CSI_DATA04_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_CSI_DATA03_CSI_DATA05_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_CSI_DATA03_CSI_DATA05_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_CSI_DATA04_CSI_DATA06_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_CSI_DATA04_CSI_DATA06_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_CSI_DATA05_CSI_DATA07_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_CSI_DATA05_CSI_DATA07_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_CSI_DATA06_CSI_DATA08_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_CSI_DATA06_CSI_DATA08_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++#define IOMUXC_SW_PAD_CTL_PAD_CSI_DATA07_CSI_DATA09_OFFSET		(IOMUXC_SW_MUX_CTL_PAD_CSI_DATA07_CSI_DATA09_OFFSET + IOMUXC_SW_PAD_CTRL_BASE_OFFSET)
++
++#define IOMUXC_SW_PAD_CTL_PAD_GRP_ADDDS_OFFSET				0x0490
++#define IOMUXC_SW_PAD_CTL_PAD_GRP_DDRMODE_CTL_OFFSET			0x0494
++#define IOMUXC_SW_PAD_CTL_PAD_GRP_B0DS_OFFSET				0x0498
++#define IOMUXC_SW_PAD_CTL_PAD_GRP_CTLDS_OFFSET				0x04A0
++#define IOMUXC_SW_PAD_CTL_PAD_CTL_GRP_B1DS_OFFSET			0x04A4
++#define IOMUXC_SW_PAD_CTL_PAD_GRP_DDRPKE_OFFSET				0x04AC
++
++#define IOMUXC_SW_PAD_CTL_PAD_GRP_DDRMODE_OFFSET			0x04B0
++#define IOMUXC_SW_PAD_CTL_GRP_DDRMODE_DDR_INPUT				BIT(17)
++
++#define IOMUXC_SW_PAD_CTL_PAD_GRP_DDR_TYPE_OFFSET			0x04B4
++#define IOMUXC_SW_PAD_CTL_GRP_DDR_TYPE_DDR_SEL_2_LPDDR2_MODE		BIT(19)
++#define IOMUXC_SW_PAD_CTL_GRP_DDR_TYPE_DDR_SEL_3_DDR3_MODE		BIT(19) | BIT(18)
++
++/* These bits are constant for each pad control register */
++#define IOMUXC_SW_PAD_CTL_PAD_HYS					BIT(16)
++#define IOMUXC_SW_PAD_CTL_PAD_PUS_3_22K_OHM_PULL_UP			BIT(16) | BIT(15)
++#define IOMUXC_SW_PAD_CTL_PADPUS_2_100K_OHM_PULL_UP			BIT(15)
++#define IOMUXC_SW_PAD_CTL_PAD_PUS_1_47K_OHM_PULL_UP			BIT(14)
++#define IOMUXC_SW_PAD_CTL_PAD_PUS_0_100K_OHM_PULL_DOWN			0
++#define IOMUXC_SW_PAD_CTL_PAD_PUE_1_PULL				BIT(13)
++#define IOMUXC_SW_PAD_CTL_PAD_PUE_0_KEEPER				0
++#define IOMUXC_SW_PAD_CTL_PAD_PKE_1_PULL_KEEPER_ENABLED			BIT(12)
++#define IOMUXC_SW_PAD_CTL_PAD_PKE_0_PULL_KEEPER_DISABLED		0
++#define IOMUXC_SW_PAD_CTL_PAD_ODE_1_OPEN_DRAIN_ENABLED			BIT(11)
++#define IOMUXC_SW_PAD_CTL_PAD_ODE_0_OPEN_DRAIN_DISABLED			0
++#define IOMUXC_SW_PAD_CTL_PAD_SPEED_3_MAX_200MHZ			BIT(7) | BIT(6)
++#define IOMUXC_SW_PAD_CTL_PAD_SPEED_2_MEDIUM_100MHZ			BIT(7)
++#define IOMUXC_SW_PAD_CTL_PAD_SPEED_1_MEDIUM_100MHZ			BIT(6)
++#define IOMUXC_SW_PAD_CTL_PAD_SPEED_0_LOW_50MHZ				0
++#define IOMUXC_SW_PAD_CTL_PAD_DSE_7_R0_7				BIT(5) | BIT(4) | BIT(3)
++#define IOMUXC_SW_PAD_CTL_PAD_DSE_6_R0_6				BIT(5) | BIT(4)
++#define IOMUXC_SW_PAD_CTL_PAD_DSE_5_R0_5				BIT(5) | BIT(3)
++#define IOMUXC_SW_PAD_CTL_PAD_DSE_4_R0_4				BIT(5)
++#define IOMUXC_SW_PAD_CTL_PAD_DSE_3_R0_3				BIT(4) | BIT(3)
++#define IOMUXC_SW_PAD_CTL_PAD_DSE_2_R0_2				BIT(4)
++#define IOMUXC_SW_PAD_CTL_PAD_DSE_1_R0_260_OHM___3_3V			BIT(3)
++#define IOMUXC_SW_PAD_CTL_PAD_DSE_1_R0_150_OHM___1_8V			BIT(3)
++#define IOMUXC_SW_PAD_CTL_PAD_DSE_1_R0_240_OHM___DDR			BIT(3)
++#define IOMUXC_SW_PAD_CTL_PAD_DSE_0_OUTPUT_DRIVER_DISABLED		0
++#define IOMUXC_SW_PAD_CTL_PAD_SRE_1_FAST_SLEW_RATE			BIT(0)
++#define IOMUXC_SW_PAD_CTL_PAD_SRE_0_SLOW_SLEW_RATE			0
++
++/*
++ * The above offsets are again possible to use to identify the relevant DAISY
++ * or direction register for a given PAD
++ */
++#define IOMUXC_UART6_RX_DATA_SELECT_INPUT_OFFSET			0x064C
++#define IOMUXC_UART6_RX_DATA_SELECT_INPUT_CSI_MCLK_ALT8			0x00
++#define IOMUXC_UART6_RX_DATA_SELECT_INPUT_ENET2_RX_DATA0_ALT1		0x01
++#define IOMUXC_UART6_RX_DATA_SELECT_INPUT_ENET2_RX_DATA1_ALT1		0x02
++#define IOMUXC_UART6_RX_DATA_SELECT_INPUT_CSI_PIXCLK_ALT8		0x03
++
++#define IOMUXC_USDHC1_CD_B_SELECT_INPUT_OFFSET				0x668
++#define IOMUXC_USDHC1_CD_B_SELECT_INPUT_GPIO1_IO03_ALT4			0
++#define IOMUXC_USDHC1_CD_B_SELECT_INPUT_UART1_RTS_B_ALT2		BIT(0)
++#define IOMUXC_USDHC1_CD_B_SELECT_INPUT_CSI_DATA05_ALT8			BIT(1)
++
++#define IOMUXC_USDHC1_WP_SELECT_INPUT_OFFSET				0x66C
++#define IOMUXC_USDHC1_WP_SELECT_INPUT_GPIO1_IO02_ALT4			0
++#define IOMUXC_USDHC1_WP_SELECT_INPUT_UART1_CTS_B_ALT2			BIT(0)
++#define IOMUXC_USDHC1_WP_SELECT_INPUT_CSI_DATA04_ALT8			BIT(1)
++
++/* Pad mux/feature set routines */
++
++void imx_io_muxc_set_pad_alt_function(uint32_t pad_mux_offset, uint32_t alt_function);
++void imx_io_muxc_set_pad_features(uint32_t pad_feature_offset, uint32_t pad_features);
++void imx_io_muxc_set_pad_select_input(uint32_t pad_select_offset, uint32_t pad_select_input);
++
++#endif /* IMX_IO_MUX_H */
+diff --git a/plat/imx/imx6/include/imx_regs.h b/plat/imx/imx6/include/imx_regs.h
+new file mode 100644
+index 0000000..149c870
+--- /dev/null
++++ b/plat/imx/imx6/include/imx_regs.h
+@@ -0,0 +1,103 @@
++/*
++ * Copyright (c) 2019, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef IMX_REGS_H
++#define IMX_REGS_H
++
++/* Define the processor memory map */
++
++#define ROM_HIGH_BASE			0x00000000	/* ROM high 64k */
++#define ROM_HIGH_PROT_BASE		0x00017000	/* ROM high 64k protected */
++#define CAAM_BASE			0x00020000	/* CAAM block base address */
++#define ROM_LOW_BASE			0x007f8000	/* ROM low 64k */
++#define OCRAM_BASE			0x00908000	/* OCRAM base */
++#define OCRAM_S_ALIAS_BASE		0x00920000	/* CM4 Alias Code */
++#define CM4_ALIAS_CODE_BASE		0x04000000	/* CM4 alias code */
++#define TCM_BASE			0x1fff0000	/* TCM */
++#define BOOTROM_CP_BASE			0x20020000	/* Boot ROM (all 96KB) */
++#define CM4_ALIAS_SYSTEM_BASE		0x20100000	/* CM4 Alias system */
++#define EIM_BASE			0x28000000	/* EIM */
++
++/* BootROM absolute base address */
++#define BOOTROM_BASE			0x00000000	/* BootROM */
++
++/* ARM peripherals like GIC */
++#define ARM_PERIPHERAL_GIC_BASE		0x00A00000	/* GIC */
++
++/* Configuration ports */
++#define GPV0_BASE			0x00B00000	/* Main config port */
++#define GPV1_BASE			0x00C00000	/* Wakeup config port */
++
++/* MMAP peripherals - like APBH DMA */
++#define APBH_DMA_BASE			0x01804000	/* APBH DMA block */
++
++/* Peripherals like GPIO live in the AIPS range */
++#define AIPS1_BASE			0x02000000	/* AIPS1 */
++#define AIPS2_BASE			0x02100000	/* AIPS2 */
++#define AIPS3_BASE			0x02200000	/* AIPS3 */
++#ifdef IMX6UL
++#define AIPS_NUM_BLOCKS			0x02
++#else
++#define AIPS_NUM_BLOCKS			0x03
++#endif
++
++/* AIPS1 block addresses */
++#define AIPSTZ_CONFIG_OFFSET		0x007C000
++
++/* Clock control module base */
++#define CCM_BASE			(AIPS1_BASE + 0xC4000)
++
++/* Define the maximum number of UART blocks on this SoC */
++#define MXC_UART1_BASE			(AIPS1_BASE + 0x020000)
++#define MXC_UART2_BASE			(AIPS2_BASE + 0x0E8000)
++#define MXC_UART3_BASE			(AIPS2_BASE + 0x0EC000)
++#define MXC_UART4_BASE			(AIPS2_BASE + 0x0F0000)
++#define MXC_UART5_BASE			(AIPS2_BASE + 0x0F4000)
++#define MXC_UART6_BASE			(AIPS2_BASE + 0x0FC000)
++#define MXC_UART7_BASE			(AIPS1_BASE + 0x018000)
++#define MXC_MAX_UART_NUM		0x07
++
++/* Define the maximum number of USDHCI blocks on this SoC */
++#define MXC_MAX_USDHC_NUM		3
++
++/* Define the number of CSU registers for this SoC */
++#define MXC_MAX_CSU_REGS		0x40
++#define CSU_BASE			(AIPS2_BASE + 0xC0000)
++
++/* IO Mux block base */
++#define MXC_IO_MUXC_BASE		(AIPS1_BASE + 0xE0000)
++
++/* SNVS HP base */
++#define SNVS_BASE			(AIPS1_BASE + 0xCC000)
++
++/* GP Timer base */
++#define GPT1_BASE_ADDR			(AIPS1_BASE + 0x98000)
++
++/* MMC base */
++#define USDHC1_BASE			(AIPS2_BASE + 0x90000)
++#define USDHC2_BASE			(AIPS2_BASE + 0x94000)
++
++/* Arm optional memory mapped counter module base address */
++#define SYS_CNTCTL_BASE			(AIPS2_BASE + 0xDC000)
++
++/* Define CAAM AIPS offset */
++#define CAAM_AIPS_BASE			(AIPS2_BASE + 0x40000)
++#define CAAM_NUM_JOB_RINGS		0x03
++#define CAAM_NUM_RTIC			0x04
++#define CAAM_NUM_DECO			0x01
++
++/* Define watchdog base addresses */
++#define WDOG1_BASE			(AIPS1_BASE + 0xBC000)
++#define WDOG2_BASE			(AIPS1_BASE + 0xC0000)
++
++/* Define the maximum number of WDOG blocks on this SoC */
++#define MXC_MAX_WDOG_NUM		0x02
++
++/* MMDC */
++#define MMDC_P0_BASE			(AIPS2_BASE + 0xB0000)
++#define MMDC_P1_BASE			0
++
++#endif /* IMX_REGS_H */
+-- 
+2.7.4
+

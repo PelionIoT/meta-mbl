@@ -1,0 +1,33 @@
+From e5599535e10c12dee7a14769551996cb412425f5 Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Thu, 8 Aug 2019 14:33:50 +0800
+Subject: [PATCH 34/34] imx8mm: increase FIP image size
+
+Othwise below assert happens when loading certificate file that
+locates in the end part of FIP.
+
+ASSERT: drivers/io/io_block.c:159
+BACKTRACE: START: assert
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+Change-Id: I5a94df59cf1b63657bfe336ca064f40acc6a753e
+---
+ plat/imx/imx8m/imx8mm/include/platform_def.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/plat/imx/imx8m/imx8mm/include/platform_def.h b/plat/imx/imx8m/imx8mm/include/platform_def.h
+index 1698570..8dfb41b 100644
+--- a/plat/imx/imx8m/imx8mm/include/platform_def.h
++++ b/plat/imx/imx8m/imx8mm/include/platform_def.h
+@@ -37,7 +37,7 @@
+ #define BL31_BASE			U(0x900000)
+ #define BL31_LIMIT			U(0x920000)
+ #define IMX8MM_FIP_BASE			U(0x40310000)
+-#define IMX8MM_FIP_SIZE			U(0x000100000)
++#define IMX8MM_FIP_SIZE			U(0x000200000)
+ #define IMX8MM_FIP_LIMIT		U(FIP_BASE + FIP_SIZE)
+ 
+ /* Define FIP image location on eMMC */
+-- 
+2.7.4
+

@@ -1,0 +1,37 @@
+From 93a531efffc09733d9484a9e29bd504fc5a61171 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Tue, 23 Apr 2019 10:25:39 +0100
+Subject: [PATCH 12/34] plat: imx8: Add imx8mm_private.h to the build
+
+Allows for exporting of FIP related methods cleanly in a private header.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/imx8m/imx8mm/include/imx8mm_private.h | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+ create mode 100644 plat/imx/imx8m/imx8mm/include/imx8mm_private.h
+
+diff --git a/plat/imx/imx8m/imx8mm/include/imx8mm_private.h b/plat/imx/imx8m/imx8mm/include/imx8mm_private.h
+new file mode 100644
+index 0000000..945d3b5
+--- /dev/null
++++ b/plat/imx/imx8m/imx8mm/include/imx8mm_private.h
+@@ -0,0 +1,15 @@
++/*
++ * Copyright (c) 2019, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef __IMX8MM_PRIVATE_H__
++#define __IMX8MM_PRIVATE_H__
++
++/*******************************************************************************
++ * Function and variable prototypes
++ ******************************************************************************/
++void plat_imx8mm_io_setup(void);
++
++#endif /* __IMX8MM_PRIVATE_H__ */
+-- 
+2.7.4
+

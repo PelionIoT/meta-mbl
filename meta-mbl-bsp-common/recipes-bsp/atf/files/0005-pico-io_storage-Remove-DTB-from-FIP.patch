@@ -1,0 +1,37 @@
+From 888636afb46ce67ff519465e1630ba8271f28f3e Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Fri, 22 Feb 2019 11:58:28 +0800
+Subject: [PATCH 05/34] pico: io_storage: Remove DTB from FIP
+
+It is possible for OP-TEE to provide a DTB overlay directly to subsequent
+boot stages. So we do not need to bundle a DTB in the FIP.
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+---
+ plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c | 10 ----------
+ 1 file changed, 10 deletions(-)
+
+diff --git a/plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c b/plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c
+index 5f510ae..19861af 100644
+--- a/plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c
++++ b/plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c
+@@ -27,16 +27,6 @@ static bl_mem_params_node_t bl2_mem_params_descs[] = {
+ 		.next_handoff_image_id = BL33_IMAGE_ID,
+ 	},
+ 	{
+-		.image_id = HW_CONFIG_ID,
+-		SET_STATIC_PARAM_HEAD(ep_info, PARAM_IMAGE_BINARY,
+-				      VERSION_2, entry_point_info_t, SECURE | NON_EXECUTABLE),
+-		SET_STATIC_PARAM_HEAD(image_info, PARAM_IMAGE_BINARY,
+-				      VERSION_2, image_info_t, 0),
+-		.image_info.image_base = PICOPI_DTB_BASE,
+-		.image_info.image_max_size = PICOPI_DTB_SIZE,
+-		.next_handoff_image_id = INVALID_IMAGE_ID,
+-	},
+-	{
+ 		.image_id = BL32_EXTRA1_IMAGE_ID,
+ 
+ 		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
+-- 
+2.7.4
+

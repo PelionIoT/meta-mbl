@@ -1,0 +1,127 @@
+From 741df1e23601c434449619ce85ce8d8031ea6539 Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Wed, 19 Dec 2018 15:48:58 +0800
+Subject: [PATCH 04/34] pico: add mmc io config
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+---
+ plat/imx/common/include/imx_io_mux.h        | 18 ++++++++++++
+ plat/imx/imx7/picopi/picopi_bl2_el3_setup.c | 44 +++++++++++++++++++++++++++++
+ 2 files changed, 62 insertions(+)
+
+diff --git a/plat/imx/common/include/imx_io_mux.h b/plat/imx/common/include/imx_io_mux.h
+index c5f6add..8ab197d 100644
+--- a/plat/imx/common/include/imx_io_mux.h
++++ b/plat/imx/common/include/imx_io_mux.h
+@@ -20,7 +20,10 @@
+ #define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO11_OFFSET		0x0020
+ #define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO12_OFFSET		0x0024
+ #define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO13_OFFSET		0x0028
++
+ #define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO14_OFFSET		0x002C
++#define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO14_ALT1_SD3_CD_B	BIT(0)
++
+ #define IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO15_OFFSET		0x0030
+ 
+ #define IOMUXC_SW_MUX_CTL_PAD_EPDC_DATA00_OFFSET	0x0034
+@@ -181,6 +184,7 @@
+ #define IOMUXC_SW_MUX_CTL_PAD_SD2_DATA1_OFFSET		0x01C4
+ #define IOMUXC_SW_MUX_CTL_PAD_SD2_DATA2_OFFSET		0x01C8
+ #define IOMUXC_SW_MUX_CTL_PAD_SD2_DATA3_OFFSET		0x01CC
++
+ #define IOMUXC_SW_MUX_CTL_PAD_SD3_CLK_OFFSET		0x01D0
+ #define IOMUXC_SW_MUX_CTL_PAD_SD3_CMD_OFFSET		0x01D4
+ #define IOMUXC_SW_MUX_CTL_PAD_SD3_DATA0_OFFSET		0x01D8
+@@ -407,6 +411,7 @@
+ #define IOMUXC_SW_PAD_CTL_PAD_SD2_DATA1_OFFSET		0x0434
+ #define IOMUXC_SW_PAD_CTL_PAD_SD2_DATA2_OFFSET		0x0438
+ #define IOMUXC_SW_PAD_CTL_PAD_SD2_DATA3_OFFSET		0x043C
++
+ #define IOMUXC_SW_PAD_CTL_PAD_SD3_CLK_OFFSET		0x0440
+ #define IOMUXC_SW_PAD_CTL_PAD_SD3_CMD_OFFSET		0x0444
+ #define IOMUXC_SW_PAD_CTL_PAD_SD3_DATA0_OFFSET		0x0448
+@@ -419,6 +424,19 @@
+ #define IOMUXC_SW_PAD_CTL_PAD_SD3_DATA7_OFFSET		0x0464
+ #define IOMUXC_SW_PAD_CTL_PAD_SD3_STROBE_OFFSET		0x0468
+ #define IOMUXC_SW_PAD_CTL_PAD_SD3_RESET_B_OFFSET	0x046C
++#define IOMUXC_SW_PAD_CTL_PAD_SD3_DSE_0_X1		0
++#define IOMUXC_SW_PAD_CTL_PAD_SD3_DSE_1_X4		BIT(0)
++#define IOMUXC_SW_PAD_CTL_PAD_SD3_DSE_2_X2		BIT(1)
++#define IOMUXC_SW_PAD_CTL_PAD_SD3_DSE_3_X6		(BIT(1) | BIT(0))
++#define IOMUXC_SW_PAD_CTL_PAD_SD3_DSE_1_X4		BIT(0)
++#define IOMUXC_SW_PAD_CTL_PAD_SD3_SLEW_SLOW		BIT(2)
++#define IOMUXC_SW_PAD_CTL_PAD_SD3_SLEW_FAST		0
++#define IOMUXC_SW_PAD_CTL_PAD_SD3_HYS			BIT(3)
++#define IOMUXC_SW_PAD_CTL_PAD_SD3_PE			BIT(4)
++#define IOMUXC_SW_PAD_CTL_PAD_SD3_PD_100K		(0 << 5)
++#define IOMUXC_SW_PAD_CTL_PAD_SD3_PU_5K			(1 << 5)
++#define IOMUXC_SW_PAD_CTL_PAD_SD3_PU_47K		(2 << 5)
++#define IOMUXC_SW_PAD_CTL_PAD_SD3_PU_100K		(3 << 5)
+ 
+ #define IOMUXC_SW_PAD_CTL_PAD_SAI1_RX_DATA_OFFSET	0x0470
+ #define IOMUXC_SW_PAD_CTL_PAD_SAI1_TX_BCLK_OFFSET	0x0474
+diff --git a/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c b/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c
+index 4af8600..3b98eb1 100644
+--- a/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c
++++ b/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c
+@@ -138,6 +138,13 @@ void bl2_el3_plat_arch_setup(void)
+ #define PICOPI_UART5_TX_MUX \
+ 	IOMUXC_SW_MUX_CTL_PAD_I2C4_SDA_ALT1_UART5_TX_DATA
+ 
++#define PICOPI_SD3_FEATURES \
++	(IOMUXC_SW_PAD_CTL_PAD_SD3_PU_47K            | \
++	 IOMUXC_SW_PAD_CTL_PAD_SD3_PE                | \
++	 IOMUXC_SW_PAD_CTL_PAD_SD3_HYS               | \
++	 IOMUXC_SW_PAD_CTL_PAD_SD3_SLEW_SLOW         | \
++	 IOMUXC_SW_PAD_CTL_PAD_SD3_DSE_3_X6)
++
+ static void picopi_setup_pinmux(void)
+ {
+ 	/* Configure UART5 TX */
+@@ -146,6 +153,43 @@ static void picopi_setup_pinmux(void)
+ 	/* Configure UART5 RX */
+ 	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_I2C4_SCL_OFFSET,
+ 					 PICOPI_UART5_RX_MUX);
++
++	/* Configure USDHC3 */
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD3_CLK_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD3_CMD_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD3_DATA0_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD3_DATA1_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD3_DATA2_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD3_DATA3_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD3_DATA4_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD3_DATA5_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD3_DATA6_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_SD3_DATA7_OFFSET, 0);
++	imx_io_muxc_set_pad_alt_function(IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO14_OFFSET,
++					 IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO14_ALT1_SD3_CD_B);
++
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD3_CLK_OFFSET,
++				     PICOPI_SD3_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD3_CMD_OFFSET,
++				     PICOPI_SD3_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD3_DATA0_OFFSET,
++				     PICOPI_SD3_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD3_DATA1_OFFSET,
++				     PICOPI_SD3_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD3_DATA2_OFFSET,
++				     PICOPI_SD3_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD3_DATA3_OFFSET,
++				     PICOPI_SD3_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD3_DATA4_OFFSET,
++				     PICOPI_SD3_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD3_DATA5_OFFSET,
++				     PICOPI_SD3_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD3_DATA6_OFFSET,
++				     PICOPI_SD3_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_SD3_DATA7_OFFSET,
++				     PICOPI_SD3_FEATURES);
++	imx_io_muxc_set_pad_features(IOMUXC_SW_PAD_CTL_PAD_GPIO1_IO14_OFFSET,
++				     PICOPI_SD3_FEATURES);
+ }
+ 
+ static void picopi_usdhc_setup(void)
+-- 
+2.7.4
+

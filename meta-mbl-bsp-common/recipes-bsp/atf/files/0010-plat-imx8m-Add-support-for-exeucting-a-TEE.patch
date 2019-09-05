@@ -1,0 +1,72 @@
+From ade41668aa8159276d7fde9b30897096d78f0aa4 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Thu, 30 May 2019 11:35:59 +0100
+Subject: [PATCH 10/34] plat: imx8m: Add support for exeucting a TEE
+
+This patch adds support for handing off to a TEE BL32 prior to handing off
+to non-secure u-boot BL33.
+
+It is based on NXP's code from codeaurora.org
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/imx8m/imx8mm/imx8mm_bl31_setup.c    | 14 ++++++++++++++
+ plat/imx/imx8m/imx8mm/include/platform_def.h |  1 +
+ plat/imx/imx8m/imx8mm/platform.mk            |  4 ++++
+ 3 files changed, 19 insertions(+)
+
+diff --git a/plat/imx/imx8m/imx8mm/imx8mm_bl31_setup.c b/plat/imx/imx8m/imx8mm/imx8mm_bl31_setup.c
+index a541ed3..31cfba8 100644
+--- a/plat/imx/imx8m/imx8mm/imx8mm_bl31_setup.c
++++ b/plat/imx/imx8m/imx8mm/imx8mm_bl31_setup.c
+@@ -96,6 +96,20 @@ void bl31_early_platform_setup2(u_register_t arg0, u_register_t arg1,
+ 	bl33_image_ep_info.spsr = get_spsr_for_bl33_entry();
+ 	SET_SECURITY_STATE(bl33_image_ep_info.h.attr, NON_SECURE);
+ 
++#ifdef TEE_IMX8
++	/* Populate entry point information for BL32 */
++	SET_PARAM_HEAD(&bl32_image_ep_info, PARAM_EP, VERSION_1, 0);
++	SET_SECURITY_STATE(bl32_image_ep_info.h.attr, SECURE);
++	bl32_image_ep_info.pc = BL32_BASE;
++	bl32_image_ep_info.spsr = 0;
++
++	/* Pass TEE base and size to uboot */
++	bl33_image_ep_info.args.arg1 = BL32_BASE;
++
++	/* TEE size + RDC reserved memory = 0x2000000 + 0x2000000 + 0x30000000 */
++	bl33_image_ep_info.args.arg2 = BL32_LIMIT - BL32_BASE;
++#endif
++
+ 	bl31_tzc380_setup();
+ }
+ 
+diff --git a/plat/imx/imx8m/imx8mm/include/platform_def.h b/plat/imx/imx8m/imx8mm/include/platform_def.h
+index a95ab83..b636bb9 100644
+--- a/plat/imx/imx8m/imx8mm/include/platform_def.h
++++ b/plat/imx/imx8m/imx8mm/include/platform_def.h
+@@ -32,6 +32,7 @@
+ #define BL31_BASE			U(0x920000)
+ #define BL31_LIMIT			U(0x940000)
+ #define BL32_BASE			U(0xbe000000)
++#define BL32_LIMIT			U(0xc0000000)
+ 
+ /* non-secure uboot base */
+ #define PLAT_NS_IMAGE_OFFSET		U(0x40200000)
+diff --git a/plat/imx/imx8m/imx8mm/platform.mk b/plat/imx/imx8m/imx8mm/platform.mk
+index 9f9ba92..dca1598 100644
+--- a/plat/imx/imx8m/imx8mm/platform.mk
++++ b/plat/imx/imx8m/imx8mm/platform.mk
+@@ -35,6 +35,10 @@ BL31_SOURCES		+=	plat/imx/common/imx8_helpers.S			\
+ 				drivers/delay_timer/generic_delay_timer.c	\
+ 				${IMX_GIC_SOURCES}
+ 
++ifneq (${SPD},none)
++$(eval $(call add_define,TEE_IMX8))
++endif
++
+ USE_COHERENT_MEM	:=	1
+ RESET_TO_BL31		:=	1
+ A53_DISABLE_NON_TEMPORAL_HINT := 0
+-- 
+2.7.4
+

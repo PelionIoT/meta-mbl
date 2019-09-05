@@ -1,0 +1,1539 @@
+From 1bfd36b39414309277a1275dc16eb8ce4fae2aaf Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Thu, 11 Jul 2019 12:42:00 +0100
+Subject: [PATCH 24/34] plat: imx7: imx7_clock: Aggregate imx7 clocks into one
+ file
+
+Previous patches split up the imx7 clock layer into different pieces in
+expectation that some of those pieces would be reusable across different
+SoC architectures.
+
+When implementing the i.MX6UL clock layer though its obvious that the
+clocking structure is quite different between the different SoC
+architectures, so, it makes sense to conglomerate the i.MX7 stuff into an
+i.MX7 specific set of files.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/common/imx7_clock.c                |  158 ++++-
+ plat/imx/common/imx_clock.c                 |  155 -----
+ plat/imx/common/include/imx7_clock.h        | 1002 +++++++++++++++++++++++++++
+ plat/imx/imx7/picopi/picopi_bl2_el3_setup.c |   28 +-
+ plat/imx/imx7/picopi/platform.mk            |    1 -
+ plat/imx/imx7/warp7/platform.mk             |    1 -
+ plat/imx/imx7/warp7/warp7_bl2_el3_setup.c   |   30 +-
+ 7 files changed, 1183 insertions(+), 192 deletions(-)
+ delete mode 100644 plat/imx/common/imx_clock.c
+ create mode 100644 plat/imx/common/include/imx7_clock.h
+
+diff --git a/plat/imx/common/imx7_clock.c b/plat/imx/common/imx7_clock.c
+index 6bd2e0e..f1a81e6 100644
+--- a/plat/imx/common/imx7_clock.c
++++ b/plat/imx/common/imx7_clock.c
+@@ -3,15 +3,162 @@
+  *
+  * SPDX-License-Identifier: BSD-3-Clause
+  */
++#include <stdint.h>
++#include <stdbool.h>
++
++#include <arch.h>
++#include <lib/mmio.h>
++
+ #include <imx_regs.h>
+-#include <imx_clock.h>
++#include <imx7_clock.h>
++
++void imx7_clock_target_set(unsigned int id, uint32_t val)
++{
++	struct ccm *ccm = ((struct ccm *)CCM_BASE);
++	uintptr_t addr;
++
++	if (id > CCM_ROOT_CTRL_NUM)
++		return;
++
++	addr = (uintptr_t)&ccm->ccm_root_ctrl[id].ccm_target_root;
++	mmio_write_32(addr, val);
++}
++
++void imx7_clock_target_clr(unsigned int id, uint32_t val)
++{
++	struct ccm *ccm = ((struct ccm *)CCM_BASE);
++	uintptr_t addr;
++
++	if (id > CCM_ROOT_CTRL_NUM)
++		return;
++
++	addr = (uintptr_t)&ccm->ccm_root_ctrl[id].ccm_target_root_clr;
++	mmio_write_32(addr, val);
++}
++
++void imx7_clock_gate_enable(unsigned int id, bool enable)
++{
++	struct ccm *ccm = ((struct ccm *)CCM_BASE);
++	uintptr_t addr;
++
++	if (id > CCM_CLK_GATE_CTRL_NUM)
++		return;
++
++	/* TODO: add support for more than DOMAIN0 clocks */
++	if (enable)
++		addr = (uintptr_t)&ccm->ccm_clk_gate_ctrl[id].ccm_ccgr_set;
++	else
++		addr = (uintptr_t)&ccm->ccm_clk_gate_ctrl[id].ccm_ccgr_clr;
++
++	mmio_write_32(addr, CCM_CCGR_SETTING0_DOM_CLK_ALWAYS);
++}
++
++void imx7_clock_enable_uart(unsigned int uart_id, uint32_t uart_clk_en_bits)
++{
++	unsigned int ccm_trgt_id = CCM_TRT_ID_UART1_CLK_ROOT + uart_id;
++	unsigned int ccm_ccgr_id = CCM_CCGR_ID_UART1 + uart_id;
++
++	/* Check for error */
++	if (uart_id > MXC_MAX_UART_NUM)
++		return;
++
++	/* Set target register values */
++	imx7_clock_target_set(ccm_trgt_id, uart_clk_en_bits);
++
++	/* Enable the clock gate */
++	imx7_clock_gate_enable(ccm_ccgr_id, true);
++}
++
++void imx7_clock_disable_uart(unsigned int uart_id)
++{
++	unsigned int ccm_trgt_id = CCM_TRT_ID_UART1_CLK_ROOT + uart_id;
++	unsigned int ccm_ccgr_id = CCM_CCGR_ID_UART1 + uart_id;
++
++	/* Check for error */
++	if (uart_id > MXC_MAX_UART_NUM)
++		return;
++
++	/* Disable the clock gate */
++	imx7_clock_gate_enable(ccm_ccgr_id, false);
++
++	/* Clear the target */
++	imx7_clock_target_clr(ccm_trgt_id, 0xFFFFFFFF);
++}
++
++void imx7_clock_enable_usdhc(unsigned int usdhc_id, uint32_t usdhc_clk_en_bits)
++{
++	unsigned int ccm_trgt_id = CCM_TRT_ID_USDHC1_CLK_ROOT + usdhc_id;
++	unsigned int ccm_ccgr_id = CCM_CCGR_ID_USBHDC1 + usdhc_id;
++
++	/* Check for error */
++	if (usdhc_id > MXC_MAX_USDHC_NUM)
++		return;
++
++	/* Set target register values */
++	imx7_clock_target_set(ccm_trgt_id, usdhc_clk_en_bits);
++
++	/* Enable the clock gate */
++	imx7_clock_gate_enable(ccm_ccgr_id, true);
++}
++
++void imx7_clock_enable_wdog(unsigned int wdog_id)
++{
++	unsigned int ccm_ccgr_id = CCM_CCGR_ID_WDOG1 + wdog_id;
++
++	/* Check for error */
++	if (wdog_id > MXC_MAX_WDOG_NUM)
++		return;
++
++	/* Enable the clock gate */
++	imx7_clock_gate_enable(ccm_ccgr_id, true);
++}
++
++void imx7_clock_disable_wdog(unsigned int wdog_id)
++{
++	unsigned int ccm_trgt_id = CCM_TRT_ID_WDOG_CLK_ROOT;
++	unsigned int ccm_ccgr_id = CCM_CCGR_ID_WDOG1 + wdog_id;
++
++	/* Check for error */
++	if (wdog_id > MXC_MAX_WDOG_NUM)
++		return;
++
++	/* Disable the clock gate */
++	imx7_clock_gate_enable(ccm_ccgr_id, false);
++
++	/* Clear the target */
++	imx7_clock_target_clr(ccm_trgt_id, 0xFFFFFFFF);
++}
++
++void imx7_clock_set_wdog_clk_root_bits(uint32_t wdog_clk_root_en_bits)
++{
++	/* Enable the common clock root just once */
++	imx7_clock_target_set(CCM_TRT_ID_WDOG_CLK_ROOT, wdog_clk_root_en_bits);
++}
++
++void imx7_clock_enable_usb(unsigned int ccm_ccgr_usb_id)
++{
++	/* Enable the clock gate */
++	imx7_clock_gate_enable(ccm_ccgr_usb_id, true);
++}
++
++void imx7_clock_disable_usb(unsigned int ccm_ccgr_usb_id)
++{
++	/* Disable the clock gate */
++	imx7_clock_gate_enable(ccm_ccgr_usb_id, false);
++}
++
++void imx7_clock_set_usb_clk_root_bits(uint32_t usb_clk_root_en_bits)
++{
++	/* Enable the common clock root just once */
++	imx7_clock_target_set(CCM_TRT_ID_USB_HSIC_CLK_ROOT, usb_clk_root_en_bits);
++}
+ 
+ static void imx7_clock_uart_init(void)
+ {
+ 	unsigned int i;
+ 
+ 	for (i = 0; i < MXC_MAX_UART_NUM; i++)
+-		imx_clock_disable_uart(i);
++		imx7_clock_disable_uart(i);
+ }
+ 
+ static void imx7_clock_wdog_init(void)
+@@ -19,16 +166,16 @@ static void imx7_clock_wdog_init(void)
+ 	unsigned int i;
+ 
+ 	for (i = 0; i < MXC_MAX_WDOG_NUM; i++)
+-		imx_clock_disable_wdog(i);
++		imx7_clock_disable_wdog(i);
+ }
+ 
+ static void imx7_clock_usb_init(void)
+ {
+ 	/* Disable the clock root */
+-	imx_clock_target_clr(CCM_TRT_ID_USB_HSIC_CLK_ROOT, 0xFFFFFFFF);
++	imx7_clock_target_clr(CCM_TRT_ID_USB_HSIC_CLK_ROOT, 0xFFFFFFFF);
+ }
+ 
+-void imx_clock_init(void)
++void imx7_clock_init(void)
+ {
+ 	/*
+ 	 * The BootROM hands off to the next stage with the internal 24 MHz XTAL
+@@ -51,5 +198,4 @@ void imx_clock_init(void)
+ 
+ 	/* USB clocks */
+ 	imx7_clock_usb_init();
+-
+ }
+diff --git a/plat/imx/common/imx_clock.c b/plat/imx/common/imx_clock.c
+deleted file mode 100644
+index 743de55..0000000
+--- a/plat/imx/common/imx_clock.c
++++ /dev/null
+@@ -1,155 +0,0 @@
+-/*
+- * Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
+- *
+- * SPDX-License-Identifier: BSD-3-Clause
+- */
+-
+-#include <stdint.h>
+-#include <stdbool.h>
+-
+-#include <arch.h>
+-#include <lib/mmio.h>
+-
+-#include <imx_regs.h>
+-#include <imx_clock.h>
+-
+-void imx_clock_target_set(unsigned int id, uint32_t val)
+-{
+-	struct ccm *ccm = ((struct ccm *)CCM_BASE);
+-	uintptr_t addr;
+-
+-	if (id > CCM_ROOT_CTRL_NUM)
+-		return;
+-
+-	addr = (uintptr_t)&ccm->ccm_root_ctrl[id].ccm_target_root;
+-	mmio_write_32(addr, val);
+-}
+-
+-void imx_clock_target_clr(unsigned int id, uint32_t val)
+-{
+-	struct ccm *ccm = ((struct ccm *)CCM_BASE);
+-	uintptr_t addr;
+-
+-	if (id > CCM_ROOT_CTRL_NUM)
+-		return;
+-
+-	addr = (uintptr_t)&ccm->ccm_root_ctrl[id].ccm_target_root_clr;
+-	mmio_write_32(addr, val);
+-}
+-
+-void imx_clock_gate_enable(unsigned int id, bool enable)
+-{
+-	struct ccm *ccm = ((struct ccm *)CCM_BASE);
+-	uintptr_t addr;
+-
+-	if (id > CCM_CLK_GATE_CTRL_NUM)
+-		return;
+-
+-	/* TODO: add support for more than DOMAIN0 clocks */
+-	if (enable)
+-		addr = (uintptr_t)&ccm->ccm_clk_gate_ctrl[id].ccm_ccgr_set;
+-	else
+-		addr = (uintptr_t)&ccm->ccm_clk_gate_ctrl[id].ccm_ccgr_clr;
+-
+-	mmio_write_32(addr, CCM_CCGR_SETTING0_DOM_CLK_ALWAYS);
+-}
+-
+-void imx_clock_enable_uart(unsigned int uart_id, uint32_t uart_clk_en_bits)
+-{
+-	unsigned int ccm_trgt_id = CCM_TRT_ID_UART1_CLK_ROOT + uart_id;
+-	unsigned int ccm_ccgr_id = CCM_CCGR_ID_UART1 + uart_id;
+-
+-	/* Check for error */
+-	if (uart_id > MXC_MAX_UART_NUM)
+-		return;
+-
+-	/* Set target register values */
+-	imx_clock_target_set(ccm_trgt_id, uart_clk_en_bits);
+-
+-	/* Enable the clock gate */
+-	imx_clock_gate_enable(ccm_ccgr_id, true);
+-}
+-
+-void imx_clock_disable_uart(unsigned int uart_id)
+-{
+-	unsigned int ccm_trgt_id = CCM_TRT_ID_UART1_CLK_ROOT + uart_id;
+-	unsigned int ccm_ccgr_id = CCM_CCGR_ID_UART1 + uart_id;
+-
+-	/* Check for error */
+-	if (uart_id > MXC_MAX_UART_NUM)
+-		return;
+-
+-	/* Disable the clock gate */
+-	imx_clock_gate_enable(ccm_ccgr_id, false);
+-
+-	/* Clear the target */
+-	imx_clock_target_clr(ccm_trgt_id, 0xFFFFFFFF);
+-}
+-
+-void imx_clock_enable_usdhc(unsigned int usdhc_id, uint32_t usdhc_clk_en_bits)
+-{
+-	unsigned int ccm_trgt_id = CCM_TRT_ID_USDHC1_CLK_ROOT + usdhc_id;
+-	unsigned int ccm_ccgr_id = CCM_CCGR_ID_USBHDC1 + usdhc_id;
+-
+-	/* Check for error */
+-	if (usdhc_id > MXC_MAX_USDHC_NUM)
+-		return;
+-
+-	/* Set target register values */
+-	imx_clock_target_set(ccm_trgt_id, usdhc_clk_en_bits);
+-
+-	/* Enable the clock gate */
+-	imx_clock_gate_enable(ccm_ccgr_id, true);
+-}
+-
+-void imx_clock_enable_wdog(unsigned int wdog_id)
+-{
+-	unsigned int ccm_ccgr_id = CCM_CCGR_ID_WDOG1 + wdog_id;
+-
+-	/* Check for error */
+-	if (wdog_id > MXC_MAX_WDOG_NUM)
+-		return;
+-
+-	/* Enable the clock gate */
+-	imx_clock_gate_enable(ccm_ccgr_id, true);
+-}
+-
+-void imx_clock_disable_wdog(unsigned int wdog_id)
+-{
+-	unsigned int ccm_trgt_id = CCM_TRT_ID_WDOG_CLK_ROOT;
+-	unsigned int ccm_ccgr_id = CCM_CCGR_ID_WDOG1 + wdog_id;
+-
+-	/* Check for error */
+-	if (wdog_id > MXC_MAX_WDOG_NUM)
+-		return;
+-
+-	/* Disable the clock gate */
+-	imx_clock_gate_enable(ccm_ccgr_id, false);
+-
+-	/* Clear the target */
+-	imx_clock_target_clr(ccm_trgt_id, 0xFFFFFFFF);
+-}
+-
+-void imx_clock_set_wdog_clk_root_bits(uint32_t wdog_clk_root_en_bits)
+-{
+-	/* Enable the common clock root just once */
+-	imx_clock_target_set(CCM_TRT_ID_WDOG_CLK_ROOT, wdog_clk_root_en_bits);
+-}
+-
+-void imx_clock_enable_usb(unsigned int ccm_ccgr_usb_id)
+-{
+-	/* Enable the clock gate */
+-	imx_clock_gate_enable(ccm_ccgr_usb_id, true);
+-}
+-
+-void imx_clock_disable_usb(unsigned int ccm_ccgr_usb_id)
+-{
+-	/* Disable the clock gate */
+-	imx_clock_gate_enable(ccm_ccgr_usb_id, false);
+-}
+-
+-void imx_clock_set_usb_clk_root_bits(uint32_t usb_clk_root_en_bits)
+-{
+-	/* Enable the common clock root just once */
+-	imx_clock_target_set(CCM_TRT_ID_USB_HSIC_CLK_ROOT, usb_clk_root_en_bits);
+-}
+diff --git a/plat/imx/common/include/imx7_clock.h b/plat/imx/common/include/imx7_clock.h
+new file mode 100644
+index 0000000..4ee25ee
+--- /dev/null
++++ b/plat/imx/common/include/imx7_clock.h
+@@ -0,0 +1,1002 @@
++/*
++ * Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++#ifndef IMX_CLOCK_H
++#define IMX_CLOCK_H
++
++#include <stdint.h>
++#include <stdbool.h>
++
++struct ccm_pll_ctrl {
++	uint32_t ccm_pll_ctrl;
++	uint32_t ccm_pll_ctrl_set;
++	uint32_t ccm_pll_ctrl_clr;
++	uint32_t ccm_pll_ctrl_tog;
++};
++
++/* Clock gate control */
++struct ccm_clk_gate_ctrl {
++	uint32_t ccm_ccgr;
++	uint32_t ccm_ccgr_set;
++	uint32_t ccm_ccgr_clr;
++	uint32_t ccm_ccgr_tog;
++};
++
++#define CCM_CCGR_SETTING0_DOM_CLK_NONE		0
++#define CCM_CCGR_SETTING0_DOM_CLK_RUN		BIT(0)
++#define CCM_CCGR_SETTING0_DOM_CLK_RUN_WAIT	BIT(1)
++#define CCM_CCGR_SETTING0_DOM_CLK_ALWAYS	(BIT(1) | BIT(0))
++#define CCM_CCGR_SETTING1_DOM_CLK_NONE		0
++#define CCM_CCGR_SETTING1_DOM_CLK_RUN		BIT(4)
++#define CCM_CCGR_SETTING1_DOM_CLK_RUN_WAIT	BIT(5)
++#define CCM_CCGR_SETTING1_DOM_CLK_ALWAYS	(BIT(5) | BIT(4))
++#define CCM_CCGR_SETTING2_DOM_CLK_NONE		0
++#define CCM_CCGR_SETTING2_DOM_CLK_RUN		BIT(8)
++#define CCM_CCGR_SETTING2_DOM_CLK_RUN_WAIT	BIT(9)
++#define CCM_CCGR_SETTING2_DOM_CLK_ALWAYS	(BIT(9) | BIT(8))
++#define CCM_CCGR_SETTING3_DOM_CLK_NONE		0
++#define CCM_CCGR_SETTING3_DOM_CLK_RUN		BIT(12)
++#define CCM_CCGR_SETTING3_DOM_CLK_RUN_WAIT	BIT(13)
++#define CCM_CCGR_SETTING3_DOM_CLK_ALWAYS	(BIT(13) | BIT(12))
++
++enum {
++	CCM_CCGR_ID_ADC = 32,
++	CCM_CCGR_ID_AIPS1TZ = 10,
++	CCM_CCGR_ID_AIPS2TZ = 11,
++	CCM_CCGR_ID_AIPS3TZ = 12,
++	CCM_CCGR_ID_APBHDMA = 20,
++	CCM_CCGR_ID_CAAM = 36,
++	CCM_CCGR_ID_CM4 = 1,
++	CCM_CCGR_ID_CSI = 73,
++	CCM_CCGR_ID_CSU = 45,
++	CCM_CCGR_ID_DAP = 47,
++	CCM_CCGR_ID_DBGMON = 46,
++	CCM_CCGR_ID_DDRC = 19,
++	CCM_CCGR_ID_ECSPI1 = 120,
++	CCM_CCGR_ID_ECSPI2 = 121,
++	CCM_CCGR_ID_ECSPI3 = 122,
++	CCM_CCGR_ID_ECSPI4 = 123,
++	CCM_CCGR_ID_EIM = 22,
++	CCM_CCGR_ID_ENET1 = 112,
++	CCM_CCGR_ID_ENET2 = 113,
++	CCM_CCGR_ID_EPDC = 74,
++	CCM_CCGR_ID_FLEXCAN1 = 116,
++	CCM_CCGR_ID_FLEXCAN2 = 117,
++	CCM_CCGR_ID_FLEXTIMER1 = 128,
++	CCM_CCGR_ID_FLEXTIMER2 = 129,
++	CCM_CCGR_ID_GPIO1 = 160,
++	CCM_CCGR_ID_GPIO2 = 161,
++	CCM_CCGR_ID_GPIO3 = 162,
++	CCM_CCGR_ID_GPIO4 = 163,
++	CCM_CCGR_ID_GPIO5 = 164,
++	CCM_CCGR_ID_GPIO6 = 165,
++	CCM_CCGR_ID_GPIO7 = 166,
++	CCM_CCGR_ID_GPT1 = 124,
++	CCM_CCGR_ID_GPT2 = 125,
++	CCM_CCGR_ID_GPT3 = 126,
++	CCM_CCGR_ID_GPT4 = 127,
++	CCM_CCGR_ID_I2C1 = 136,
++	CCM_CCGR_ID_I2C2 = 137,
++	CCM_CCGR_ID_I2C3 = 138,
++	CCM_CCGR_ID_I2C4 = 139,
++	CCM_CCGR_ID_IOMUXC1 = 168,
++	CCM_CCGR_ID_IOMUXC2 = 169,
++	CCM_CCGR_ID_KPP = 120,
++	CCM_CCGR_ID_LCDIF = 75,
++	CCM_CCGR_ID_MIPI_CSI = 100,
++	CCM_CCGR_ID_MIPI_DSI = 101,
++	CCM_CCGR_ID_MIPI_PHY = 102,
++	CCM_CCGR_ID_MU = 39,
++	CCM_CCGR_ID_OCOTP = 35,
++	CCM_CCGR_ID_OCRAM = 17,
++	CCM_CCGR_ID_OCRAM_S = 18,
++	CCM_CCGR_ID_PCIE = 96,
++	CCM_CCGR_ID_PCIE_PHY = 96,
++	CCM_CCGR_ID_PERFMON1 = 68,
++	CCM_CCGR_ID_PERFMON2 = 69,
++	CCM_CCGR_ID_PWM1 = 132,
++	CCM_CCGR_ID_PWM2 = 133,
++	CCM_CCGR_ID_PWM3 = 134,
++	CCM_CCGR_ID_PMM4 = 135,
++	CCM_CCGR_ID_PXP = 76,
++	CCM_CCGR_ID_QOS1 = 42,
++	CCM_CCGR_ID_QOS2 = 43,
++	CCM_CCGR_ID_QOS3 = 44,
++	CCM_CCGR_ID_QUADSPI = 21,
++	CCM_CCGR_ID_RDC = 38,
++	CCM_CCGR_ID_ROMCP = 16,
++	CCM_CCGR_ID_SAI1 = 140,
++	CCM_CCGR_ID_SAI2 = 141,
++	CCM_CCGR_ID_SAI3 = 142,
++	CCM_CCGR_ID_SCTR = 34,
++	CCM_CCGR_ID_SDMA = 72,
++	CCM_CCGR_ID_SEC = 49,
++	CCM_CCGR_ID_SEMA42_1 = 64,
++	CCM_CCGR_ID_SEMA42_2 = 65,
++	CCM_CCGR_ID_SIM_DISPLAY = 5,
++	CCM_CCGR_ID_SIM_ENET = 6,
++	CCM_CCGR_ID_SIM_M = 7,
++	CCM_CCGR_ID_SIM_MAIN = 4,
++	CCM_CCGR_ID_SIM_S = 8,
++	CCM_CCGR_ID_SIM_WAKEUP = 9,
++	CCM_CCGR_ID_SIM1 = 144,
++	CCM_CCGR_ID_SIM2 = 145,
++	CCM_CCGR_ID_SIM_NAND = 20,
++	CCM_CCGR_ID_DISPLAY_CM4 = 1,
++	CCM_CCGR_ID_DRAM = 19,
++	CCM_CCGR_ID_SNVS = 37,
++	CCM_CCGR_ID_SPBA = 12,
++	CCM_CCGR_ID_TRACE = 48,
++	CCM_CCGR_ID_TZASC = 19,
++	CCM_CCGR_ID_UART1 = 148,
++	CCM_CCGR_ID_UART2 = 149,
++	CCM_CCGR_ID_UART3 = 150,
++	CCM_CCGR_ID_UART4 = 151,
++	CCM_CCGR_ID_UART5 = 152,
++	CCM_CCGR_ID_UART6 = 153,
++	CCM_CCGR_ID_UART7 = 154,
++	CCM_CCGR_ID_USB_HS = 40,
++	CCM_CCGR_ID_USB_IPG = 104,
++	CCM_CCGR_ID_USB_PHY_480MCLK = 105,
++	CCM_CCGR_ID_USB_OTG1_PHY = 106,
++	CCM_CCGR_ID_USB_OTG2_PHY = 107,
++	CCM_CCGR_ID_USBHDC1 = 108,
++	CCM_CCGR_ID_USBHDC2 = 109,
++	CCM_CCGR_ID_USBHDC3 = 110,
++	CCM_CCGR_ID_WDOG1 = 156,
++	CCM_CCGR_ID_WDOG2 = 157,
++	CCM_CCGR_ID_WDOG3 = 158,
++	CCM_CCGR_ID_WDOG4 = 159,
++};
++
++/* Clock target block */
++struct ccm_target_root_ctrl {
++	uint32_t ccm_target_root;
++	uint32_t ccm_target_root_set;
++	uint32_t ccm_target_root_clr;
++	uint32_t ccm_target_root_tog;
++	uint32_t ccm_misc;
++	uint32_t ccm_misc_set;
++	uint32_t ccm_misc_clr;
++	uint32_t ccm_misc_tog;
++	uint32_t ccm_post;
++	uint32_t ccm_post_set;
++	uint32_t ccm_post_clr;
++	uint32_t ccm_post_tog;
++	uint32_t ccm_pre;
++	uint32_t ccm_pre_set;
++	uint32_t ccm_pre_clr;
++	uint32_t ccm_pre_tog;
++	uint32_t reserved[0x0c];
++	uint32_t ccm_access_ctrl;
++	uint32_t ccm_access_ctrl_set;
++	uint32_t ccm_access_ctrl_clr;
++	uint32_t ccm_access_ctrl_tog;
++};
++
++#define CCM_TARGET_ROOT_ENABLE		BIT(28)
++#define CCM_TARGET_MUX(x)		(((x) - 1) << 24)
++#define CCM_TARGET_PRE_PODF(x)		(((x) - 1) << 16)
++#define CCM_TARGET_POST_PODF(x)		((x) - 1)
++
++/* Target root MUX values - selects the clock source for a block */
++/* ARM_A7_CLK_ROOT */
++
++#define CCM_TRGT_MUX_ARM_A7_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_ARM_A7_CLK_ROOT_ARM_PLL			BIT(24)
++#define CCM_TRGT_MUX_ARM_A7_CLK_ROOT_ENET_PLL_DIV2		BIT(25)
++#define CCM_TRGT_MUX_ARM_A7_CLK_ROOT_DDR_PLL			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_ARM_A7_CLK_ROOT_SYS_PLL			BIT(26)
++#define CCM_TRGT_MUX_ARM_A7_CLK_ROOT_SYS_PLL_PFD0		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_ARM_A7_CLK_ROOT_AUDIO_PLL			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_ARM_A7_CLK_ROOT_USB_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* ARM_M4_CLK_ROOT */
++
++#define CCM_TRGT_MUX_ARM_M4_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_ARM_M4_CLK_ROOT_SYS_PLL_DIV2		BIT(24)
++#define CCM_TRGT_MUX_ARM_M4_CLK_ROOT_ENET_PLL_DIV4		BIT(25)
++#define CCM_TRGT_MUX_ARM_M4_CLK_ROOT_SYS_PLL_PFD2		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_ARM_M4_CLK_ROOT_DDR_PLL_DIV2		BIT(26)
++#define CCM_TRGT_MUX_ARM_M4_CLK_ROOT_AUDIO_PLL			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_ARM_M4_CLK_ROOTV_IDEO_PLL			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_ARM_M4_CLK_ROOTUSB_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* MAIN_AXI_CLK_ROOT */
++
++#define CCM_TRGT_MUX_MAIN_AXI_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_MAIN_AXI_CLK_ROOT_SYS_PLL_PFD1		BIT(24)
++#define CCM_TRGT_MUX_MAIN_AXI_CLK_ROOT_DDR_PLL_DIV2		BIT(25)
++#define CCM_TRGT_MUX_MAIN_AXI_CLK_ROOT_ENET_PLL_DIV4		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_MAIN_AXI_CLK_ROOT_SYS_PLL_PFD5		BIT(26)
++#define CCM_TRGT_MUX_MAIN_AXI_CLK_ROOT_AUDIO_PLL		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_MAIN_AXI_CLK_ROOT_VIDEO_PLL		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_MAIN_AXI_CLK_ROOT_SYS_PLL_PFD7		((BIT(26) | BIT(25) | BIT(24))
++
++/* DISP_AXI_CLK_ROOT */
++
++#define CCM_TRGT_MUX_DISP_AXI_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_DISP_AXI_CLK_ROOT_SYS_PLL_PFD1		BIT(24)
++#define CCM_TRGT_MUX_DISP_AXI_CLK_ROOT_DDR_PLL_DIV2		BIT(25)
++#define CCM_TRGT_MUX_DISP_AXI_CLK_ROOT_ENET_PLL_DIV4		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_DISP_AXI_CLK_ROOT_SYS_PLL_PFD6		BIT(26)
++#define CCM_TRGT_MUX_DISP_AXI_CLK_ROOT_SYS_PLL_PFD7		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_DISP_AXI_CLK_ROOT_AUDIO_PLL		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_DISP_AXI_CLK_ROOT_VIDEO_PLL		((BIT(26) | BIT(25) | BIT(24))
++
++/* ENET_AXI_CLK_ROOT */
++
++#define CCM_TRGT_MUX_ENET_AXI_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_ENET_AXI_CLK_ROOT_SYS_PLL_PFD2		BIT(24)
++#define CCM_TRGT_MUX_ENET_AXI_CLK_ROOT_DDR_PLL_DIV2		BIT(25)
++#define CCM_TRGT_MUX_ENET_AXI_CLK_ROOT_ENET_PLL_DIV4		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_ENET_AXI_CLK_ROOT_SYS_PLL_DIV2		BIT(26)
++#define CCM_TRGT_MUX_ENET_AXI_CLK_ROOT_AUDIO_PLL		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_ENET_AXI_CLK_ROOT_VIDEO_PLL		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_ENET_AXI_CLK_ROOT_SYS_PLL_PFD4		((BIT(26) | BIT(25) | BIT(24))
++
++/* NAND_USDHC_BUS_CLK_ROOT */
++
++#define CM_TRGT_MUX_NAND_USDHC_BUS_CLK_ROOT_OSC_24M		0
++#define CCM_TRGT_MUX_NAND_USDHC_BUS_CLK_ROOT_AHB		BIT(24)
++#define CCM_TRGT_MUX_NAND_USDHC_BUS_CLK_ROOT_DDR_PLL_DIV2	BIT(25)
++#define CCM_TRGT_MUX_NAND_USDHC_BUS_CLK_ROOT_SYS_PLL_DIV2	(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_NAND_USDHC_BUS_CLK_ROOT_SYS_PLL_PFD2_DIV2	BIT(26)
++#define CCM_TRGT_MUX_NAND_USDHC_BUS_CLK_ROOT_SYS_PLL_PFD6	(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_NAND_USDHC_BUS_CLK_ROOT_ENET_PLL_DIV4	(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_NAND_USDHC_BUS_CLK_ROOT_AUDIO_PLL		((BIT(26) | BIT(25) | BIT(24))
++
++/* AHB_CLK_ROOT */
++
++#define CCM_TRGT_MUX_AHB_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_AHB_CLK_ROOT_SYS_PLL_PFD2			BIT(24)
++#define CCM_TRGT_MUX_AHB_CLK_ROOT_DDR_PLL_DIV2			BIT(25)
++#define CCM_TRGT_MUX_AHB_CLK_ROOT_SYS_PLL_PFD0			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_AHB_CLK_ROOT_ENET_PLL_DIV8			BIT(26)
++#define CCM_TRGT_MUX_AHB_CLK_ROOT_USB_PLL			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_AHB_CLK_ROOT_AUDIO_PLL			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_AHB_CLK_ROOT_VIDEO_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* IPG_CLK_ROOT */
++#define CCM_TRGT_MUX_IPG_CLK_ROOT_AHB_CLK_ROOT			0
++
++/* DRAM_PHYM_CLK_ROOT */
++#define CCM_TRGT_MUX_DRAM_PHYM_CLK_ROOT_DDR_PLL			0
++#define CCM_TRGT_MUX_DRAM_PHYM_CLK_ROOT_DRAM_PHYM_ALT_CLK_ROOT	BIT(24)
++
++/* DRAM_CLK_ROOT */
++
++#define CCM_TRGT_MUX_DRAM_CLK_ROOT_DDR_PLL			0
++#define CCM_TRGT_MUX_DRAM_CLK_ROOT_DRAM_ALT_CLK_ROOT		BIT(24)
++
++/* DRAM_PHYM_ALT_CLK_ROOT */
++#define CCM_TRGT_MUX_DRAM_PHYM_ALT_CLK_ROOT_OSC_24M		0
++#define CCM_TRGT_MUX_DRAM_PHYM_ALT_CLK_ROOT_DDR_PLL_DIV2	BIT(24)
++#define CCM_TRGT_MUX_DRAM_PHYM_ALT_CLK_ROOT_SYS_PLL		BIT(25)
++#define CCM_TRGT_MUX_DRAM_PHYM_ALT_CLK_ROOT_ENET_PLL_DIV2	(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_DRAM_PHYM_ALT_CLK_ROOT_USB_PLL		BIT(26)
++#define CCM_TRGT_MUX_DRAM_PHYM_ALT_CLK_ROOT_SYS_PLL_PFD7	(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_DRAM_PHYM_ALT_CLK_ROOT_AUDIO_PLL		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_DRAM_PHYM_ALT_CLK_ROOT_VIDEO_PLL		((BIT(26) | BIT(25) | BIT(24))
++
++/* DRAM_ALT_CLK_ROOT */
++
++#define CCM_TRGT_MUX_DRAM_ALT_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_DRAM_ALT_CLK_ROOT_DDR_PLL_DIV2		BIT(24)
++#define CCM_TRGT_MUX_DRAM_ALT_CLK_ROOT_SYS_PLL			BIT(25)
++#define CCM_TRGT_MUX_DRAM_ALT_CLK_ROOT_ENET_PLL_DIV4		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_DRAM_ALT_CLK_ROOT_USB_PLL			BIT(26)
++#define CCM_TRGT_MUX_DRAM_ALT_CLK_ROOT_SYS_PLL_PFD0		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_DRAM_ALT_CLK_ROOT_AUDIO_PLL		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_DRAM_ALT_CLK_ROOT_SYS_PLL_PFD2		((BIT(26) | BIT(25) | BIT(24))
++
++/* USB_HSIC_CLK_ROOT */
++
++#define CCM_TRGT_MUX_USB_HSIC_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_USB_HSIC_CLK_ROOT_SYS_PLL			BIT(24)
++#define CCM_TRGT_MUX_USB_HSIC_CLK_ROOT_USB_PLL			BIT(25)
++#define CCM_TRGT_MUX_USB_HSIC_CLK_ROOT_SYS_PLL_PFD3		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_USB_HSIC_CLK_ROOT_SYS_PLL_PFD4		BIT(26)
++#define CCM_TRGT_MUX_USB_HSIC_CLK_ROOT_SYS_PLL_PFD5		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_USB_HSIC_CLK_ROOT_SYS_PLL_PFD6		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_USB_HSIC_CLK_ROOT_SYS_PLL_PFD7		((BIT(26) | BIT(25) | BIT(24))
++
++/* LCDIF_PIXEL_CLK_ROOT */
++
++#define CCM_TRGT_MUX_LCDIF_PIXEL_CLK_ROOT_OSC_24M		0
++#define CCM_TRGT_MUX_LCDIF_PIXEL_CLK_ROOT_SYS_PLL_PFD5		BIT(24)
++#define CCM_TRGT_MUX_LCDIF_PIXEL_CLK_ROOT_DDR_PLL_DIV2		BIT(25)
++#define CCM_TRGT_MUX_LCDIF_PIXEL_CLK_ROOT_EXT_CLK3		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_LCDIF_PIXEL_CLK_ROOT_SYS_PLL_PFD4		BIT(26)
++#define CCM_TRGT_MUX_LCDIF_PIXEL_CLK_ROOT_SYS_PLL_PFD2		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_LCDIF_PIXEL_CLK_ROOT_VIDEO_PLL		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_LCDIF_PIXEL_CLK_ROOT_USB_PLL		((BIT(26) | BIT(25) | BIT(24))
++
++/* MIPI_DSI_CLK_ROOT */
++
++#define CCM_TRGT_MUX_MIPI_DSI_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_MIPI_DSI_CLK_ROOT_SYS_PLL_PFD5		BIT(24)
++#define CCM_TRGT_MUX_MIPI_DSI_CLK_ROOT_SYS_PLL_PFD3		BIT(25)
++#define CCM_TRGT_MUX_MIPI_DSI_CLK_ROOT_SYS_PLL			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_MIPI_DSI_CLK_ROOT_SYS_PLL_PFD0_DIV2	BIT(26)
++#define CCM_TRGT_MUX_MIPI_DSI_CLK_ROOT_DDR_PLL_DIV2		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_MIPI_DSI_CLK_ROOT_VIDEO_PLL		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_MIPI_DSI_CLK_ROOT_AUDIO_PLL		((BIT(26) | BIT(25) | BIT(24))
++
++/* MIPI_CSI_CLK_ROOT */
++
++#define CCM_TRGT_MUX_MIPI_CSI_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_MIPI_CSI_CLK_ROOT_SYS_PLL_PFD4		BIT(24)
++#define CCM_TRGT_MUX_MIPI_CSI_CLK_ROOT_SYS_PLL_PFD3		BIT(25)
++#define CCM_TRGT_MUX_MIPI_CSI_CLK_ROOT_SYS_PLL			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_MIPI_CSI_CLK_ROOT_SYS_PLL_PFD0_DIV2	BIT(26)
++#define CCM_TRGT_MUX_MIPI_CSI_CLK_ROOT_DDR_PLL_DIV2		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_MIPI_CSI_CLK_ROOT_VIDEO_PLL		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_MIPI_CSI_CLK_ROOT_AUDIO_PLL		((BIT(26) | BIT(25) | BIT(24))
++
++/* MIPI_DPHY_REF_CLK_ROOT */
++
++#define CCM_TRGT_MUX_MIPI_DPHY_REF_CLK_ROOT_OSC_24M		0
++#define CCM_TRGT_MUX_MIPI_DPHY_REF_CLK_ROOT_SYS_PLL_DIV4	BIT(24)
++#define CCM_TRGT_MUX_MIPI_DPHY_REF_CLK_ROOT_DDR_PLL_DIV2	BIT(25)
++#define CCM_TRGT_MUX_MIPI_DPHY_REF_CLK_ROOT_SYS_PLL_PFD5	(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_MIPI_DPHY_REF_CLK_ROOT_REF_1M		BIT(26)
++#define CCM_TRGT_MUX_MIPI_DPHY_REF_CLK_ROOT_EXT_CLK2		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_MIPI_DPHY_REF_CLK_ROOT_VIDEO_PLL		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_MIPI_DPHY_REF_CLK_ROOT_EXT_CLK3		((BIT(26) | BIT(25) | BIT(24))
++
++/* SAI1_CLK_ROOT */
++
++#define CCM_TRGT_MUX_SAI1_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_SAI1_CLK_ROOT_SYS_PLL_PFD2_DIV2		BIT(24)
++#define CCM_TRGT_MUX_SAI1_CLK_ROOT_AUDIO_PLL			BIT(25)
++#define CCM_TRGT_MUX_SAI1_CLK_ROOT_DDR_PLL_DIV2			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_SAI1_CLK_ROOT_VIDEO_PLL			BIT(26)
++#define CCM_TRGT_MUX_SAI1_CLK_ROOT_SYS_PLL_PFD4			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_SAI1_CLK_ROOT_ENET_PLL_DIV8		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_SAI1_CLK_ROOT_EXT_CLK2			((BIT(26) | BIT(25) | BIT(24))
++
++/* SAI2_CLK_ROOT */
++
++#define CCM_TRGT_MUX_SAI2_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_SAI2_CLK_ROOT_SYS_PLL_PFD2_DIV2		BIT(24)
++#define CCM_TRGT_MUX_SAI2_CLK_ROOT_AUDIO_PLL			BIT(25)
++#define CCM_TRGT_MUX_SAI2_CLK_ROOT_DDR_PLL_DIV2			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_SAI2_CLK_ROOT_VIDEO_PLL			BIT(26)
++#define CCM_TRGT_MUX_SAI2_CLK_ROOT_SYS_PLL_PFD4			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_SAI2_CLK_ROOT_ENET_PLL_DIV8		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_SAI2_CLK_ROOT_EXT_CLK2			((BIT(26) | BIT(25) | BIT(24))
++
++/* SAI3_CLK_ROOT */
++
++#define CCM_TRGT_MUX_SAI3_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_SAI3_CLK_ROOT_SYS_PLL_PFD2_DIV2		BIT(24)
++#define CCM_TRGT_MUX_SAI3_CLK_ROOT_AUDIO_PLL			BIT(25)
++#define CCM_TRGT_MUX_SAI3_CLK_ROOT_DDR_PLL_DIV2			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_SAI3_CLK_ROOT_VIDEO_PLL			BIT(26)
++#define CCM_TRGT_MUX_SAI3_CLK_ROOT_SYS_PLL_PFD4			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_SAI3_CLK_ROOT_ENET_PLL_DIV8		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_SAI3_CLK_ROOT_EXT_CLK3			((BIT(26) | BIT(25) | BIT(24))
++
++/* ENET1_REF_CLK_ROOT */
++
++#define CCM_TRGT_MUX_ENET1_REF_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_ENET1_REF_CLK_ROOT_ENET_PLL_DIV8		BIT(24)
++#define CCM_TRGT_MUX_ENET1_REF_CLK_ROOT_ENET_PLL_DIV20		BIT(25)
++#define CCM_TRGT_MUX_ENET1_REF_CLK_ROOT_ENET_PLL_DIV40		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_ENET1_REF_CLK_ROOT_SYS_PLL_DIV4		BIT(26)
++#define CCM_TRGT_MUX_ENET1_REF_CLK_ROOT_AUDIO_PLL		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_ENET1_REF_CLK_ROOT_VIDEO_PLL		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_ENET1_REF_CLK_ROOT_EXT_CLK4		((BIT(26) | BIT(25) | BIT(24))
++
++/* ENET1_TIME_CLK_ROOT */
++
++#define CCM_TRGT_MUX_ENET1_TIME_CLK_ROOT_OSC_24M		0
++#define CCM_TRGT_MUX_ENET1_TIME_CLK_ROOT_ENET_PLL_DIV10		BIT(24)
++#define CCM_TRGT_MUX_ENET1_TIME_CLK_ROOT_AUDIO_PLL		BIT(25)
++#define CCM_TRGT_MUX_ENET1_TIME_CLK_ROOT_EXT_CLK1		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_ENET1_TIME_CLK_ROOT_EXT_CLK2		BIT(26)
++#define CCM_TRGT_MUX_ENET1_TIME_CLK_ROOT_EXT_CLK3		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_ENET1_TIME_CLK_ROOT_EXT_CLK4		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_ENET1_TIME_CLK_ROOT_VIDEO_PLL		((BIT(26) | BIT(25) | BIT(24))
++
++/* ENET_PHY_REF_CLK_ROOT */
++
++#define CCM_TRGT_MUX_ENET_PHY_REF_CLK_ROOT_OSC_24M		0
++#define CCM_TRGT_MUX_ENET_PHY_REF_CLK_ROOT_ENET_PLL_DIV40	BIT(24)
++#define CCM_TRGT_MUX_ENET_PHY_REF_CLK_ROOT_ENET_PLL_DIV20	BIT(25)
++#define CCM_TRGT_MUX_ENET_PHY_REF_CLK_ROOT_ENET_PLL_DIV8	(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_ENET_PHY_REF_CLK_ROOT_DDR_PLL_DIV2		BIT(26)
++#define CCM_TRGT_MUX_ENET_PHY_REF_CLK_ROOT_AUDIO_PLL		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_ENET_PHY_REF_CLK_ROOT_VIDEO_PLL		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_ENET_PHY_REF_CLK_ROOT_SYS_PLL_PFD3		((BIT(26) | BIT(25) | BIT(24))
++
++/* EIM_CLK_ROOT */
++
++#define CCM_TRGT_MUX_EIM_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_EIM_CLK_ROOT_SYS_PLL_PFD2_DIV2		BIT(24)
++#define CCM_TRGT_MUX_EIM_CLK_ROOT_SYS_PLL_DIV4			BIT(25)
++#define CCM_TRGT_MUX_EIM_CLK_ROOT_DDR_PLL_DIV2			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_EIM_CLK_ROOT_SYS_PLL_PFD2			BIT(26)
++#define CCM_TRGT_MUX_EIM_CLK_ROOT_SYS_PLL_PFD3			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_EIM_CLK_ROOT_ENET_PLL_DIV8			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_EIM_CLK_ROOT_USB_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* NAND_CLK_ROOT */
++
++#define CCM_TRGT_MUX_NAND_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_NAND_CLK_ROOT_SYS_PLL			BIT(24)
++#define CCM_TRGT_MUX_NAND_CLK_ROOT_DDR_PLL_DIV2			BIT(25)
++#define CCM_TRGT_MUX_NAND_CLK_ROOT_SYS_PLL_PFD0			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_NAND_CLK_ROOT_SYS_PLL_PFD3			BIT(26)
++#define CCM_TRGT_MUX_NAND_CLK_ROOT_ENET_PLL_DIV2		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_NAND_CLK_ROOT_ENET_PLL_DIV4		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_NAND_CLK_ROOT_VIDEO_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* QSPI_CLK_ROOT */
++
++#define CCM_TRGT_MUX_QSPI_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_QSPI_CLK_ROOT_SYS_PLL_PFD4			BIT(24)
++#define CCM_TRGT_MUX_QSPI_CLK_ROOT_DDR_PLL_DIV2			BIT(25)
++#define CCM_TRGT_MUX_QSPI_CLK_ROOT_ENET_PLL_DIV2		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_QSPI_CLK_ROOT_SYS_PLL_PFD3			BIT(26)
++#define CCM_TRGT_MUX_QSPI_CLK_ROOT_SYS_PLL_PFD2			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_QSPI_CLK_ROOT_SYS_PLL_PFD6			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_QSPI_CLK_ROOT_SYS_PLL_PFD7			((BIT(26) | BIT(25) | BIT(24))
++
++/* USDHC1_CLK_ROOT */
++
++#define CM_TRGT_MUX_USDHC1_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_USDHC1_CLK_ROOT_SYS_PLL_PFD0		BIT(24)
++#define CCM_TRGT_MUX_USDHC1_CLK_ROOT_DDR_PLL_DIV2		BIT(25)
++#define CCM_TRGT_MUX_USDHC1_CLK_ROOT_ENET_PLL_DIV2		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_USDHC1_CLK_ROOT_SYS_PLL_PFD4		BIT(26)
++#define CCM_TRGT_MUX_USDHC1_CLK_ROOT_SYS_PLL_PFD2		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_USDHC1_CLK_ROOT_SYS_PLL_PFD6		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_USDHC1_CLK_ROOT_SYS_PLL_PFD7		((BIT(26) | BIT(25) | BIT(24))
++
++/* USDHC2_CLK_ROOT */
++
++#define CCM_TRGT_MUX_USDHC2_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_USDHC2_CLK_ROOT_SYS_PLL_PFD0		BIT(24)
++#define CCM_TRGT_MUX_USDHC2_CLK_ROOT_DDR_PLL_DIV2		BIT(25)
++#define CCM_TRGT_MUX_USDHC2_CLK_ROOT_ENET_PLL_DIV2		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_USDHC2_CLK_ROOT_SYS_PLL_PFD4		BIT(26)
++#define CCM_TRGT_MUX_USDHC2_CLK_ROOT_SYS_PLL_PFD2		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_USDHC2_CLK_ROOT_SYS_PLL_PFD6		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_USDHC2_CLK_ROOT_SYS_PLL_PFD7		((BIT(26) | BIT(25) | BIT(24))
++
++/* USDHC3_CLK_ROOT */
++
++#define CCM_TRGT_MUX_USDHC3_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_USDHC3_CLK_ROOT_SYS_PLL_PFD0		BIT(24)
++#define CCM_TRGT_MUX_USDHC3_CLK_ROOT_DDR_PLL_DIV2		BIT(25)
++#define CCM_TRGT_MUX_USDHC3_CLK_ROOT_ENET_PLL_DIV2		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_USDHC3_CLK_ROOT_SYS_PLL_PFD4		BIT(26)
++#define CCM_TRGT_MUX_USDHC3_CLK_ROOT_SYS_PLL_PFD2		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_USDHC3_CLK_ROOT_SYS_PLL_PFD6		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_USDHC3_CLK_ROOT_SYS_PLL_PFD7		((BIT(26) | BIT(25) | BIT(24))
++
++/* CAN1_CLK_ROOT */
++
++#define CCM_TRGT_MUX_CAN1_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_CAN1_CLK_ROOT_SYS_PLL_DIV4			BIT(24)
++#define CCM_TRGT_MUX_CAN1_CLK_ROOT_DDR_PLL_DIV2			BIT(25)
++#define CCM_TRGT_MUX_CAN1_CLK_ROOT_SYS_PLL			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_CAN1_CLK_ROOT_ENET_PLL_DIV25		BIT(26)
++#define CCM_TRGT_MUX_CAN1_CLK_ROOT_USB_PLL			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_CAN1_CLK_ROOT_EXT_CLK1			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_CAN1_CLK_ROOT_EXT_CLK4			((BIT(26) | BIT(25) | BIT(24))
++
++/* CAN2_CLK_ROOT */
++
++#define CCM_TRGT_MUX_CAN2_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_CAN2_CLK_ROOT_SYS_PLL_DIV4			BIT(24)
++#define CCM_TRGT_MUX_CAN2_CLK_ROOT_DDR_PLL_DIV2			BIT(25)
++#define CCM_TRGT_MUX_CAN2_CLK_ROOT_SYS_PLL			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_CAN2_CLK_ROOT_ENET_PLL_DIV25		BIT(26)
++#define CCM_TRGT_MUX_CAN2_CLK_ROOT_USB_PLL			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_CAN2_CLK_ROOT_EXT_CLK1			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_CAN2_CLK_ROOT_EXT_CLK3			((BIT(26) | BIT(25) | BIT(24))
++
++/* I2C1_CLK_ROOT */
++
++#define CCM_TRGT_MUX_I2C1_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_I2C1_CLK_ROOT_SYS_PLL_DIV4			BIT(24)
++#define CCM_TRGT_MUX_I2C1_CLK_ROOT_ENET_PLL_DIV20		BIT(25)
++#define CCM_TRGT_MUX_I2C1_CLK_ROOT_DDR_PLL_DIV2			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_I2C1_CLK_ROOT_AUDIO_PLL			BIT(26)
++#define CCM_TRGT_MUX_I2C1_CLK_ROOT_VIDEO_PLL			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_I2C1_CLK_ROOT_USB_PLL			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_I2C1_CLK_ROOT_SYS_PLL_PFD2_DIV2		((BIT(26) | BIT(25) | BIT(24))
++
++/* I2C2_CLK_ROOT */
++
++#define CCM_TRGT_MUX_I2C2_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_I2C2_CLK_ROOT_SYS_PLL_DIV4			BIT(24)
++#define CCM_TRGT_MUX_I2C2_CLK_ROOT_ENET_PLL_DIV20		BIT(25)
++#define CCM_TRGT_MUX_I2C2_CLK_ROOT_DDR_PLL_DIV2			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_I2C2_CLK_ROOT_AUDIO_PLL			BIT(26)
++#define CCM_TRGT_MUX_I2C2_CLK_ROOT_VIDEO_PLL			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_I2C2_CLK_ROOT_USB_PLL			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_I2C2_CLK_ROOT_SYS_PLL_PFD2_DIV2		((BIT(26) | BIT(25) | BIT(24))
++
++/* I2C3_CLK_ROOT */
++
++#define CCM_TRGT_MUX_I2C3_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_I2C3_CLK_ROOT_SYS_PLL_DIV4			BIT(24)
++#define CCM_TRGT_MUX_I2C3_CLK_ROOT_ENET_PLL_DIV20		BIT(25)
++#define CCM_TRGT_MUX_I2C3_CLK_ROOT_DDR_PLL_DIV2			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_I2C3_CLK_ROOT_AUDIO_PLL			BIT(26)
++#define CCM_TRGT_MUX_I2C3_CLK_ROOT_VIDEO_PLL			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_I2C3_CLK_ROOT_USB_PLL			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_I2C3_CLK_ROOT_SYS_PLL_PFD2_DIV2		((BIT(26) | BIT(25) | BIT(24))
++
++/* I2C4_CLK_ROOT */
++
++#define CCM_TRGT_MUX_I2C4_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_I2C4_CLK_ROOT_SYS_PLL_DIV4			BIT(24)
++#define CCM_TRGT_MUX_I2C4_CLK_ROOT_ENET_PLL_DIV20		BIT(25)
++#define CCM_TRGT_MUX_I2C4_CLK_ROOT_DDR_PLL_DIV2			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_I2C4_CLK_ROOT_AUDIO_PLL			BIT(26)
++#define CCM_TRGT_MUX_I2C4_CLK_ROOT_VIDEO_PLL			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_I2C4_CLK_ROOT_USB_PLL			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_I2C4_CLK_ROOT_SYS_PLL_PFD2_DIV2		((BIT(26) | BIT(25) | BIT(24))
++
++/* UART1_CLK_ROOT */
++
++#define CCM_TRGT_MUX_UART1_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_UART1_CLK_ROOT_SYS_PLL_DIV2		BIT(24)
++#define CCM_TRGT_MUX_UART1_CLK_ROOT_ENET_PLL_DIV25		BIT(25)
++#define CCM_TRGT_MUX_UART1_CLK_ROOT_ENET_PLL_DIV10		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_UART1_CLK_ROOT_SYS_PLL			BIT(26)
++#define CCM_TRGT_MUX_UART1_CLK_ROOT_EXT_CLK2			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_UART1_CLK_ROOT_EXT_CLK4			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_UART1_CLK_ROOT_USB_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* UART2_CLK_ROOT */
++
++#define CCM_TRGT_MUX_UART2_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_UART2_CLK_ROOT_SYS_PLL_DIV2		BIT(24)
++#define CCM_TRGT_MUX_UART2_CLK_ROOT_ENET_PLL_DIV25		BIT(25)
++#define CCM_TRGT_MUX_UART2_CLK_ROOT_ENET_PLL_DIV10		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_UART2_CLK_ROOT_SYS_PLL			BIT(26)
++#define CCM_TRGT_MUX_UART2_CLK_ROOT_EXT_CLK2			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_UART2_CLK_ROOT_EXT_CLK3			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_UART2_CLK_ROOT_USB_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* UART3_CLK_ROOT */
++
++#define CCM_TRGT_MUX_UART3_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_UART3_CLK_ROOT_SYS_PLL_DIV2		BIT(24)
++#define CCM_TRGT_MUX_UART3_CLK_ROOT_ENET_PLL_DIV25		BIT(25)
++#define CCM_TRGT_MUX_UART3_CLK_ROOT_ENET_PLL_DIV10		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_UART3_CLK_ROOT_SYS_PLL			BIT(26)
++#define CCM_TRGT_MUX_UART3_CLK_ROOT_EXT_CLK2			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_UART3_CLK_ROOT_EXT_CLK4			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_UART3_CLK_ROOT_USB_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* UART4_CLK_ROOT */
++
++#define CCM_TRGT_MUX_UART4_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_UART4_CLK_ROOT_SYS_PLL_DIV2		BIT(24)
++#define CCM_TRGT_MUX_UART4_CLK_ROOT_ENET_PLL_DIV25		BIT(25)
++#define CCM_TRGT_MUX_UART4_CLK_ROOT_ENET_PLL_DIV10		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_UART4_CLK_ROOT_SYS_PLL			BIT(26)
++#define CCM_TRGT_MUX_UART4_CLK_ROOT_EXT_CLK2			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_UART4_CLK_ROOT_EXT_CLK3			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_UART4_CLK_ROOT_USB_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* UART5_CLK_ROOT */
++
++#define CCM_TRGT_MUX_UART5_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_UART5_CLK_ROOT_SYS_PLL_DIV2		BIT(24)
++#define CCM_TRGT_MUX_UART5_CLK_ROOT_ENET_PLL_DIV25		BIT(25)
++#define CCM_TRGT_MUX_UART5_CLK_ROOT_ENET_PLL_DIV10		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_UART5_CLK_ROOT_SYS_PLL			BIT(26)
++#define CCM_TRGT_MUX_UART5_CLK_ROOT_EXT_CLK2			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_UART5_CLK_ROOT_EXT_CLK4			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_UART5_CLK_ROOT_USB_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* UART6_CLK_ROOT */
++
++#define CCM_TRGT_MUX_UART6_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_UART6_CLK_ROOT_SYS_PLL_DIV2		BIT(24)
++#define CCM_TRGT_MUX_UART6_CLK_ROOT_ENET_PLL_DIV25		BIT(25)
++#define CCM_TRGT_MUX_UART6_CLK_ROOT_ENET_PLL_DIV10		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_UART6_CLK_ROOT_SYS_PLL			BIT(26)
++#define CCM_TRGT_MUX_UART6_CLK_ROOT_EXT_CLK2			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_UART6_CLK_ROOT_EXT_CLK3			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_UART6_CLK_ROOT_USB_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* UART7_CLK_ROOT */
++
++#define CCM_TRGT_MUX_UART7_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_UART7_CLK_ROOT_SYS_PLL_DIV2		BIT(24)
++#define CCM_TRGT_MUX_UART7_CLK_ROOT_ENET_PLL_DIV25		BIT(25)
++#define CCM_TRGT_MUX_UART7_CLK_ROOT_ENET_PLL_DIV10		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_UART7_CLK_ROOT_SYS_PLL			BIT(26)
++#define CCM_TRGT_MUX_UART7_CLK_ROOT_EXT_CLK2			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_UART7_CLK_ROOT_EXT_CLK4			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_UART7_CLK_ROOT_USB_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* ECSPI1_CLK_ROOT */
++
++#define CCM_TRGT_MUX_ECSPI1_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_ECSPI1_CLK_ROOT_SYS_PLL_DIV2		BIT(24)
++#define CCM_TRGT_MUX_ECSPI1_CLK_ROOT_ENET_PLL_DIV25		BIT(25)
++#define CCM_TRGT_MUX_ECSPI1_CLK_ROOT_SYS_PLL_DIV4		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_ECSPI1_CLK_ROOT_SYS_PLL			BIT(26)
++#define CCM_TRGT_MUX_ECSPI1_CLK_ROOT_SYS_PLL_PFD4		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_ECSPI1_CLK_ROOT_ENET_PLL_DIV4		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_ECSPI1_CLK_ROOT_USB_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* ECSPI2_CLK_ROOT */
++
++#define CCM_TRGT_MUX_ECSPI2_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_ECSPI2_CLK_ROOT_SYS_PLL_DIV2		BIT(24)
++#define CCM_TRGT_MUX_ECSPI2_CLK_ROOT_ENET_PLL_DIV25		BIT(25)
++#define CCM_TRGT_MUX_ECSPI2_CLK_ROOT_SYS_PLL_DIV4		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_ECSPI2_CLK_ROOT_SYS_PLL			BIT(26)
++#define CCM_TRGT_MUX_ECSPI2_CLK_ROOT_SYS_PLL_PFD4		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_ECSPI2_CLK_ROOT_ENET_PLL_DIV4		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_ECSPI2_CLK_ROOT_USB_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* ECSPI3_CLK_ROOT */
++
++#define CCM_TRGT_MUX_ECSPI3_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_ECSPI3_CLK_ROOT_SYS_PLL_DIV2		BIT(24)
++#define CCM_TRGT_MUX_ECSPI3_CLK_ROOT_ENET_PLL_DIV25		BIT(25)
++#define CCM_TRGT_MUX_ECSPI3_CLK_ROOT_SYS_PLL_DIV4		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_ECSPI3_CLK_ROOT_SYS_PLL			BIT(26)
++#define CCM_TRGT_MUX_ECSPI3_CLK_ROOT_SYS_PLL_PFD4		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_ECSPI3_CLK_ROOT_ENET_PLL_DIV4		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_ECSPI3_CLK_ROOT_USB_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* ECSPI4_CLK_ROOT */
++
++#define CCM_TRGT_MUX_ECSPI4_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_ECSPI4_CLK_ROOT_SYS_PLL_DIV2		BIT(24)
++#define CCM_TRGT_MUX_ECSPI4_CLK_ROOT_ENET_PLL_DIV25		BIT(25)
++#define CCM_TRGT_MUX_ECSPI4_CLK_ROOT_SYS_PLL_DIV4		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_ECSPI4_CLK_ROOT_SYS_PLL			BIT(26)
++#define CCM_TRGT_MUX_ECSPI4_CLK_ROOT_SYS_PLL_PFD4		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_ECSPI4_CLK_ROOT_ENET_PLL_DIV4		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_ECSPI4_CLK_ROOT_USB_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* PWM1_CLK_ROOT */
++
++#define CCM_TRGT_MUX_PWM1_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_PWM1_CLK_ROOT_ENET_PLL_DIV10		BIT(24)
++#define CCM_TRGT_MUX_PWM1_CLK_ROOT_SYS_PLL_DIV4			BIT(25)
++#define CCM_TRGT_MUX_PWM1_CLK_ROOT_ENET_PLL_DIV25		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_PWM1_CLK_ROOT_AUDIO_PLL			BIT(26)
++#define CCM_TRGT_MUX_PWM1_CLK_ROOT_EXT_CLK1			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_PWM1_CLK_ROOT_REF_1M			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_PWM1_CLK_ROOT_VIDEO_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* PWM2_CLK_ROOT */
++
++#define CCM_TRGT_MUX_PWM2_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_PWM2_CLK_ROOT_ENET_PLL_DIV10		BIT(24)
++#define CCM_TRGT_MUX_PWM2_CLK_ROOT_SYS_PLL_DIV4			BIT(25)
++#define CCM_TRGT_MUX_PWM2_CLK_ROOT_ENET_PLL_DIV25		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_PWM2_CLK_ROOT_AUDIO_PLL			BIT(26)
++#define CCM_TRGT_MUX_PWM2_CLK_ROOT_EXT_CLK1			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_PWM2_CLK_ROOT_REF_1M			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_PWM2_CLK_ROOT_VIDEO_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* PWM3_CLK_ROOT */
++
++#define CCM_TRGT_MUX_PWM3_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_PWM3_CLK_ROOT_ENET_PLL_DIV10		BIT(24)
++#define CCM_TRGT_MUX_PWM3_CLK_ROOT_SYS_PLL_DIV4			BIT(25)
++#define CCM_TRGT_MUX_PWM3_CLK_ROOT_ENET_PLL_DIV25		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_PWM3_CLK_ROOT_AUDIO_PLL			BIT(26)
++#define CCM_TRGT_MUX_PWM3_CLK_ROOT_EXT_CLK2			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_PWM3_CLK_ROOT_REF_1M			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_PWM3_CLK_ROOT_VIDEO_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* PWM4_CLK_ROOT */
++
++#define CCM_TRGT_MUX_PWM4_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_PWM4_CLK_ROOT_ENET_PLL_DIV10		BIT(24)
++#define CCM_TRGT_MUX_PWM4_CLK_ROOT_SYS_PLL_DIV4			BIT(25)
++#define CCM_TRGT_MUX_PWM4_CLK_ROOT_ENET_PLL_DIV25		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_PWM4_CLK_ROOT_AUDIO_PLL			BIT(26)
++#define CCM_TRGT_MUX_PWM4_CLK_ROOT_EXT_CLK2			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_PWM4_CLK_ROOT_REF_1M			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_PWM4_CLK_ROOT_VIDEO_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* FLEXTIMER1_CLK_ROOT */
++
++#define CCM_TRGT_MUX_FLEXTIMER1_CLK_ROOT_OSC_24M		0
++#define CCM_TRGT_MUX_FLEXTIMER1_CLK_ROOT_ENET_PLL_DIV10		BIT(24)
++#define CCM_TRGT_MUX_FLEXTIMER1_CLK_ROOT_SYS_PLL_DIV4		BIT(25)
++#define CCM_TRGT_MUX_FLEXTIMER1_CLK_ROOT_ENET_PLL_DIV25		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_FLEXTIMER1_CLK_ROOT_AUDIO_PLL		BIT(26)
++#define CCM_TRGT_MUX_FLEXTIMER1_CLK_ROOT_EXT_CLK3		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_FLEXTIMER1_CLK_ROOT_REF_1M			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_FLEXTIMER1_CLK_ROOT_VIDEO_PLL		((BIT(26) | BIT(25) | BIT(24))
++
++/* FLEXTIMER2_CLK_ROOT */
++
++#define CCM_TRGT_MUX_FLEXTIMER2_CLK_ROOT_OSC_24M		0
++#define CCM_TRGT_MUX_FLEXTIMER2_CLK_ROOT_ENET_PLL_DIV10		BIT(24)
++#define CCM_TRGT_MUX_FLEXTIMER2_CLK_ROOT_SYS_PLL_DIV4		BIT(25)
++#define CCM_TRGT_MUX_FLEXTIMER2_CLK_ROOT_ENET_PLL_DIV25		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_FLEXTIMER2_CLK_ROOT_AUDIO_PLL		BIT(26)
++#define CCM_TRGT_MUX_FLEXTIMER2_CLK_ROOT_EXT_CLK3		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_FLEXTIMER2_CLK_ROOT_REF_1M			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_FLEXTIMER2_CLK_ROOT_VIDEO_PLL		((BIT(26) | BIT(25) | BIT(24))
++
++/* Target SIM1_CLK_ROOT */
++
++#define CCM_TRGT_MUX_SIM1_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_SIM1_CLK_ROOT_SYS_PLL_PFD2_DIV2		BIT(24)
++#define CCM_TRGT_MUX_SIM1_CLK_ROOT_SYS_PLL_DIV4			BIT(25)
++#define CCM_TRGT_MUX_SIM1_CLK_ROOT_DDR_PLL_DIV2			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_SIM1_CLK_ROOT_USB_PLL			BIT(26)
++#define CCM_TRGT_MUX_SIM1_CLK_ROOT_AUDIO_PLL			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_SIM1_CLK_ROOT_ENET_PLL_DIV8		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_SIM1_CLK_ROOT_SYS_PLL_PFD7			((BIT(26) | BIT(25) | BIT(24))
++
++/* Target SIM2_CLK_ROOT */
++
++#define CCM_TRGT_MUX_SIM2_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_SIM2_CLK_ROOT_SYS_PLL_PFD2_DIV2		BIT(24)
++#define CCM_TRGT_MUX_SIM2_CLK_ROOT_SYS_PLL_DIV4			BIT(25)
++#define CCM_TRGT_MUX_SIM2_CLK_ROOT_DDR_PLL_DIV2			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_SIM2_CLK_ROOT_USB_PLL			BIT(26)
++#define CCM_TRGT_MUX_SIM2_CLK_ROOT_VIDEO_PLL			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_SIM2_CLK_ROOT_ENET_PLL_DIV8		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_SIM2_CLK_ROOT_SYS_PLL_PFD7			((BIT(26) | BIT(25) | BIT(24))
++
++/* Target GPT1_CLK_ROOT */
++
++#define CCM_TRGT_MUX_GPT1_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_GPT1_CLK_ROOT_ENET_PLL_DIV10		BIT(24)
++#define CCM_TRGT_MUX_GPT1_CLK_ROOT_SYS_PLL_PFD0			BIT(25)
++#define CCM_TRGT_MUX_GPT1_CLK_ROOT_ENET_PLL_DIV25		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_GPT1_CLK_ROOT_VIDEO_PLL			BIT(26)
++#define CCM_TRGT_MUX_GPT1_CLK_ROOT_REF_1M			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_GPT1_CLK_ROOT_AUDIO_PLL			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_GPT1_CLK_ROOT_EXT_CLK1			((BIT(26) | BIT(25) | BIT(24))
++
++/* Target GPT2_CLK_ROOT */
++
++#define CCM_TRGT_MUX_GPT2_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_GPT2_CLK_ROOT_ENET_PLL_DIV10		BIT(24)
++#define CCM_TRGT_MUX_GPT2_CLK_ROOT_SYS_PLL_PFD0			BIT(25)
++#define CCM_TRGT_MUX_GPT2_CLK_ROOT_ENET_PLL_DIV25		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_GPT2_CLK_ROOT_VIDEO_PLL			BIT(26)
++#define CCM_TRGT_MUX_GPT2_CLK_ROOT_REF_1M			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_GPT2_CLK_ROOT_AUDIO_PLL			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_GPT2_CLK_ROOT_EXT_CLK2			((BIT(26) | BIT(25) | BIT(24))
++
++/* Target GPT3_CLK_ROOT */
++
++#define CCM_TRGT_MUX_GPT3_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_GPT3_CLK_ROOT_ENET_PLL_DIV10		BIT(24)
++#define CCM_TRGT_MUX_GPT3_CLK_ROOT_SYS_PLL_PFD0			BIT(25)
++#define CCM_TRGT_MUX_GPT3_CLK_ROOT_ENET_PLL_DIV25		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_GPT3_CLK_ROOT_VIDEO_PLL			BIT(26)
++#define CCM_TRGT_MUX_GPT3_CLK_ROOT_REF_1M			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_GPT3_CLK_ROOT_AUDIO_PLL			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_GPT3_CLK_ROOT_EXT_CLK3			((BIT(26) | BIT(25) | BIT(24))
++
++/*Target GPT4_CLK_ROOT */
++
++#define CCM_TRGT_MUX_GPT4_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_GPT4_CLK_ROOT_ENET_PLL_DIV10		BIT(24)
++#define CCM_TRGT_MUX_GPT4_CLK_ROOT_SYS_PLL_PFD0			BIT(25)
++#define CCM_TRGT_MUX_GPT4_CLK_ROOT_ENET_PLL_DIV25		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_GPT4_CLK_ROOT_VIDEO_PLL			BIT(26)
++#define CCM_TRGT_MUX_GPT4_CLK_ROOT_REF_1M			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_GPT4_CLK_ROOT_AUDIO_PLL			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_GPT4_CLK_ROOT_EXT_CLK4			((BIT(26) | BIT(25) | BIT(24))
++
++/* Target TRACE_CLK_ROOT */
++
++#define CCM_TRGT_MUX_TRACE_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_TRACE_CLK_ROOT_SYS_PLL_PFD2_DIV2		BIT(24)
++#define CCM_TRGT_MUX_TRACE_CLK_ROOT_SYS_PLL_DIV4		BIT(25)
++#define CCM_TRGT_MUX_TRACE_CLK_ROOT_DDR_PLL_DIV2		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_TRACE_CLK_ROOT_ENET_PLL_DIV8		BIT(26)
++#define CCM_TRGT_MUX_TRACE_CLK_ROOT_USB_PLL			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_TRACE_CLK_ROOT_EXT_CLK2			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_TRACE_CLK_ROOT_EXT_CLK3			((BIT(26) | BIT(25) | BIT(24))
++
++/* Target WDOG_CLK_ROOT */
++
++#define CCM_TRGT_MUX_WDOG_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_WDOG_CLK_ROOT_SYS_PLL_PFD2_DIV2		BIT(24)
++#define CCM_TRGT_MUX_WDOG_CLK_ROOT_SYS_PLL_DIV4			BIT(25)
++#define CCM_TRGT_MUX_WDOG_CLK_ROOT_DDR_PLL_DIV2			(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_WDOG_CLK_ROOT_ENET_PLL_DIV8		BIT(26)
++#define CCM_TRGT_MUX_WDOG_CLK_ROOT_USB_PLL			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_WDOG_CLK_ROOT_REF_1M			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_WDOG_CLK_ROOT_SYS_PLL_PFD1_DIV2		((BIT(26) | BIT(25) | BIT(24))
++
++/* Target CSI_MCLK_CLK_ROOT */
++
++#define CCM_TRGT_MUX_CSI_MCLK_CLK_ROOT_OSC_24M			0
++#define CCM_TRGT_MUX_CSI_MCLK_CLK_ROOT_SYS_PLL_PFD2_DIV2	BIT(24)
++#define CCM_TRGT_MUX_CSI_MCLK_CLK_ROOT_SYS_PLL_DIV4		BIT(25)
++#define CCM_TRGT_MUX_CSI_MCLK_CLK_ROOT_DDR_PLL_DIV2		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_CSI_MCLK_CLK_ROOT_ENET_PLL_DIV8		BIT(26)
++#define CCM_TRGT_MUX_CSI_MCLK_CLK_ROOT_AUDIO_PLL		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_CSI_MCLK_CLK_ROOT_VIDEO_PLL		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_CSI_MCLK_CLK_ROOT_USB_PLL			((BIT(26) | BIT(25) | BIT(24))
++
++/* Target AUDIO_MCLK_CLK_ROOT */
++#define CCM_TRGT_MUX_AUDIO_MCLK_CLK_ROOT_OSC_24M		0
++#define CCM_TRGT_MUX_AUDIO_MCLK_CLK_ROOT_SYS_PLL_PFD2_DIV2	BIT(24)
++#define CCM_TRGT_MUX_AUDIO_MCLK_CLK_ROOT_SYS_PLL_DIV4		BIT(25)
++#define CCM_TRGT_MUX_AUDIO_MCLK_CLK_ROOT_DDR_PLL_DIV2		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_AUDIO_MCLK_CLK_ROOT_ENET_PLL_DIV8		BIT(26)
++#define CCM_TRGT_MUX_AUDIO_MCLK_CLK_ROOT_AUDIO_PLL		(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_AUDIO_MCLK_CLK_ROOT_VIDEO_PLL		(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_AUDIO_MCLK_CLK_ROOT_USB_PLL		((BIT(26) | BIT(25) | BIT(24))
++
++/* Target CCM_CLKO1 */
++#define CCM_TRGT_MUX_CCM_CLKO1_OSC_24M				0
++#define CCM_TRGT_MUX_CCM_CLKO1_SYS_PLL				BIT(24)
++#define CCM_TRGT_MUX_CCM_CLKO1_SYS_PLL_DIV2			BIT(25)
++#define CCM_TRGT_MUX_CCM_CLKO1_SYS_PLL_PFD0_DIV2		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_CCM_CLKO1_SYS_PLL_PFD3			BIT(26)
++#define CCM_TRGT_MUX_CCM_CLKO1_ENET_PLL_DIV2			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_CCM_CLKO1_DDR_PLL_DIV2			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_CCM_CLKO1_REF_1M				((BIT(26) | BIT(25) | BIT(24))
++
++/* Target CCM_CLKO2 */
++#define CCM_TRGT_MUX_CCM_CLKO2_OSC_24M				0
++#define CCM_TRGT_MUX_CCM_CLKO2_SYS_PLL_DIV2			BIT(24)
++#define CCM_TRGT_MUX_CCM_CLKO2_SYS_PLL_PFD0			BIT(25)
++#define CCM_TRGT_MUX_CCM_CLKO2_SYS_PLL_PFD1_DIV2		(BIT(25) | BIT(24))
++#define CCM_TRGT_MUX_CCM_CLKO2_SYS_PLL_PFD4			BIT(26)
++#define CCM_TRGT_MUX_CCM_CLKO2_AUDIO_PLL			(BIT(26) | BIT(24))
++#define CCM_TRGT_MUX_CCM_CLKO2_VIDEO_PLL			(BIT(26) | BIT(25))
++#define CCM_TRGT_MUX_CCM_CLKO2_OSC_32K				((BIT(26) | BIT(25) | BIT(24))
++
++/*
++ * See Table 5-11 in i.MX7 Solo Reference manual rev 0.1
++ * The indices must be calculated by dividing the offset by
++ * sizeof (struct ccm_target_root_ctrl) => 0x80 bytes for each index
++ */
++enum {
++	CCM_TRT_ID_ARM_A7_CLK_ROOT = 0,
++	CCM_TRT_ID_ARM_M4_CLK_ROOT = 1,
++	CCM_TRT_ID_MAIN_AXI_CLK_ROOT = 16,
++	CCM_TRT_ID_DISP_AXI_CLK_ROOT = 17,
++	CCM_TRT_ID_ENET_AXI_CLK_ROOT = 18,
++	CCM_TRT_ID_NAND_USDHC_BUS_CLK_ROOT = 19,
++	CCM_TRT_ID_AHB_CLK_ROOT = 32,
++	CCM_TRT_ID_IPG_CLK_ROOT = 33,
++	CCM_TRT_ID_DRAM_PHYM_CLK_ROOT = 48,
++	CCM_TRT_ID_DRAM_CLK_ROOT = 49,
++	CCM_TRT_ID_DRAM_PHYM_ALT_CLK_ROOT = 64,
++	CCM_TRT_ID_DRAM_ALT_CLK_ROOT = 65,
++	CCM_TRT_ID_USB_HSIC_CLK_ROOT = 66,
++	CCM_TRT_ID_LCDIF_PIXEL_CLK_ROOT = 70,
++	CCM_TRT_ID_MIPI_DSI_CLK_ROOT = 71,
++	CCM_TRT_ID_MIPI_CSI_CLK_ROOT = 72,
++	CCM_TRT_ID_MIPI_DPHY_REF_CLK_ROOT = 73,
++	CCM_TRT_ID_SAI1_CLK_ROOT = 74,
++	CCM_TRT_ID_SAI2_CLK_ROOT = 75,
++	CCM_TRT_ID_SAI3_CLK_ROOT = 76,
++	CCM_TRT_ID_ENET1_REF_CLK_ROOT = 78,
++	CCM_TRT_ID_ENET1_TIME_CLK_ROOT = 79,
++	CCM_TRT_ID_ENET_PHY_REF_CLK_ROOT = 82,
++	CCM_TRT_ID_EIM_CLK_ROOT = 83,
++	CCM_TRT_ID_NAND_CLK_ROOT = 84,
++	CCM_TRT_ID_QSPI_CLK_ROOT = 85,
++	CCM_TRT_ID_USDHC1_CLK_ROOT = 86,
++	CCM_TRT_ID_USDHC2_CLK_ROOT = 87,
++	CCM_TRT_ID_USDHC3_CLK_ROOT = 88,
++	CCM_TRT_ID_CAN1_CLK_ROOT = 89,
++	CCM_TRT_ID_CAN2_CLK_ROOT = 90,
++	CCM_TRT_ID_I2C1_CLK_ROOT = 91,
++	CCM_TRT_ID_I2C2_CLK_ROOT = 92,
++	CCM_TRT_ID_I2C3_CLK_ROOT = 93,
++	CCM_TRT_ID_I2C4_CLK_ROOT = 94,
++	CCM_TRT_ID_UART1_CLK_ROOT = 95,
++	CCM_TRT_ID_UART2_CLK_ROOT = 96,
++	CCM_TRT_ID_UART3_CLK_ROOT = 97,
++	CCM_TRT_ID_UART4_CLK_ROOT = 98,
++	CCM_TRT_ID_UART5_CLK_ROOT = 99,
++	CCM_TRT_ID_UART6_CLK_ROOT = 100,
++	CCM_TRT_ID_UART7_CLK_ROOT = 101,
++	CCM_TRT_ID_ECSPI1_CLK_ROOT = 102,
++	CCM_TRT_ID_ECSPI2_CLK_ROOT = 103,
++	CCM_TRT_ID_ECSPI3_CLK_ROOT = 104,
++	CCM_TRT_ID_ECSPI4_CLK_ROOT = 105,
++	CCM_TRT_ID_PWM1_CLK_ROOT = 106,
++	CCM_TRT_ID_PWM2_CLK_ROOT = 107,
++	CCM_TRT_ID_PWM3_CLK_ROOT = 108,
++	CCM_TRT_ID_PWM4_CLK_ROOT = 109,
++	CCM_TRT_ID_FLEXTIMER1_CLK_ROOT = 110,
++	CCM_TRT_ID_FLEXTIMER2_CLK_ROOT = 111,
++	CCM_TRT_ID_SIM1_CLK_ROOT = 112,
++	CCM_TRT_ID_SIM2_CLK_ROOT = 113,
++	CCM_TRT_ID_GPT1_CLK_ROOT = 114,
++	CCM_TRT_ID_GPT2_CLK_ROOT = 115,
++	CCM_TRT_ID_GPT3_CLK_ROOT = 116,
++	CCM_TRT_ID_GPT4_CLK_ROOT = 117,
++	CCM_TRT_ID_TRACE_CLK_ROOT = 118,
++	CCM_TRT_ID_WDOG_CLK_ROOT = 119,
++	CCM_TRT_ID_CSI_MCLK_CLK_ROOT = 120,
++	CCM_TRT_ID_AUDIO_MCLK_CLK_ROOT = 121,
++	CCM_TRT_ID_CCM_CLKO1 = 123,
++	CCM_TRT_ID_CCM_CLKO2 = 124,
++};
++
++#define CCM_MISC_VIOLATE		BIT(8)
++#define CCM_MISC_TIMEOUT		BIT(4)
++#define CCM_MISC_AUTHEN_FAIL		BIT(0)
++
++#define CCM_POST_BUSY2			BIT(31)
++#define CCM_POST_SELECT_BRANCH_A	BIT(28)
++#define CCM_POST_BUSY1			BIT(7)
++#define CCM_POST_POST_PODF(x)		((x) - 1)
++
++#define CCM_PRE_BUSY4			BIT(31)
++#define CCM_PRE_ENABLE_A		BIT(28)
++#define CCM_PRE_MUX_A(x)		(((x) - 1) << 24)
++#define CCM_PRE_BUSY3			BIT(19)
++#define CCM_PRE_PODF_A(x)		(((x) - 1) << 16)
++#define CCM_PRE_BUSY1			BIT(15)
++#define CCM_PRE_ENABLE_B		BIT(12)
++#define CCM_PRE_MUX_B(x)		(((x) - 1) << 8)
++#define CCM_PRE_BUSY0			BIT(3)
++#define CCM_PRE_POST_PODF(x)		((x) - 1)
++
++#define CCM_ACCESS_CTRL_LOCK		BIT(31)
++#define CCM_ACCESS_SEMA_ENABLE		BIT(28)
++#define CCM_ACCESS_DOM3_WHITELIST	BIT(27)
++#define CCM_ACCESS_DOM2_WHITELIST	BIT(26)
++#define CCM_ACCESS_DOM1_WHITELIST	BIT(25)
++#define CCM_ACCESS_DOM0_WHITELIST	BIT(24)
++#define CCM_ACCESS_MUTEX		BIT(20)
++#define CCM_ACCESS_OWNER_ID(x)		((x) << 16)
++#define CCM_ACCESS_DOM3_INFO(x)		((x) << 12)
++#define CCM_ACCESS_DOM2_INFO(x)		((x) << 8)
++#define CCM_ACCESS_DOM1_INFO(x)		((x) << 4)
++#define CCM_ACCESS_DOM0_INFO(x)		(x)
++
++#define CCM_PLL_CTRL_NUM	0x21
++#define CCM_CLK_GATE_CTRL_NUM	0xbf
++#define CCM_ROOT_CTRL_NUM	0x79
++
++struct ccm {
++	uint32_t ccm_gpr0;
++	uint32_t ccm_gpr0_set;
++	uint32_t ccm_gpr0_clr;
++	uint32_t ccm_grp0_tog;
++	uint32_t reserved[0x1fc];
++	struct ccm_pll_ctrl ccm_pll_ctrl[CCM_PLL_CTRL_NUM];
++	uint32_t reserved1[0xd7c];
++	struct ccm_clk_gate_ctrl ccm_clk_gate_ctrl[CCM_CLK_GATE_CTRL_NUM];
++	uint32_t reserved2[0xd04];
++	struct ccm_target_root_ctrl ccm_root_ctrl[CCM_ROOT_CTRL_NUM];
++};
++
++void imx7_clock_target_set(unsigned int id, uint32_t val);
++void imx7_clock_target_clr(unsigned int id, uint32_t val);
++void imx7_clock_gate_enable(unsigned int id, bool enable);
++
++void imx7_clock_init(void);
++
++void imx7_clock_enable_uart(unsigned int uart_id, uint32_t uart_clk_en_bits);
++void imx7_clock_disable_uart(unsigned int uart_id);
++void imx7_clock_enable_usdhc(unsigned int usdhc_id, uint32_t usdhc_clk_en_bits);
++void imx7_clock_set_wdog_clk_root_bits(uint32_t wdog_clk_root_en_bits);
++void imx7_clock_enable_wdog(unsigned int wdog_id);
++void imx7_clock_disable_wdog(unsigned int wdog_id);
++void imx7_clock_enable_usb(unsigned int usb_id);
++void imx7_clock_disable_usb(unsigned int usb_id);
++void imx7_clock_set_usb_clk_root_bits(uint32_t usb_clk_root_en_bits);
++
++#endif /* IMX_CLOCK_H */
+diff --git a/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c b/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c
+index 76c3224..fc32b91 100644
+--- a/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c
++++ b/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c
+@@ -19,7 +19,7 @@
+ #include <lib/xlat_tables/xlat_tables_defs.h>
+ #include <imx_aips.h>
+ #include <imx_caam.h>
+-#include <imx_clock.h>
++#include <imx7_clock.h>
+ #include <imx_csu.h>
+ #include <imx_gpt.h>
+ #include <imx_io_mux.h>
+@@ -221,22 +221,22 @@ static void picopi_setup_wdog_clocks(void)
+ {
+ 	uint32_t wdog_en_bits = (uint32_t)WDOG_CLK_SELECT;
+ 
+-	imx_clock_set_wdog_clk_root_bits(wdog_en_bits);
+-	imx_clock_enable_wdog(0);
+-	imx_clock_enable_wdog(1);
+-	imx_clock_enable_wdog(2);
+-	imx_clock_enable_wdog(3);
++	imx7_clock_set_wdog_clk_root_bits(wdog_en_bits);
++	imx7_clock_enable_wdog(0);
++	imx7_clock_enable_wdog(1);
++	imx7_clock_enable_wdog(2);
++	imx7_clock_enable_wdog(3);
+ }
+ 
+ static void picopi_setup_usb_clocks(void)
+ {
+ 	uint32_t usb_en_bits = (uint32_t)USB_CLK_SELECT;
+ 
+-	imx_clock_set_usb_clk_root_bits(usb_en_bits);
+-	imx_clock_enable_usb(CCM_CCGR_ID_USB_IPG);
+-	imx_clock_enable_usb(CCM_CCGR_ID_USB_PHY_480MCLK);
+-	imx_clock_enable_usb(CCM_CCGR_ID_USB_OTG1_PHY);
+-	imx_clock_enable_usb(CCM_CCGR_ID_USB_OTG2_PHY);
++	imx7_clock_set_usb_clk_root_bits(usb_en_bits);
++	imx7_clock_enable_usb(CCM_CCGR_ID_USB_IPG);
++	imx7_clock_enable_usb(CCM_CCGR_ID_USB_PHY_480MCLK);
++	imx7_clock_enable_usb(CCM_CCGR_ID_USB_OTG1_PHY);
++	imx7_clock_enable_usb(CCM_CCGR_ID_USB_OTG2_PHY);
+ }
+ /*
+  * bl2_el3_early_platform_setup()
+@@ -257,9 +257,9 @@ void bl2_el3_early_platform_setup(u_register_t arg1, u_register_t arg2,
+ 	imx_gpt_ops_init(GPT1_BASE_ADDR);
+ 
+ 	/* Initialize clocks, regulators, pin-muxes etc */
+-	imx_clock_init();
+-	imx_clock_enable_uart(4, uart5_en_bits);
+-	imx_clock_enable_usdhc(usdhc_clock_sel, USDHC_CLK_SELECT);
++	imx7_clock_init();
++	imx7_clock_enable_uart(4, uart5_en_bits);
++	imx7_clock_enable_usdhc(usdhc_clock_sel, USDHC_CLK_SELECT);
+ 	picopi_setup_system_counter();
+ 	picopi_setup_wdog_clocks();
+ 	picopi_setup_usb_clocks();
+diff --git a/plat/imx/imx7/picopi/platform.mk b/plat/imx/imx7/picopi/platform.mk
+index 6b75331..959a680 100644
+--- a/plat/imx/imx7/picopi/platform.mk
++++ b/plat/imx/imx7/picopi/platform.mk
+@@ -50,7 +50,6 @@ BL2_SOURCES		+=	common/desc_image_load.c			\
+ 				lib/optee/optee_utils.c				\
+ 				plat/imx/common/imx_aips.c			\
+ 				plat/imx/common/imx_caam.c			\
+-				plat/imx/common/imx_clock.c			\
+ 				plat/imx/common/imx_csu.c			\
+ 				plat/imx/common/imx_io_mux.c			\
+ 				plat/imx/common/imx_snvs.c			\
+diff --git a/plat/imx/imx7/warp7/platform.mk b/plat/imx/imx7/warp7/platform.mk
+index 6cd7566..dfb9de5 100644
+--- a/plat/imx/imx7/warp7/platform.mk
++++ b/plat/imx/imx7/warp7/platform.mk
+@@ -48,7 +48,6 @@ BL2_SOURCES		+=	common/desc_image_load.c			\
+ 				lib/optee/optee_utils.c				\
+ 				plat/imx/common/imx_aips.c			\
+ 				plat/imx/common/imx_caam.c			\
+-				plat/imx/common/imx_clock.c			\
+ 				plat/imx/common/imx_csu.c			\
+ 				plat/imx/common/imx_io_mux.c			\
+ 				plat/imx/common/imx_snvs.c			\
+diff --git a/plat/imx/imx7/warp7/warp7_bl2_el3_setup.c b/plat/imx/imx7/warp7/warp7_bl2_el3_setup.c
+index 0eedd21..a0af920 100644
+--- a/plat/imx/imx7/warp7/warp7_bl2_el3_setup.c
++++ b/plat/imx/imx7/warp7/warp7_bl2_el3_setup.c
+@@ -22,7 +22,7 @@
+ 
+ #include <imx_aips.h>
+ #include <imx_caam.h>
+-#include <imx_clock.h>
++#include <imx7_clock.h>
+ #include <imx_csu.h>
+ #include <imx_gpt.h>
+ #include <imx_io_mux.h>
+@@ -231,22 +231,22 @@ static void warp7_setup_wdog_clocks(void)
+ {
+ 	uint32_t wdog_en_bits = (uint32_t)WDOG_CLK_SELECT;
+ 
+-	imx_clock_set_wdog_clk_root_bits(wdog_en_bits);
+-	imx_clock_enable_wdog(0);
+-	imx_clock_enable_wdog(1);
+-	imx_clock_enable_wdog(2);
+-	imx_clock_enable_wdog(3);
++	imx7_clock_set_wdog_clk_root_bits(wdog_en_bits);
++	imx7_clock_enable_wdog(0);
++	imx7_clock_enable_wdog(1);
++	imx7_clock_enable_wdog(2);
++	imx7_clock_enable_wdog(3);
+ }
+ 
+ static void warp7_setup_usb_clocks(void)
+ {
+ 	uint32_t usb_en_bits = (uint32_t)USB_CLK_SELECT;
+ 
+-	imx_clock_set_usb_clk_root_bits(usb_en_bits);
+-	imx_clock_enable_usb(CCM_CCGR_ID_USB_IPG);
+-	imx_clock_enable_usb(CCM_CCGR_ID_USB_PHY_480MCLK);
+-	imx_clock_enable_usb(CCM_CCGR_ID_USB_OTG1_PHY);
+-	imx_clock_enable_usb(CCM_CCGR_ID_USB_OTG2_PHY);
++	imx7_clock_set_usb_clk_root_bits(usb_en_bits);
++	imx7_clock_enable_usb(CCM_CCGR_ID_USB_IPG);
++	imx7_clock_enable_usb(CCM_CCGR_ID_USB_PHY_480MCLK);
++	imx7_clock_enable_usb(CCM_CCGR_ID_USB_OTG1_PHY);
++	imx7_clock_enable_usb(CCM_CCGR_ID_USB_OTG2_PHY);
+ }
+ /*
+  * bl2_el3_early_platform_setup()
+@@ -268,10 +268,10 @@ void bl2_el3_early_platform_setup(u_register_t arg1, u_register_t arg2,
+ 	imx_gpt_ops_init(GPT1_BASE_ADDR);
+ 
+ 	/* Initialize clocks, regulators, pin-muxes etc */
+-	imx_clock_init();
+-	imx_clock_enable_uart(0, uart1_en_bits);
+-	imx_clock_enable_uart(5, uart6_en_bits);
+-	imx_clock_enable_usdhc(usdhc_clock_sel, USDHC_CLK_SELECT);
++	imx7_clock_init();
++	imx7_clock_enable_uart(0, uart1_en_bits);
++	imx7_clock_enable_uart(5, uart6_en_bits);
++	imx7_clock_enable_usdhc(usdhc_clock_sel, USDHC_CLK_SELECT);
+ 	warp7_setup_system_counter();
+ 	warp7_setup_wdog_clocks();
+ 	warp7_setup_usb_clocks();
+-- 
+2.7.4
+

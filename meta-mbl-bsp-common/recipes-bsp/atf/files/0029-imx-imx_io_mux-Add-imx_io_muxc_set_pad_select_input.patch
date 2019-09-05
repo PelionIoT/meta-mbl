@@ -1,0 +1,48 @@
+From a095040d3cb92aa6135afe199784a541f2616695 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 29 Jul 2019 14:08:19 +0100
+Subject: [PATCH 29/34] imx: imx_io_mux: Add imx_io_muxc_set_pad_select_input()
+
+Pins have individual MUX functions but, it is also the case that different
+muxed pins can be assigned to different IP blocks. The processes of
+selecting one of an array of pins for a block function is called selecting
+the input.
+
+Provide a simple wrapper around pad input selection now.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/common/imx_io_mux.c       | 8 ++++++++
+ plat/imx/imx7/include/imx_io_mux.h | 1 +
+ 2 files changed, 9 insertions(+)
+
+diff --git a/plat/imx/common/imx_io_mux.c b/plat/imx/common/imx_io_mux.c
+index 75de5d1..0ca9447 100644
+--- a/plat/imx/common/imx_io_mux.c
++++ b/plat/imx/common/imx_io_mux.c
+@@ -22,3 +22,11 @@ void imx_io_muxc_set_pad_features(uint32_t pad_feature_offset, uint32_t pad_feat
+ 
+ 	mmio_write_32(addr, pad_features);
+ }
++
++void imx_io_muxc_set_pad_select_input(uint32_t pad_select_offset, uint32_t pad_select_input)
++{
++	uintptr_t addr = (uintptr_t)(MXC_IO_MUXC_BASE + pad_select_offset);
++
++	mmio_write_32(addr, pad_select_input);
++
++}
+diff --git a/plat/imx/imx7/include/imx_io_mux.h b/plat/imx/imx7/include/imx_io_mux.h
+index 8ab197d..d6670c7 100644
+--- a/plat/imx/imx7/include/imx_io_mux.h
++++ b/plat/imx/imx7/include/imx_io_mux.h
+@@ -647,5 +647,6 @@
+ 
+ void imx_io_muxc_set_pad_alt_function(uint32_t pad_mux_offset, uint32_t alt_function);
+ void imx_io_muxc_set_pad_features(uint32_t pad_feature_offset, uint32_t pad_features);
++void imx_io_muxc_set_pad_select_input(uint32_t pad_select_offset, uint32_t pad_select_input);
+ 
+ #endif /* IMX_IO_MUX_H */
+-- 
+2.7.4
+

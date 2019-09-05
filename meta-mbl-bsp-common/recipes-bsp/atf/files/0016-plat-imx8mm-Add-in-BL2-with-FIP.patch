@@ -1,0 +1,423 @@
+From 9bff112ffeb2fc90b71d2fa892694cdd53beda79 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Thu, 30 May 2019 15:15:16 +0100
+Subject: [PATCH 16/34] plat: imx8mm: Add in BL2 with FIP
+
+Adds bl2 with FIP to the build build required for mbed Linux booting where
+we do:
+
+BootROM -> BL2 -> OPTEE -> u-boot
+
+If BUILD_BL2 is specified then BL2 will be built and BL31 will have its
+address range modified upwards to accommodate. BL31 must be loaded from a
+FIP in this case.
+
+If BUILD_BL2 is not specified then the current BL31 boot flow is unaffected
+and u-boot SPL will load and execute BL31 directly.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/imx8m/imx8mm/imx8mm_bl2_el3_setup.c       | 139 +++++++++++++++++++++
+ plat/imx/imx8m/imx8mm/imx8mm_bl2_mem_params_desc.c |  94 ++++++++++++++
+ plat/imx/imx8m/imx8mm/imx8mm_image_load.c          |   6 +-
+ plat/imx/imx8m/imx8mm/imx8mm_io_storage.c          |  10 +-
+ plat/imx/imx8m/imx8mm/include/platform_def.h       |  13 ++
+ plat/imx/imx8m/imx8mm/platform.mk                  |  54 +++++++-
+ 6 files changed, 307 insertions(+), 9 deletions(-)
+ create mode 100644 plat/imx/imx8m/imx8mm/imx8mm_bl2_el3_setup.c
+ create mode 100644 plat/imx/imx8m/imx8mm/imx8mm_bl2_mem_params_desc.c
+
+diff --git a/plat/imx/imx8m/imx8mm/imx8mm_bl2_el3_setup.c b/plat/imx/imx8m/imx8mm/imx8mm_bl2_el3_setup.c
+new file mode 100644
+index 0000000..c087cd3
+--- /dev/null
++++ b/plat/imx/imx8m/imx8mm/imx8mm_bl2_el3_setup.c
+@@ -0,0 +1,139 @@
++/*
++ * Copyright 2017-2018 NXP
++ * Copyright 2019 Arm
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <arch_helpers.h>
++#include <assert.h>
++#include <common/bl_common.h>
++#include <drivers/console.h>
++#include <common/debug.h>
++#include <context.h>
++#include <stdbool.h>
++#include <drivers/generic_delay_timer.h>
++#include <lib/mmio.h>
++#include <plat/common/platform.h>
++#include <platform_def.h>
++#include <imx8mm_private.h>
++#include <tbbr_img_def.h>
++#include <common/desc_image_load.h>
++#include <lib/optee_utils.h>
++
++#include <imx_uart.h>
++
++static void imx8mm_aips_config(void)
++{
++	/* config the AIPSTZ1 */
++	mmio_write_32(0x301f0000, 0x77777777);
++	mmio_write_32(0x301f0004, 0x77777777);
++	mmio_write_32(0x301f0040, 0x0);
++	mmio_write_32(0x301f0044, 0x0);
++	mmio_write_32(0x301f0048, 0x0);
++	mmio_write_32(0x301f004c, 0x0);
++	mmio_write_32(0x301f0050, 0x0);
++
++	/* config the AIPSTZ2 */
++	mmio_write_32(0x305f0000, 0x77777777);
++	mmio_write_32(0x305f0004, 0x77777777);
++	mmio_write_32(0x305f0040, 0x0);
++	mmio_write_32(0x305f0044, 0x0);
++	mmio_write_32(0x305f0048, 0x0);
++	mmio_write_32(0x305f004c, 0x0);
++	mmio_write_32(0x305f0050, 0x0);
++
++	/* config the AIPSTZ3 */
++	mmio_write_32(0x309f0000, 0x77777777);
++	mmio_write_32(0x309f0004, 0x77777777);
++	mmio_write_32(0x309f0040, 0x0);
++	mmio_write_32(0x309f0044, 0x0);
++	mmio_write_32(0x309f0048, 0x0);
++	mmio_write_32(0x309f004c, 0x0);
++	mmio_write_32(0x309f0050, 0x0);
++
++	/* config the AIPSTZ4 */
++	mmio_write_32(0x32df0000, 0x77777777);
++	mmio_write_32(0x32df0004, 0x77777777);
++	mmio_write_32(0x32df0040, 0x0);
++	mmio_write_32(0x32df0044, 0x0);
++	mmio_write_32(0x32df0048, 0x0);
++	mmio_write_32(0x32df004c, 0x0);
++	mmio_write_32(0x32df0050, 0x0);
++}
++
++void bl2_el3_early_platform_setup(u_register_t arg1, u_register_t arg2,
++				  u_register_t arg3, u_register_t arg4)
++{
++	int i;
++	static console_uart_t console;
++
++	/* enable CSU NS access permission */
++	for (i = 0; i < 64; i++) {
++		mmio_write_32(0x303e0000 + i * 4, 0x00ff00ff);
++	}
++
++	/* config the aips access permission */
++	imx8mm_aips_config();
++
++	console_imx_uart_register(IMX_BOOT_UART_BASE, IMX_BOOT_UART_CLK_IN_HZ,
++		IMX_CONSOLE_BAUDRATE, &console);
++
++	/* Open handles to a FIP image */
++	plat_imx8mm_io_setup();
++
++}
++
++void bl2_el3_plat_arch_setup(void)
++{
++}
++
++void bl2_platform_setup(void)
++{
++	generic_delay_timer_init();
++
++	/* select the CKIL source to 32K OSC */
++	mmio_write_32(0x30360124, 0x1);
++}
++
++int bl2_plat_handle_post_image_load(unsigned int image_id)
++{
++	int err = 0;
++	bl_mem_params_node_t *bl_mem_params = get_bl_mem_params_node(image_id);
++	bl_mem_params_node_t *pager_mem_params = NULL;
++	bl_mem_params_node_t *paged_mem_params = NULL;
++
++	assert(bl_mem_params);
++
++	switch (image_id) {
++	case BL32_IMAGE_ID:
++		pager_mem_params = get_bl_mem_params_node(BL32_EXTRA1_IMAGE_ID);
++		assert(pager_mem_params);
++
++		paged_mem_params = get_bl_mem_params_node(BL32_EXTRA2_IMAGE_ID);
++		assert(paged_mem_params);
++
++		err = parse_optee_header(&bl_mem_params->ep_info,
++					 &pager_mem_params->image_info,
++					 &paged_mem_params->image_info);
++		if (err != 0)
++			WARN("OPTEE header parse error.\n");
++
++		break;
++	default:
++		/* Do nothing in default case */
++		break;
++	}
++
++	return err;
++}
++
++unsigned int plat_get_syscnt_freq2(void)
++{
++	return COUNTER_FREQUENCY;
++}
++
++void bl2_plat_runtime_setup(void)
++{
++	return;
++}
+diff --git a/plat/imx/imx8m/imx8mm/imx8mm_bl2_mem_params_desc.c b/plat/imx/imx8m/imx8mm/imx8mm_bl2_mem_params_desc.c
+new file mode 100644
+index 0000000..437fa6c
+--- /dev/null
++++ b/plat/imx/imx8m/imx8mm/imx8mm_bl2_mem_params_desc.c
+@@ -0,0 +1,94 @@
++/*
++ * Copyright (c) 2018, ARM Limited and Contributors. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <arch.h>
++#include <common/desc_image_load.h>
++#include <plat/common/platform.h>
++#include <platform_def.h>
++
++static bl_mem_params_node_t bl2_mem_params_descs[] = {
++	{
++		.image_id = BL31_IMAGE_ID,
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
++				      entry_point_info_t,
++				      SECURE | EXECUTABLE | EP_FIRST_EXE),
++		.ep_info.pc = BL31_BASE,
++		.ep_info.spsr = SPSR_64(MODE_EL3, MODE_SP_ELX,
++					DISABLE_ALL_EXCEPTIONS),
++		SET_STATIC_PARAM_HEAD(image_info, PARAM_EP, VERSION_2, image_info_t,
++				      IMAGE_ATTRIB_PLAT_SETUP),
++		.image_info.image_base = BL31_BASE,
++		.image_info.image_max_size = BL31_LIMIT - BL31_BASE,
++		.next_handoff_image_id = INVALID_IMAGE_ID,
++	},
++	{
++		.image_id = BL32_IMAGE_ID,
++
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
++				      entry_point_info_t,
++				      SECURE | EXECUTABLE),
++		.ep_info.pc = BL32_BASE,
++
++		SET_STATIC_PARAM_HEAD(image_info, PARAM_EP, VERSION_2,
++				      image_info_t, 0),
++
++		.image_info.image_base = BL32_BASE,
++		.image_info.image_max_size = BL32_LIMIT - BL32_BASE,
++
++		.next_handoff_image_id = BL33_IMAGE_ID,
++	},
++	{
++		.image_id = BL32_EXTRA1_IMAGE_ID,
++
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
++				      entry_point_info_t,
++				      SECURE | NON_EXECUTABLE),
++
++		SET_STATIC_PARAM_HEAD(image_info, PARAM_EP, VERSION_2,
++				      image_info_t, IMAGE_ATTRIB_SKIP_LOADING),
++		.image_info.image_base = BL32_BASE,
++		.image_info.image_max_size =  BL32_LIMIT - BL32_BASE,
++
++		.next_handoff_image_id = INVALID_IMAGE_ID,
++	},
++	{
++		/* This is a zero sized image so we don't set base or size */
++		.image_id = BL32_EXTRA2_IMAGE_ID,
++
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP,
++				      VERSION_2, entry_point_info_t,
++				      SECURE | NON_EXECUTABLE),
++
++		SET_STATIC_PARAM_HEAD(image_info, PARAM_EP,
++				      VERSION_2, image_info_t,
++				      IMAGE_ATTRIB_SKIP_LOADING),
++		.next_handoff_image_id = INVALID_IMAGE_ID,
++	},
++	{
++		.image_id = BL33_IMAGE_ID,
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
++				      entry_point_info_t,
++				      NON_SECURE | EXECUTABLE),
++		# ifdef PRELOADED_BL33_BASE
++			.ep_info.pc = PLAT_NS_IMAGE_OFFSET,
++
++			SET_STATIC_PARAM_HEAD(image_info, PARAM_EP,
++					      VERSION_2, image_info_t,
++					      IMAGE_ATTRIB_SKIP_LOADING),
++		# else
++			.ep_info.pc = PLAT_NS_IMAGE_OFFSET,
++
++			SET_STATIC_PARAM_HEAD(image_info, PARAM_EP,
++					      VERSION_2, image_info_t, 0),
++			.image_info.image_base = PLAT_NS_IMAGE_OFFSET,
++			.image_info.image_max_size = PLAT_NS_IMAGE_SIZE,
++		# endif /* PRELOADED_BL33_BASE */
++
++		.next_handoff_image_id = INVALID_IMAGE_ID,
++	}
++};
++
++REGISTER_BL_IMAGE_DESCS(bl2_mem_params_descs);
+diff --git a/plat/imx/imx8m/imx8mm/imx8mm_image_load.c b/plat/imx/imx8m/imx8mm/imx8mm_image_load.c
+index 162ca6d..4f8806e 100644
+--- a/plat/imx/imx8m/imx8mm/imx8mm_image_load.c
++++ b/plat/imx/imx8m/imx8mm/imx8mm_image_load.c
+@@ -4,10 +4,10 @@
+  * SPDX-License-Identifier: BSD-3-Clause
+  */
+ 
+-#include <bl_common.h>
+-#include <desc_image_load.h>
+-#include <platform.h>
++#include <common/bl_common.h>
++#include <plat/common/platform.h>
+ #include <platform_def.h>
++#include <common/desc_image_load.h>
+ 
+ void plat_flush_next_bl_params(void)
+ {
+diff --git a/plat/imx/imx8m/imx8mm/imx8mm_io_storage.c b/plat/imx/imx8m/imx8mm/imx8mm_io_storage.c
+index 5ef6705..559339b 100644
+--- a/plat/imx/imx8m/imx8mm/imx8mm_io_storage.c
++++ b/plat/imx/imx8m/imx8mm/imx8mm_io_storage.c
+@@ -5,13 +5,13 @@
+  */
+ 
+ #include <assert.h>
+-#include <firmware_image_package.h>
++#include <tools_share/firmware_image_package.h>
+ #include <platform_def.h>
+-#include <io_fip.h>
+-#include <io_driver.h>
+-#include <io_memmap.h>
++#include <drivers/io/io_fip.h>
++#include <drivers/io/io_driver.h>
++#include <drivers/io/io_memmap.h>
+ #include <tbbr_img_def.h>
+-#include <utils_def.h>
++#include <lib/utils_def.h>
+ 
+ static const io_dev_connector_t *fip_dev_con;
+ static uintptr_t fip_dev_handle;
+diff --git a/plat/imx/imx8m/imx8mm/include/platform_def.h b/plat/imx/imx8m/imx8mm/include/platform_def.h
+index 7ac0a04..f1d8879 100644
+--- a/plat/imx/imx8m/imx8mm/include/platform_def.h
++++ b/plat/imx/imx8m/imx8mm/include/platform_def.h
+@@ -4,6 +4,8 @@
+  * SPDX-License-Identifier: BSD-3-Clause
+  */
+ 
++#include <common/tbbr/tbbr_img_def.h>
++
+ #define PLATFORM_LINKER_FORMAT		"elf64-littleaarch64"
+ #define PLATFORM_LINKER_ARCH		aarch64
+ 
+@@ -29,8 +31,19 @@
+ #define PLAT_WAIT_RET_STATE		U(1)
+ #define PLAT_STOP_OFF_STATE		U(3)
+ 
++#if defined(BUILD_BL2)
++#define BL2_BASE			U(0x920000)
++#define BL2_LIMIT			U(0x940000)
++#define BL31_BASE			U(0x900000)
++#define BL31_LIMIT			U(0x920000)
++#define FIP_BASE			U(0x40310000)
++#define FIP_SIZE			U(0x000100000)
++#define FIP_LIMIT			U(FIP_BASE + FIP_SIZE)
++#else
+ #define BL31_BASE			U(0x920000)
+ #define BL31_LIMIT			U(0x940000)
++#endif
++
+ #define BL32_BASE			U(0xbe000000)
+ #define BL32_LIMIT			U(0xc0000000)
+ 
+diff --git a/plat/imx/imx8m/imx8mm/platform.mk b/plat/imx/imx8m/imx8mm/platform.mk
+index dca1598..e86936f 100644
+--- a/plat/imx/imx8m/imx8mm/platform.mk
++++ b/plat/imx/imx8m/imx8mm/platform.mk
+@@ -6,7 +6,9 @@
+ 
+ PLAT_INCLUDES		:=	-Iplat/imx/common/include		\
+ 				-Iplat/imx/imx8m/include		\
+-				-Iplat/imx/imx8m/imx8mm/include
++				-Iplat/imx/imx8m/imx8mm/include		\
++				-Idrivers/imx/usdhc			\
++				-Iinclude/common/tbbr
+ 
+ IMX_GIC_SOURCES		:=	drivers/arm/gic/v3/gicv3_helpers.c	\
+ 				drivers/arm/gic/v3/arm_gicv3_common.c   \
+@@ -35,6 +37,56 @@ BL31_SOURCES		+=	plat/imx/common/imx8_helpers.S			\
+ 				drivers/delay_timer/generic_delay_timer.c	\
+ 				${IMX_GIC_SOURCES}
+ 
++ifneq (${BUILD_BL2},)
++BL2_SOURCES		+=	common/desc_image_load.c			\
++				plat/imx/common/imx8_helpers.S			\
++				plat/imx/common/imx_uart_console.S		\
++				plat/imx/imx8m/imx8mm/imx8mm_bl2_el3_setup.c	\
++				plat/imx/imx8m/imx8mm/gpc.c			\
++				plat/common/plat_psci_common.c			\
++				lib/xlat_tables/aarch64/xlat_tables.c		\
++				lib/xlat_tables/xlat_tables_common.c		\
++				lib/cpus/aarch64/cortex_a53.S			\
++				drivers/console/aarch64/console.S		\
++				drivers/delay_timer/delay_timer.c		\
++				drivers/delay_timer/generic_delay_timer.c	\
++				${PLAT_GIC_SOURCES}				\
++				${PLAT_DRAM_SOURCES}				\
++				drivers/mmc/mmc.c				\
++				drivers/io/io_block.c				\
++				drivers/io/io_fip.c				\
++				drivers/io/io_memmap.c				\
++				drivers/io/io_storage.c				\
++				drivers/imx/usdhc/imx_usdhc.c			\
++				plat/imx/imx8m/imx8mm/imx8mm_bl2_mem_params_desc.c	\
++				plat/imx/imx8m/imx8mm/imx8mm_io_storage.c		\
++				plat/imx/imx8m/imx8mm/imx8mm_image_load.c		\
++				lib/optee/optee_utils.c
++endif
++
++# Add the build options to pack BLx images and kernel device tree
++# in the FIP if the platform requires.
++ifneq ($(BL2),)
++RESET_TO_BL31		:=	0
++$(eval $(call TOOL_ADD_PAYLOAD,${BUILD_PLAT}/tb_fw.crt,--tb-fw-cert))
++endif
++ifneq ($(BL32_EXTRA1),)
++$(eval $(call TOOL_ADD_IMG,BL32_EXTRA1,--tos-fw-extra1))
++endif
++ifneq ($(BL32_EXTRA2),)
++$(eval $(call TOOL_ADD_IMG,BL32_EXTRA2,--tos-fw-extra2))
++endif
++ifneq ($(HW_CONFIG),)
++$(eval $(call TOOL_ADD_IMG,HW_CONFIG,--hw-config))
++endif
++
++ifneq (${BUILD_BL2},)
++$(eval $(call add_define,BUILD_BL2))
++LOAD_IMAGE_V2		:=	1
++# Non-TF Boot ROM
++BL2_AT_EL3		:=	1
++endif
++
+ ifneq (${SPD},none)
+ $(eval $(call add_define,TEE_IMX8))
+ endif
+-- 
+2.7.4
+

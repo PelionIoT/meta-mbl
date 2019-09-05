@@ -1,0 +1,123 @@
+From 0e76f4e9ae1fbcb0a5578fcc83cd54581a3d4f1d Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Wed, 7 Aug 2019 14:25:23 +0800
+Subject: [PATCH 32/34] drivers: imx: mxc_usdhc: Add enhencement for IMX8
+
+- Support SD CMD8 because it does not have data operation, while
+EMMC CMD8 do.
+
+- Ehence clock divider calculation.
+
+- Support 1bit bus width in driver.
+
+- A delay workaround for imx8 is added, otherwise, cmd6 fails. It may
+be due to mmc config from SPL. We shall remove this after removing
+SPL.
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+Change-Id: I0fc22caf85606b91a1591775da0c54d5b5d3eb39
+---
+ drivers/imx/usdhc/imx_usdhc.c | 34 ++++++++++++++++++++++++++--------
+ drivers/imx/usdhc/imx_usdhc.h |  2 ++
+ 2 files changed, 28 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/imx/usdhc/imx_usdhc.c b/drivers/imx/usdhc/imx_usdhc.c
+index 07f55b7..efe6eed 100644
+--- a/drivers/imx/usdhc/imx_usdhc.c
++++ b/drivers/imx/usdhc/imx_usdhc.c
+@@ -48,7 +48,7 @@ static void imx_usdhc_set_clk(int clk)
+ 	while (sdhc_clk / (16 * pre_div) > clk && pre_div < 256)
+ 		pre_div *= 2;
+ 
+-	while (sdhc_clk / div > clk && div < 16)
++	while (sdhc_clk / div >= clk && div < 16)
+ 		div++;
+ 
+ 	pre_div >>= 1;
+@@ -114,6 +114,8 @@ static int imx_usdhc_send_cmd(struct mmc_cmd *cmd)
+ 	unsigned int state, flags = INTSTATEN_CC | INTSTATEN_CTOE;
+ 	unsigned int cmd_retries = 0;
+ 
++	/* Add temp delay for imx8, otherwise there is error for cmd6 and cmd17 */
++	udelay(5000);
+ 	assert(cmd);
+ 
+ 	/* clear all irq status */
+@@ -137,8 +139,12 @@ static int imx_usdhc_send_cmd(struct mmc_cmd *cmd)
+ 	case MMC_CMD(18):
+ 		multiple = 1;
+ 		/* fall thru for read op */
+-	case MMC_CMD(17):
+ 	case MMC_CMD(8):
++		/* SD CMD8 is an op without data, skip data flag */
++		if (cmd->cmd_idx == MMC_CMD(8) &&
++		    imx_usdhc_params.mmc_dev_type != MMC_IS_EMMC)
++			break;
++	case MMC_CMD(17):
+ 		mixctl |= MIXCTRL_DTDSEL;
+ 		data = 1;
+ 		break;
+@@ -252,15 +258,26 @@ out:
+ static int imx_usdhc_set_ios(unsigned int clk, unsigned int width)
+ {
+ 	uintptr_t reg_base = imx_usdhc_params.reg_base;
++	uint32_t wvalue;
+ 
+ 	imx_usdhc_set_clk(clk);
+ 
+-	if (width == MMC_BUS_WIDTH_4)
+-		mmio_clrsetbits32(reg_base + PROTCTRL, PROTCTRL_WIDTH_MASK,
+-				  PROTCTRL_WIDTH_4);
+-	else if (width == MMC_BUS_WIDTH_8)
+-		mmio_clrsetbits32(reg_base + PROTCTRL, PROTCTRL_WIDTH_MASK,
+-				  PROTCTRL_WIDTH_8);
++	switch (width) {
++	case MMC_BUS_WIDTH_8:
++		wvalue = PROTCTRL_WIDTH_8;
++		break;
++	case MMC_BUS_WIDTH_4:
++		wvalue = PROTCTRL_WIDTH_4;
++		break;
++	case MMC_BUS_WIDTH_1:
++		wvalue = PROTCTRL_WIDTH_1;
++		break;
++	default:
++		ERROR("imx_usdhc mmc invalid bus width %d.\n", width);
++		return -EPERM;
++	}
++	mmio_clrsetbits32(reg_base + PROTCTRL, PROTCTRL_WIDTH_MASK,
++			  wvalue);
+ 
+ 	return 0;
+ }
+@@ -297,6 +314,7 @@ void imx_usdhc_init(imx_usdhc_params_t *params,
+ 		(params->bus_width == MMC_BUS_WIDTH_8)));
+ 
+ 	memcpy(&imx_usdhc_params, params, sizeof(imx_usdhc_params_t));
++	imx_usdhc_params.mmc_dev_type = mmc_dev_info->mmc_dev_type;
+ 	mmc_init(&imx_usdhc_ops, params->clk_rate, params->bus_width,
+ 		 params->flags, mmc_dev_info);
+ }
+diff --git a/drivers/imx/usdhc/imx_usdhc.h b/drivers/imx/usdhc/imx_usdhc.h
+index e063316..e1d5e45 100644
+--- a/drivers/imx/usdhc/imx_usdhc.h
++++ b/drivers/imx/usdhc/imx_usdhc.h
+@@ -14,6 +14,7 @@ typedef struct imx_usdhc_params {
+ 	int		clk_rate;
+ 	int		bus_width;
+ 	unsigned int	flags;
++	enum mmc_device_type	mmc_dev_type;
+ } imx_usdhc_params_t;
+ 
+ void imx_usdhc_init(imx_usdhc_params_t *params,
+@@ -46,6 +47,7 @@ void imx_usdhc_init(imx_usdhc_params_t *params,
+ 
+ #define PROTCTRL		0x028
+ #define PROTCTRL_LE		BIT(5)
++#define PROTCTRL_WIDTH_1	0
+ #define PROTCTRL_WIDTH_4	BIT(1)
+ #define PROTCTRL_WIDTH_8	BIT(2)
+ #define PROTCTRL_WIDTH_MASK	0x6
+-- 
+2.7.4
+

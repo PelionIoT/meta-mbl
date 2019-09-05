@@ -1,0 +1,31 @@
+From b7c778dc5a4927e738156435ef4c3b3a6d5a0961 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Tue, 9 Jul 2019 00:04:29 +0100
+Subject: [PATCH 20/34] imx7: imx_regs: Define the number of AIPS blocks to
+ configure
+
+In order to make the AIPS configuration code more portable between i.MX6
+and i.MX7 we need to define the number of AIPS blocks to work with.
+
+Do that now for i.MX7.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/imx7/include/imx_regs.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/plat/imx/imx7/include/imx_regs.h b/plat/imx/imx7/include/imx_regs.h
+index 3c7e20f..99b4cbd 100644
+--- a/plat/imx/imx7/include/imx_regs.h
++++ b/plat/imx/imx7/include/imx_regs.h
+@@ -30,6 +30,7 @@
+ #define AIPS2_BASE			0x30400000	/* AIPS2 */
+ #define AIPS3_BASE			0x30800000	/* AIPS3 */
+ #define AIPS4_BASE			0x30c00000	/* AIPS4 */
++#define AIPS_NUM_BLOCKS			0x03
+ 
+ /* ARM peripherals like GIC */
+ #define ARM_PERIPHERAL_GIC_BASE		0x31000000	/* GIC */
+-- 
+2.7.4
+

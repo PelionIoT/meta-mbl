@@ -1,0 +1,129 @@
+From c3eddcf1cbbb15dea406013295ca0b679ad18293 Mon Sep 17 00:00:00 2001
+From: "Ying-Chun Liu (PaulLiu)" <paulliu@debian.org>
+Date: Mon, 25 Feb 2019 16:05:22 +0800
+Subject: [PATCH 06/34] plat: picopi: Rebase to latest master branch with
+ enabling MULTI_CONSOLE_API
+
+In this commit we rebase picopi to latest master branch. We need to
+specify some include with full path to avoid FTBFS. Also we start
+using MULTI_CONSOLE_API.
+
+Signed-off-by: Ying-Chun Liu (PaulLiu) <paulliu@debian.org>
+---
+ plat/imx/imx7/picopi/picopi_bl2_el3_setup.c       | 16 +++++++++++-----
+ plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c |  4 ++--
+ plat/imx/imx7/picopi/picopi_image_load.c          |  4 ++--
+ plat/imx/imx7/picopi/picopi_io_storage.c          |  2 +-
+ plat/imx/imx7/picopi/platform.mk                  |  4 ++++
+ 5 files changed, 20 insertions(+), 10 deletions(-)
+
+diff --git a/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c b/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c
+index 3b98eb1..54fd58b 100644
+--- a/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c
++++ b/plat/imx/imx7/picopi/picopi_bl2_el3_setup.c
+@@ -6,10 +6,10 @@
+ 
+ #include <arch_helpers.h>
+ #include <assert.h>
+-#include <bl_common.h>
++#include <common/bl_common.h>
+ #include <console.h>
+-#include <debug.h>
+-#include <desc_image_load.h>
++#include <common/debug.h>
++#include <common/desc_image_load.h>
+ #include <mmc.h>
+ #include <mmio.h>
+ #include <optee_utils.h>
+@@ -247,6 +247,8 @@ void bl2_el3_early_platform_setup(u_register_t arg1, u_register_t arg2,
+ {
+ 	uint32_t uart5_en_bits = (uint32_t)UART5_CLK_SELECT;
+ 	uint32_t usdhc_clock_sel = PLAT_PICOPI_SD - 1;
++	static console_imx_uart_t console;
++	int console_scope = CONSOLE_FLAG_BOOT | CONSOLE_FLAG_RUNTIME;
+ 
+ 	/* Initialize the AIPS */
+ 	imx_aips_init();
+@@ -266,8 +268,12 @@ void bl2_el3_early_platform_setup(u_register_t arg1, u_register_t arg2,
+ 	picopi_setup_pinmux();
+ 
+ 	/* Init UART, storage and friends */
+-	console_init(PLAT_PICOPI_BOOT_UART_BASE, PLAT_PICOPI_BOOT_UART_CLK_IN_HZ,
+-		     PLAT_PICOPI_CONSOLE_BAUDRATE);
++	console_imx_uart_register(PLAT_PICOPI_BOOT_UART_BASE,
++				  PLAT_PICOPI_BOOT_UART_CLK_IN_HZ,
++				  PLAT_PICOPI_CONSOLE_BAUDRATE,
++				  &console);
++	console_set_scope(&console.console, console_scope);
++
+ 	picopi_usdhc_setup();
+ 
+ 	/* Open handles to persistent storage */
+diff --git a/plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c b/plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c
+index 19861af..d070d51 100644
+--- a/plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c
++++ b/plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c
+@@ -4,8 +4,8 @@
+  * SPDX-License-Identifier: BSD-3-Clause
+  */
+ 
+-#include <bl_common.h>
+-#include <desc_image_load.h>
++#include <common/bl_common.h>
++#include <common/desc_image_load.h>
+ #include <platform.h>
+ #include <platform_def.h>
+ 
+diff --git a/plat/imx/imx7/picopi/picopi_image_load.c b/plat/imx/imx7/picopi/picopi_image_load.c
+index 1e3a2b0..47459b8 100644
+--- a/plat/imx/imx7/picopi/picopi_image_load.c
++++ b/plat/imx/imx7/picopi/picopi_image_load.c
+@@ -4,8 +4,8 @@
+  * SPDX-License-Identifier: BSD-3-Clause
+  */
+ 
+-#include <bl_common.h>
+-#include <desc_image_load.h>
++#include <common/bl_common.h>
++#include <common/desc_image_load.h>
+ #include <platform.h>
+ 
+ void plat_flush_next_bl_params(void)
+diff --git a/plat/imx/imx7/picopi/picopi_io_storage.c b/plat/imx/imx7/picopi/picopi_io_storage.c
+index 327e440..1df44d1 100644
+--- a/plat/imx/imx7/picopi/picopi_io_storage.c
++++ b/plat/imx/imx7/picopi/picopi_io_storage.c
+@@ -4,7 +4,7 @@
+  * SPDX-License-Identifier: BSD-3-Clause
+  */
+ #include <assert.h>
+-#include <debug.h>
++#include <common/debug.h>
+ #include <mmc.h>
+ #include <firmware_image_package.h>
+ #include <io_block.h>
+diff --git a/plat/imx/imx7/picopi/platform.mk b/plat/imx/imx7/picopi/platform.mk
+index 81d365e..6b75331 100644
+--- a/plat/imx/imx7/picopi/platform.mk
++++ b/plat/imx/imx7/picopi/platform.mk
+@@ -61,6 +61,7 @@ BL2_SOURCES		+=	common/desc_image_load.c			\
+ 				plat/imx/imx7/picopi/picopi_bl2_mem_params_desc.c \
+ 				plat/imx/imx7/picopi/picopi_io_storage.c		\
+ 				plat/imx/imx7/picopi/picopi_image_load.c		\
++				plat/imx/common/aarch32/imx_uart_console.S	\
+ 				${XLAT_TABLES_LIB_SRCS}
+ 
+ ifneq (${TRUSTED_BOARD_BOOT},0)
+@@ -120,6 +121,9 @@ SEPARATE_CODE_AND_RODATA	:= 1
+ # Use Coherent memory
+ USE_COHERENT_MEM		:= 1
+ 
++# Use multi console API
++MULTI_CONSOLE_API               := 1
++
+ # PLAT_PICOPI_UART
+ PLAT_PICOPI_UART			:=5
+ $(eval $(call add_define,PLAT_PICOPI_UART))
+-- 
+2.7.4
+

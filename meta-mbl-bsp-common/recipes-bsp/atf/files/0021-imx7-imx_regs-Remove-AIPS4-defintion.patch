@@ -1,0 +1,28 @@
+From d4e5de4cd5f74775add5bc092b356a34783efcad Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Tue, 9 Jul 2019 00:06:17 +0100
+Subject: [PATCH 21/34] imx7: imx_regs: Remove AIPS4 defintion
+
+In the specification the area is marked as reserved not as AIPS4. Fix the
+error by subtracting the definition of AIPS4 now.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/imx7/include/imx_regs.h | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/plat/imx/imx7/include/imx_regs.h b/plat/imx/imx7/include/imx_regs.h
+index 99b4cbd..1150f44 100644
+--- a/plat/imx/imx7/include/imx_regs.h
++++ b/plat/imx/imx7/include/imx_regs.h
+@@ -29,7 +29,6 @@
+ #define AIPS1_BASE			0x30000000	/* AIPS1 */
+ #define AIPS2_BASE			0x30400000	/* AIPS2 */
+ #define AIPS3_BASE			0x30800000	/* AIPS3 */
+-#define AIPS4_BASE			0x30c00000	/* AIPS4 */
+ #define AIPS_NUM_BLOCKS			0x03
+ 
+ /* ARM peripherals like GIC */
+-- 
+2.7.4
+

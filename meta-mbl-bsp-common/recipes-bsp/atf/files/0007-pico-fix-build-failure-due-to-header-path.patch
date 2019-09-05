@@ -1,0 +1,30 @@
+From b4b62b411ac267699f71b7241fed35a734a277b7 Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Thu, 28 Feb 2019 11:37:48 +0800
+Subject: [PATCH 07/34] pico: fix build failure due to header path
+
+We need to specify include path with full path.
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+---
+ plat/imx/imx7/picopi/picopi_trusted_boot.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/plat/imx/imx7/picopi/picopi_trusted_boot.c b/plat/imx/imx7/picopi/picopi_trusted_boot.c
+index af8430b..7658596 100644
+--- a/plat/imx/imx7/picopi/picopi_trusted_boot.c
++++ b/plat/imx/imx7/picopi/picopi_trusted_boot.c
+@@ -4,8 +4,8 @@
+  * SPDX-License-Identifier: BSD-3-Clause
+  */
+ 
+-#include <debug.h>
+-#include <platform.h>
++#include <common/debug.h>
++#include <plat/common/platform.h>
+ 
+ extern char picopi_rotpk_hash[], picopi_rotpk_hash_end[];
+ 
+-- 
+2.7.4
+

@@ -1,0 +1,32 @@
+From a6182dfb9fbdedb44c0213e2a609f31955cd5105 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Tue, 9 Jul 2019 00:29:18 +0100
+Subject: [PATCH 22/34] imx: imx_aips: Iterate over number of elements defined
+ not calculated
+
+This patch allows a value defined in imx_regs.h to indicate how many
+elements ought to be iterated over to configure AIPS blocks.
+
+This way we can have differentiation between i.MX6ULL and i.MX6UL which
+contain respectively three and two AIPS blocks.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ plat/imx/common/imx_aips.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/plat/imx/common/imx_aips.c b/plat/imx/common/imx_aips.c
+index 532d9c0..17b1d60 100644
+--- a/plat/imx/common/imx_aips.c
++++ b/plat/imx/common/imx_aips.c
+@@ -52,6 +52,6 @@ void imx_aips_init(void)
+ 		(struct aipstz_regs *)(AIPS3_BASE + AIPSTZ_CONFIG_OFFSET),
+ 	};
+ 
+-	for (i = 0; i < ARRAY_SIZE(aips_regs); i++)
++	for (i = 0; i < AIPS_NUM_BLOCKS; i++)
+ 		imx_aips_set_default_access(aips_regs[i]);
+ }
+-- 
+2.7.4
+

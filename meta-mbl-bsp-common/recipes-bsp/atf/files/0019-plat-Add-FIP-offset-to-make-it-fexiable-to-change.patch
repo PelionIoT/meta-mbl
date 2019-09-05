@@ -1,0 +1,75 @@
+From 17e93a8fbf2e0925b23151fcb4a7cf1e2a1130f2 Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Fri, 19 Jul 2019 17:38:17 +0800
+Subject: [PATCH 19/34] plat: Add FIP offset to make it fexiable to change
+
+Add FIP_ROM_OFFSET to make it fexiable to be changed in build time.
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+Change-Id: I0dd65251de6b1280d0784b3cc4bae8a5dcf67fe0
+---
+ Makefile                                    | 1 +
+ make_helpers/defaults.mk                    | 3 +++
+ plat/imx/imx7/picopi/include/platform_def.h | 4 ++--
+ plat/imx/imx7/warp7/include/platform_def.h  | 4 ++--
+ 4 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 1078ef5..5855d97 100644
+--- a/Makefile
++++ b/Makefile
+@@ -718,6 +718,7 @@ $(eval $(call add_define,USE_TBBR_DEFS))
+ $(eval $(call add_define,WARMBOOT_ENABLE_DCACHE_EARLY))
+ $(eval $(call add_define,BL2_AT_EL3))
+ $(eval $(call add_define,BL2_IN_XIP_MEM))
++$(eval $(call add_define,FIP_ROM_OFFSET))
+ 
+ # Define the EL3_PAYLOAD_BASE flag only if it is provided.
+ ifdef EL3_PAYLOAD_BASE
+diff --git a/make_helpers/defaults.mk b/make_helpers/defaults.mk
+index 6becf80..289542e 100644
+--- a/make_helpers/defaults.mk
++++ b/make_helpers/defaults.mk
+@@ -109,6 +109,9 @@ ERROR_DEPRECATED		:= 0
+ # Fault injection support
+ FAULT_INJECTION_SUPPORT		:= 0
+ 
++# Default byte offset that FIP is on eMMC/FLASH/etc
++FIP_ROM_OFFSET			:= 0x100000
++
+ # Byte alignment that each component in FIP is aligned to
+ FIP_ALIGN			:= 0
+ 
+diff --git a/plat/imx/imx7/picopi/include/platform_def.h b/plat/imx/imx7/picopi/include/platform_def.h
+index 41f7585..92107a2 100644
+--- a/plat/imx/imx7/picopi/include/platform_def.h
++++ b/plat/imx/imx7/picopi/include/platform_def.h
+@@ -98,8 +98,8 @@
+ #define PICOPI_FIP_BASE			(DRAM_BASE)
+ #define PICOPI_FIP_LIMIT			(PICOPI_FIP_BASE + PICOPI_FIP_SIZE)
+ 
+-/* Define FIP image location at 1MB offset */
+-#define PICOPI_FIP_MMC_BASE		(1024 * 1024)
++/* Define FIP image location on eMMC */
++#define PICOPI_FIP_MMC_BASE		FIP_ROM_OFFSET
+ 
+ /* Define the absolute location of DTB 0x83000000 - 0x83100000 */
+ #define PICOPI_DTB_SIZE			0x00100000
+diff --git a/plat/imx/imx7/warp7/include/platform_def.h b/plat/imx/imx7/warp7/include/platform_def.h
+index d58382f..46cbdc2 100644
+--- a/plat/imx/imx7/warp7/include/platform_def.h
++++ b/plat/imx/imx7/warp7/include/platform_def.h
+@@ -98,8 +98,8 @@
+ #define WARP7_FIP_BASE			(DRAM_BASE)
+ #define WARP7_FIP_LIMIT			(WARP7_FIP_BASE + WARP7_FIP_SIZE)
+ 
+-/* Define FIP image location at 1MB offset */
+-#define WARP7_FIP_MMC_BASE		(1024 * 1024)
++/* Define FIP image location on eMMC */
++#define WARP7_FIP_MMC_BASE		FIP_ROM_OFFSET
+ 
+ /* Define the absolute location of DTB 0x83000000 - 0x83100000 */
+ #define WARP7_DTB_SIZE			0x00100000
+-- 
+2.7.4
+

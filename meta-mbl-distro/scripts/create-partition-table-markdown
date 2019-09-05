@@ -88,14 +88,10 @@ def get_name_col(d, part_name, bank):
     """
     label_str = ""
     name_str = ""
-    if part_name == "WKS_BOOTLOADER1" and int(
-        get_var_for_part(d, "IS_BL2", part_name, "0")
-    ):
-        name_str = "BL2"
-    elif part_name == "WKS_BOOTLOADER2" and int(
-        get_var_for_part(d, "IS_BL3", part_name, "0")
-    ):
-        name_str = "BL3"
+    if part_name == "WKS_BOOTLOADER1":
+        name_str = "Bootloader slot 1"
+    elif part_name == "WKS_BOOTLOADER2":
+        name_str = "Bootloader slot 2"
     elif part_name == "BANK_AND_UPDATE_STATE":
         name_str = "Bank/Update state"
     else:
@@ -162,6 +158,28 @@ def get_notes_col(d, part_name, bank):
     Get the content of the "Notes" table cell for the given partition name and
     bank.
     """
+    if part_name == "WKS_BOOTLOADER1" and int(
+        get_var_for_part(d, "IS_BL2", part_name, "0")
+    ):
+        return "Contains bootloader component 1"
+    if part_name == "WKS_BOOTLOADER2" and int(
+        get_var_for_part(d, "IS_BL3", part_name, "0")
+    ):
+        if bank == 1:
+            return "Contains bootloader component 2"
+        else:
+            return "Unused"
+    if part_name == "BANK_AND_UPDATE_STATE":
+        return "Unused"
+    if part_name == "BOOT":
+        if bank == 2 or not int(get_var_for_part(d, "SKIP", "WKS_BOOTLOADER_FS", "1")):
+            return "Unused"
+        else:
+            return "Contains the kernel"
+    if part_name == "NON_FACTORY_CONFIG" and bank == 2:
+        return "Unused"
+    if part_name == "WKS_BOOTLOADER_FS":
+        return "Contains bootloader component 1 and the kernel"
     return "-"
 
 
@@ -286,14 +304,20 @@ def print_table(table):
     """
     Print the partition Markdown table to stdout.
     """
+    # Make each column as wide as the widest string in that column...
     col_widths = [len(max(col, key=len)) for col in zip(*table)]
+
+    # ...except for the last column because its width doesn't affect the
+    # alignment of the other columns.
+    col_widths[-1] = 1
+
     for row in table:
         print(format_table_row(row, col_widths))
 
 
 def main():
     with bb.tinfoil.Tinfoil() as tinfoil:
-        tinfoil.prepare(config_only=False)
+        tinfoil.prepare(config_only=False, quiet=2)
         d = tinfoil.parse_recipe("mbl-image-development")
         table = create_table(d)
         print_table(table)

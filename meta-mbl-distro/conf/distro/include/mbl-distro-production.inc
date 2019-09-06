@@ -18,6 +18,8 @@ PACKAGECONFIG_append_pn-u-boot = " silent minimal"
 
 PACKAGECONFIG_append_pn-atf-${MACHINE} = " silent"
 
+PACKAGECONFIG_append_pn-optee-os = " silent"
+
 # For production images we want to set the minimum password length to 12
 # characters.
 MBL_PASS_MIN_LEN = "12"

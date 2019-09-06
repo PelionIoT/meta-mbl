@@ -12,13 +12,22 @@
 # Possible values for u-boot recipes PACKAGECONFIG:
 # "noconsole": disables u-boot console only
 # "silent": disables u-boot and kernel consoles
-PACKAGECONFIG_append_pn-u-boot-fslc = " silent minimal"
-PACKAGECONFIG_append_pn-u-boot-imx = " silent minimal"
-PACKAGECONFIG_append_pn-u-boot = " silent minimal"
+# "minimal": disables network booting, fastboot, usb mass storage and,
+#            device firmware upgrade(DFU)
+UBOOT_PRODUCTION_CFG ?= "silent minimal"
+PACKAGECONFIG_append_pn-u-boot-fslc = " ${UBOOT_PRODUCTION_CFG}"
+PACKAGECONFIG_append_pn-u-boot-imx = " ${UBOOT_PRODUCTION_CFG}"
+PACKAGECONFIG_append_pn-u-boot = " ${UBOOT_PRODUCTION_CFG}"
 
-PACKAGECONFIG_append_pn-atf-${MACHINE} = " silent"
+# Possible value for atf recipes PACKAGECONFIG:
+# "silent": only warning level messages are printed out
+ATF_PRODUCTION_CFG ?= "silent"
+PACKAGECONFIG_append_pn-atf-${MACHINE} = " ${ATF_PRODUCTION_CFG}"
 
-PACKAGECONFIG_append_pn-optee-os = " silent"
+# Possible value for optee-os recipe PACKAGECONFIG:
+# "silent": only error level messages are printed out
+OPTEE_PRODUCTION_CFG ?= "silent"
+PACKAGECONFIG_append_pn-optee-os = " ${OPTEE_PRODUCTION_CFG}"
 
 # For production images we want to set the minimum password length to 12
 # characters.

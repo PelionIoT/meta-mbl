@@ -9,7 +9,7 @@ MBL_UBOOT_VERSION_imx6ul-pico-mbl = "v2019.10-rc1"
 inherit mbl-uboot-sign
 
 SRCREV = "c0c4ee5fce01ec0818c4f27ce029d9b16c8849ad"
-SRCREV_imx6ul-pico-mbl = "ee3b9f43dfdde29ba939342bbdc22a0549015979"
+SRCREV_imx6ul-pico-mbl = "319817bd424b1dde057281887c0f0ee0332099e1"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 

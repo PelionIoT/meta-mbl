@@ -8,12 +8,12 @@
 
 PV = "${LINUX_VERSION}+git${SRCPV}"
 LINUX_VERSION = "4.14.112"
-SRCREV = "937ee3dd236ed01a6be33fbabc79a528d62b1036"
+SRCREV = "46d7ce67b4e5bab34e42b4e857a7e0cbe9580998"
 SRCREV_imx6ul-des0258-mbl = "83d967e82fe285635be7845c6b578fee2c441996"
 
 KBUILD_DEFCONFIG_imx7s-warp-mbl ?= "warp7_mbl_defconfig"
 KBUILD_DEFCONFIG_imx7d-pico-mbl ?= "pico_mbl_mx6_mx7_defconfig"
-KBUILD_DEFCONFIG_imx6ul-pico-mbl ?= "pico_mbl_mx6_mx7_defconfig"
+KBUILD_DEFCONFIG_imx6ul-pico-mbl ?= "pico_mbl_mx6_mx7_no_cpuidle_defconfig"
 KBUILD_DEFCONFIG_imx6ul-des0258-mbl ?= "imx6ul_des0258_defconfig"
 
 FILESEXTRAPATHS_prepend:="${THISDIR}/files:"

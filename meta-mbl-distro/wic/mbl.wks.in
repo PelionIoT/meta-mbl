@@ -34,9 +34,9 @@ ${MBL_ROOT_COMMENT_IF_SKIP}part --fstype=${MBL_ROOT_FSTYPE} --label ${MBL_ROOT_L
 # Factory config partition
 ${MBL_FACTORY_CONFIG_COMMENT_IF_SKIP}part --source rootfs-subdir --sourceparams subdir=${MBL_FACTORY_CONFIG_MOUNT_POINT} --fstype=${MBL_FACTORY_CONFIG_FSTYPE} --label ${MBL_FACTORY_CONFIG_LABEL} --align ${MBL_FACTORY_CONFIG_OFFSET_BANK1_KiB} --fixed-size ${MBL_FACTORY_CONFIG_SIZE_MiB}
 
-# Non-factory config partition (two banks)
-${MBL_NON_FACTORY_CONFIG_COMMENT_IF_SKIP}part --source rootfs-subdir --sourceparams subdir=${MBL_NON_FACTORY_CONFIG_MOUNT_POINT} --fstype=${MBL_NON_FACTORY_CONFIG_FSTYPE} --label ${MBL_NON_FACTORY_CONFIG_LABEL}1 --align ${MBL_NON_FACTORY_CONFIG_OFFSET_BANK1_KiB} --fixed-size ${MBL_NON_FACTORY_CONFIG_SIZE_MiB}
-${MBL_NON_FACTORY_CONFIG_COMMENT_IF_SKIP}part --fstype=${MBL_NON_FACTORY_CONFIG_FSTYPE} --label ${MBL_NON_FACTORY_CONFIG_LABEL}2 --align ${MBL_NON_FACTORY_CONFIG_OFFSET_BANK2_KiB} --fixed-size ${MBL_NON_FACTORY_CONFIG_SIZE_MiB}
+# Config partition (two banks)
+${MBL_CONFIG_COMMENT_IF_SKIP}part --source rootfs-subdir --sourceparams subdir=${MBL_CONFIG_MOUNT_POINT} --fstype=${MBL_CONFIG_FSTYPE} --label ${MBL_CONFIG_LABEL}1 --align ${MBL_CONFIG_OFFSET_BANK1_KiB} --fixed-size ${MBL_CONFIG_SIZE_MiB}
+${MBL_CONFIG_COMMENT_IF_SKIP}part --fstype=${MBL_CONFIG_FSTYPE} --label ${MBL_CONFIG_LABEL}2 --align ${MBL_CONFIG_OFFSET_BANK2_KiB} --fixed-size ${MBL_CONFIG_SIZE_MiB}
 
 # Log partition
 ${MBL_LOG_COMMENT_IF_SKIP}part --source rootfs-subdir --sourceparams subdir=${MBL_LOG_MOUNT_POINT} --fstype=${MBL_LOG_FSTYPE} --label ${MBL_LOG_LABEL} --align ${MBL_LOG_OFFSET_BANK1_KiB} --fixed-size ${MBL_LOG_SIZE_MiB}

@@ -6,8 +6,8 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 FILES_${PN} += " \
-    ${MBL_NON_FACTORY_CONFIG_DIR} \
-    ${MBL_NON_FACTORY_CONFIG_DIR}/main.conf \
+    ${MBL_CONFIG_DIR} \
+    ${MBL_CONFIG_DIR}/main.conf \
     ${sysconfdir}/systemd/system/connman.service.d/10-mbl-connman.service.conf \
 "
 
@@ -31,20 +31,20 @@ PACKAGECONFIG_remove = "wispr"
 PACKAGECONFIG[wispr] = ""
 FILES_${PN}-tools = ""
 
-#pass MBL_NON_FACTORY_CONFIG_DIR to autotools make to minimize maintainance. Some connman paths will be redirected the non factory config path
+#pass MBL_CONFIG_DIR to autotools make to minimize maintainance. Some connman paths will be redirected the config path
 EXTRA_OEMAKE += "\
-    MBL_NON_FACTORY_CONFIG_DIR=${MBL_NON_FACTORY_CONFIG_DIR} \
+    MBL_CONFIG_DIR=${MBL_CONFIG_DIR} \
 "
 
 do_install_append() {
-    install -d ${D}${MBL_NON_FACTORY_CONFIG_DIR}/connman
-    install -m 0644 ${WORKDIR}/main.conf ${D}${MBL_NON_FACTORY_CONFIG_DIR}/connman/main.conf
-    install -m 0644 ${WORKDIR}/settings ${D}${MBL_NON_FACTORY_CONFIG_DIR}/connman/settings
+    install -d ${D}${MBL_CONFIG_DIR}/connman
+    install -m 0644 ${WORKDIR}/main.conf ${D}${MBL_CONFIG_DIR}/connman/main.conf
+    install -m 0644 ${WORKDIR}/settings ${D}${MBL_CONFIG_DIR}/connman/settings
 
     install -d ${D}${sysconfdir}/systemd/system/connman.service.d/
     install -m 0644 ${WORKDIR}/10-mbl-connman.service.conf ${D}${sysconfdir}/systemd/system/connman.service.d/10-mbl-connman-service.conf
 
     # Fix wrong symlink creation in the main recipe
     rm -rf ${D}${sysconfdir}/resolv-conf.connman
-    ln -sf ..${MBL_NON_FACTORY_CONFIG_DIR}/run/connman/resolv.conf ${D}${sysconfdir}/resolv-conf.connman
+    ln -sf ..${MBL_CONFIG_DIR}/run/connman/resolv.conf ${D}${sysconfdir}/resolv-conf.connman
 }

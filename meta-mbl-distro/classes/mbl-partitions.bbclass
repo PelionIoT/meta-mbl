@@ -229,14 +229,14 @@ MBL_FACTORY_CONFIG_MOUNT_OPTS = "rw,noexec,nodev,nosuid,async"
 MBL_PARTITION_NAMES += "FACTORY_CONFIG"
 
 # ------------------------------------------------------------------------------
-# Non factory config partitions (file system; two banks)
+# Config partitions (file system; two banks)
 # ------------------------------------------------------------------------------
-MBL_NON_FACTORY_CONFIG_MOUNT_POINT = "${MBL_NON_FACTORY_CONFIG_DIR}"
-MBL_NON_FACTORY_CONFIG_LABEL ?= "nfactory_config"
-MBL_NON_FACTORY_CONFIG_DEFAULT_SIZE_MiB ?= "32"
-MBL_NON_FACTORY_CONFIG_IS_BANKED = "1"
-MBL_NON_FACTORY_CONFIG_MOUNT_OPTS ?= "rw,noexec,nodev,nosuid,async"
-MBL_PARTITION_NAMES += "NON_FACTORY_CONFIG"
+MBL_CONFIG_MOUNT_POINT = "${MBL_CONFIG_DIR}"
+MBL_CONFIG_LABEL ?= "config"
+MBL_CONFIG_DEFAULT_SIZE_MiB ?= "32"
+MBL_CONFIG_IS_BANKED = "1"
+MBL_CONFIG_MOUNT_OPTS ?= "rw,noexec,nodev,nosuid,async"
+MBL_PARTITION_NAMES += "CONFIG"
 
 # ------------------------------------------------------------------------------
 # Log partition (file system; single bank)

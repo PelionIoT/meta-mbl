@@ -122,8 +122,8 @@ diff -urN a/Makefile.am b/Makefile.am
  
 -storagedir = $(localstatedir)/lib/connman
 -vpn_storagedir = $(localstatedir)/lib/connman-vpn
-+localstatedir=$(MBL_NON_FACTORY_CONFIG_DIR)
-+sysconfdir=$(MBL_NON_FACTORY_CONFIG_DIR)
++localstatedir=$(MBL_CONFIG_DIR)
++sysconfdir=$(MBL_CONFIG_DIR)
 +
 +storagedir = $(localstatedir)/connman
 +vpn_storagedir = $(localstatedir)/connman-vpn

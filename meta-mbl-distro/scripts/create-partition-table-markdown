@@ -176,7 +176,7 @@ def get_notes_col(d, part_name, bank):
             return "Unused"
         else:
             return "Contains the kernel"
-    if part_name == "NON_FACTORY_CONFIG" and bank == 2:
+    if part_name == "CONFIG" and bank == 2:
         return "Unused"
     if part_name == "WKS_BOOTLOADER_FS":
         return "Contains bootloader component 1 and the kernel"

@@ -82,6 +82,17 @@ do_compile() {
 do_deploy() {
     install -m 0644 ${B}/${MBL_FIT_ROT_KEY_FILENAME} ${DEPLOYDIR}
     install -m 0644 ${B}/${MBL_FIT_ROT_KEY_CERT_FILENAME} ${DEPLOYDIR}
+
+    # Check if we need to persist the KEY
+    if [ "${MBL_PERSIST_SIGN_KEYS}" -eq "1" ]; then
+        if [ ! -e "${MBL_KEYSTORE_DIR}/${MBL_FIT_ROT_KEY_FILENAME}" ]; then
+            cp ${B}/${MBL_FIT_ROT_KEY_FILENAME} ${MBL_KEYSTORE_DIR}/${MBL_FIT_ROT_KEY_FILENAME}
+        fi
+        if [ ! -e "${MBL_KEYSTORE_DIR}/${MBL_FIT_ROT_KEY_CERT_FILENAME}" ]; then
+            cp ${B}/${MBL_FIT_ROT_KEY_CERT_FILENAME} ${MBL_KEYSTORE_DIR}/${MBL_FIT_ROT_KEY_CERT_FILENAME}
+        fi
+    fi
+
 }
 
 addtask do_deploy after do_compile before do_build

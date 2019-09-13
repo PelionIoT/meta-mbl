@@ -110,9 +110,9 @@ MBL_UNIFIED_BIN_PATH ?= ""
 do_compile[depends] += " virtual/kernel:do_deploy virtual/bootloader:do_deploy optee-os:do_deploy"
 do_compile () {
     # Use existing key if provided to create signed FIP image.
-    if [ -e "${MBL_ROT_KEY}" ]; then
-	mkdir -p ${B}/${PLATFORM}
-	cp ${MBL_ROT_KEY} ${B}/${PLATFORM}/rot_key.pem
+    if [ -e "${MBL_KEYSTORE_DIR}/${MBL_ROT_KEY_FILENAME}" ]; then
+        mkdir -p ${B}/${PLATFORM}
+        cp ${MBL_KEYSTORE_DIR}/${MBL_ROT_KEY_FILENAME} ${B}/${PLATFORM}/rot_key.pem
     fi
 
    export PATH=${STAGING_DIR_NATIVE}${bindir}/aarch64-linux-gnu/bin:$PATH
@@ -140,6 +140,12 @@ do_deploy() {
     install -d ${DEPLOYDIR}/${MBL_UNIFIED_BIN_PATH}
     install -D -p -m 0644 ${B}/${PLATFORM}/${MBL_UNIFIED_BIN} ${DEPLOYDIR}/${MBL_UNIFIED_BIN_PATH}/${MBL_UNIFIED_BIN}
     install -D -p -m 0644 ${B}/${PLATFORM}/rot_key.pem ${DEPLOYDIR}
+
+    # Check if we need to persist the ROT_KEY
+    if [ "${MBL_PERSIST_SIGN_KEYS}" -eq "1" -a ! -e "${MBL_KEYSTORE_DIR}/${MBL_ROT_KEY_FILENAME}" ]; then
+        cp ${B}/${PLATFORM}/rot_key.pem ${MBL_KEYSTORE_DIR}/${MBL_ROT_KEY_FILENAME}
+    fi
+
 }
 
 addtask deploy after do_compile

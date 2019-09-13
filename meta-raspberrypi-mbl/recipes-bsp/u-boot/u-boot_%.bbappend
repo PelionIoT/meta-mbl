@@ -16,7 +16,7 @@ SRC_URI_append_raspberrypi3-mbl = " \
 		${@bb.utils.contains_any('PACKAGECONFIG','noconsole silent',' file://0003-set-silent-envs.patch','',d)} \
 		${@bb.utils.contains('PACKAGECONFIG', 'minimal', '', ' file://enable-random-macaddr-mbl.cfg', d)} \
 		${@bb.utils.contains('PACKAGECONFIG', 'minimal', '', ' file://enable-fastboot-mbl.cfg', d)} \
-		${@bb.utils.contains('PACKAGECONFIG', 'minimal', ' file://0001-rpi3-disable-PXE-and-DHCP-boot.patch', '', d)} \
+		${@bb.utils.contains('PACKAGECONFIG', 'minimal', ' file://0001-rpi3-disable-USB-PXE-and-DHCP-boot.patch', '', d)} \
 "
 
 do_configure_prepend_raspberrypi3-mbl() {

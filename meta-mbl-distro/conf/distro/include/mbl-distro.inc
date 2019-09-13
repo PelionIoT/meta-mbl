@@ -61,3 +61,6 @@ PREFERRED_PROVIDER_virtual/runc = "runc-opencontainers"
 INITRAMFS_IMAGE = "mbl-image-initramfs"
 
 WKS_FILE = "mbl.wks.in"
+
+# Whether or not to persist the sign keys
+MBL_PERSIST_SIGN_KEYS ?= "1"

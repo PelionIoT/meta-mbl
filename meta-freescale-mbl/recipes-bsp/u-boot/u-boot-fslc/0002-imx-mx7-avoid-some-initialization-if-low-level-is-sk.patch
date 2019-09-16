@@ -1,0 +1,69 @@
+From 621bf5f2eec3e20cbb90d4a5ae7cddd5801eddd9 Mon Sep 17 00:00:00 2001
+From: Rui Miguel Silva <rui.silva@linaro.org>
+Date: Fri, 29 Jun 2018 15:10:11 +0100
+Subject: [PATCH 02/24] imx: mx7: avoid some initialization if low level is
+ skipped
+
+We can have the case where u-boot is launched after some other low level
+enabler, like for example when u-boot runs after arm-trusted-firmware
+and/or optee. So, because of that we may need to jump the initialization of
+some IP blocks even because we may no longer have the permission for that.
+
+So, if the config option to skip low level init is set disable also timer,
+board and csu initialization.
+
+Signed-off-by: Rui Miguel Silva <rui.silva@linaro.org>
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Cc: Stefano Babic <sbabic@denx.de>
+Cc: Fabio Estevam <fabio.estevam@nxp.com>
+Cc: Albert Aribaud <albert.u.boot@aribaud.net>
+Cc: Peng Fan <peng.fan@nxp.com>
+Cc: u-boot@lists.denx.de
+---
+ arch/arm/mach-imx/mx7/soc.c    | 2 ++
+ arch/arm/mach-imx/syscounter.c | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/arch/arm/mach-imx/mx7/soc.c b/arch/arm/mach-imx/mx7/soc.c
+index 502f033162..3f74f8a3ed 100644
+--- a/arch/arm/mach-imx/mx7/soc.c
++++ b/arch/arm/mach-imx/mx7/soc.c
+@@ -164,6 +164,7 @@ u32 __weak get_board_rev(void)
+ }
+ #endif
+ 
++#ifndef CONFIG_SKIP_LOWLEVEL_INIT
+ /* enable all periherial can be accessed in nosec mode */
+ static void init_csu(void)
+ {
+@@ -285,6 +286,7 @@ int arch_cpu_init(void)
+ 
+ 	return 0;
+ }
++#endif
+ 
+ #ifdef CONFIG_ARCH_MISC_INIT
+ int arch_misc_init(void)
+diff --git a/arch/arm/mach-imx/syscounter.c b/arch/arm/mach-imx/syscounter.c
+index 676bb3caa9..2c319681fc 100644
+--- a/arch/arm/mach-imx/syscounter.c
++++ b/arch/arm/mach-imx/syscounter.c
+@@ -55,6 +55,7 @@ static inline unsigned long long us_to_tick(unsigned long long usec)
+ 	return usec;
+ }
+ 
++#ifndef CONFIG_SKIP_LOWLEVEL_INIT
+ int timer_init(void)
+ {
+ 	struct sctr_regs *sctr = (struct sctr_regs *)SCTR_BASE_ADDR;
+@@ -76,6 +77,7 @@ int timer_init(void)
+ 
+ 	return 0;
+ }
++#endif
+ 
+ unsigned long long get_ticks(void)
+ {
+-- 
+2.23.0.rc1
+

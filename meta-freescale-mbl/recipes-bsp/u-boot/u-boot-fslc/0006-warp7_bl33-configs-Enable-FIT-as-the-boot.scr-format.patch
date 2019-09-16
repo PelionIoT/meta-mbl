@@ -1,0 +1,27 @@
+From b6aa80093af35ac2a13f4459ec419e9020006c38 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Thu, 6 Sep 2018 16:53:40 +0100
+Subject: [PATCH 06/24] warp7_bl33: configs: Enable FIT as the boot.scr format
+
+This patch switches on FIT verification of boot.scr. After this commit your
+boot.scr must be in the FIT format.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ configs/warp7_bl33_defconfig | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/configs/warp7_bl33_defconfig b/configs/warp7_bl33_defconfig
+index bed970b014..41acb004d5 100644
+--- a/configs/warp7_bl33_defconfig
++++ b/configs/warp7_bl33_defconfig
+@@ -40,3 +40,6 @@ CONFIG_USB_ETH_CDC=y
+ CONFIG_USBNET_HOST_ADDR="de:ad:be:af:00:00"
+ CONFIG_OF_LIBFDT=y
+ CONFIG_OPTEE_TZDRAM_SIZE=0x2000000
++CONFIG_FIT=y
++CONFIG_FIT_SIGNATURE=y
++CONFIG_FIT_VERBOSE=y
+-- 
+2.23.0.rc1
+

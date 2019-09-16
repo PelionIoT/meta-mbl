@@ -1,0 +1,26 @@
+From 8ca558a3cb75a9a31332e921ca14514718a55ca5 Mon Sep 17 00:00:00 2001
+From: "Ying-Chun Liu (PaulLiu)" <paulliu@debian.org>
+Date: Mon, 9 Sep 2019 10:16:36 +0800
+Subject: [PATCH] minimal U-boot service for pico-imx6ul
+
+Signed-off-by: Ying-Chun Liu (PaulLiu) <paulliu@debian.org>
+---
+ include/configs/pico-imx6ul.h | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+Index: git/include/configs/pico-imx6ul.h
+===================================================================
+--- git.orig/include/configs/pico-imx6ul.h
++++ git/include/configs/pico-imx6ul.h
+@@ -116,10 +116,7 @@
+ 	BOOTENV
+ 
+ #define BOOT_TARGET_DEVICES(func) \
+-	func(MMC, mmc, 0) \
+-	func(USB, usb, 0) \
+-	func(PXE, pxe, na) \
+-	func(DHCP, dhcp, na)
++	func(MMC, mmc, 0)
+ 
+ /* Define the name of the FIT subimage for the bootscript */
+ #if defined(CONFIG_FIT)

@@ -1,0 +1,33 @@
+From 407a3560f72a3be781cd062b509a7726406a5c6f Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Fri, 30 Nov 2018 13:05:19 +0000
+Subject: [PATCH 11/24] warp7: include: configs: Specify an fdtovaddr
+
+In the Mbed Linux OS bootflow OP-TEE runs before u-boot and provides a DTB
+overlay at 0x82000000.
+
+This overlay should subsequently be merged into the main DTB before handing
+over to the kernel.
+
+This patch defines fdtovaddr at 0x83100000.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ include/configs/warp7.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/configs/warp7.h b/include/configs/warp7.h
+index d5f46ead9a..9507cf4175 100644
+--- a/include/configs/warp7.h
++++ b/include/configs/warp7.h
+@@ -61,6 +61,7 @@
+ 	"initrd_high=0xffffffff\0" \
+ 	"fdt_file=imx7s-warp.dtb\0" \
+ 	"fdt_addr=" __stringify(CONFIG_SYS_FDT_ADDR)"\0" \
++	"fdtovaddr=0x83100000\0" \
+ 	"optee_addr=" __stringify(CONFIG_OPTEE_LOAD_ADDR)"\0" \
+ 	"boot_fdt=try\0" \
+ 	"ip_dyn=yes\0" \
+-- 
+2.23.0.rc1
+

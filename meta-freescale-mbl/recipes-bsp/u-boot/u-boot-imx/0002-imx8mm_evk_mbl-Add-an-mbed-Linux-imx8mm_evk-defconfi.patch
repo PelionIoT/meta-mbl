@@ -1,0 +1,28 @@
+From 4cac377d31d412068e8dadc010093ead91ed6127 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Fri, 14 Jun 2019 15:10:43 +0100
+Subject: [PATCH 2/4] imx8mm_evk_mbl: Add an mbed Linux imx8mm_evk defconfig
+
+Ensure CONFIG_OF_LIBFDT_OVERLAY=y is switched on in order to allow OP-TEE
+provided overlay to be applied from boot.cmd.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ configs/imx8mm_evk_mbl_defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/configs/imx8mm_evk_mbl_defconfig b/configs/imx8mm_evk_mbl_defconfig
+index 529ed44f61..a019e4e9b7 100644
+--- a/configs/imx8mm_evk_mbl_defconfig
++++ b/configs/imx8mm_evk_mbl_defconfig
+@@ -13,6 +13,7 @@ CONFIG_SPL_BOARD_INIT=y
+ CONFIG_SPL_MMC_SUPPORT=y
+ CONFIG_HUSH_PARSER=y
+ CONFIG_OF_LIBFDT=y
++CONFIG_OF_LIBFDT_OVERLAY=y
+ CONFIG_FS_FAT=y
+ CONFIG_CMD_EXT2=y
+ CONFIG_CMD_EXT4=y
+-- 
+2.23.0.rc1
+

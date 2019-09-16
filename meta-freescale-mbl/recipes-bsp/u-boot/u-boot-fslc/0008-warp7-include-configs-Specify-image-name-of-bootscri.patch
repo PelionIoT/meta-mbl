@@ -1,0 +1,45 @@
+From e037f65a1052e57c2c1d93b7f2d0dce2103533e5 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 15 Oct 2018 16:40:54 +0100
+Subject: [PATCH 08/24] warp7: include: configs: Specify image name of
+ bootscript in FIT
+
+When obtaining the bootscript from a FIT image we need to specify the nane
+of the bootscript as defined inside of the FIT.
+
+This patch makes a define that appends a "bootscr" parameter to the source
+command when compiling up in FIT mode on warp7.
+
+An environment variable is supplied to enable others to use a different
+name than "bootscr" as the image name of the boot script in their FIT.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ include/configs/warp7.h | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/include/configs/warp7.h b/include/configs/warp7.h
+index f185663791..d5f46ead9a 100644
+--- a/include/configs/warp7.h
++++ b/include/configs/warp7.h
+@@ -41,9 +41,17 @@
+ #define CONFIG_DFU_ENV_SETTINGS \
+ 	"dfu_alt_info=boot raw 0x2 0x400 mmcpart 1\0" \
+ 
++/* When booting with FIT specify the node entry containing boot.scr */
++#if defined(CONFIG_FIT)
++#define BOOT_SCR_STRING "source ${bootscriptaddr}:${bootscr_fitimage_name}\0"
++#else
++#define BOOT_SCR_STRING "source ${bootscriptaddr}\0"
++#endif
++
+ #define CONFIG_EXTRA_ENV_SETTINGS \
+ 	CONFIG_DFU_ENV_SETTINGS \
+ 	"script=boot.scr\0" \
++	"bootscr_fitimage_name=bootscr\0" \
+ 	"script_signed=boot.scr.imx-signed\0" \
+ 	"bootscriptaddr=0x83200000\0" \
+ 	"image=zImage\0" \
+-- 
+2.23.0.rc1
+

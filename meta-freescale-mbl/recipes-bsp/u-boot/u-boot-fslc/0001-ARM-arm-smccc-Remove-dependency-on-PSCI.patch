@@ -1,0 +1,96 @@
+From 8b5e43448f0ab2c9a5f3473de68f3651dcb4ce4e Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 5 Nov 2018 15:46:35 +0000
+Subject: [PATCH 01/24] ARM: arm-smccc: Remove dependency on PSCI
+
+commit 573a3811edc ('sysreset: psci: support system reset in a generic way
+with PSCI') makes CONFIG_ARM_PSCI_FW a dependency in order to switch on
+SMCCC.
+
+It should however be possible to make an SMCCC call without pulling in the
+PSCI and device tree dependencies associated with it.
+
+This patch rescinds the selected dependency while ensuring that boards
+which currently select CONFIG_ARM_SMCCC will continue to select
+CONFIG_ARM_PSCI_FW.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ arch/arm/Kconfig                  | 1 -
+ configs/bubblegum_96_defconfig    | 1 +
+ configs/dragonboard820c_defconfig | 1 +
+ configs/qemu_arm64_defconfig      | 1 +
+ configs/qemu_arm_defconfig        | 1 +
+ configs/uniphier_v8_defconfig     | 1 +
+ 6 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index ccf2a844be..100554eb11 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -306,7 +306,6 @@ config SYS_ARCH_TIMER
+ config ARM_SMCCC
+ 	bool "Support for ARM SMC Calling Convention (SMCCC)"
+ 	depends on CPU_V7A || ARM64
+-	select ARM_PSCI_FW
+ 	help
+ 	  Say Y here if you want to enable ARM SMC Calling Convention.
+ 	  This should be enabled if U-Boot needs to communicate with system
+diff --git a/configs/bubblegum_96_defconfig b/configs/bubblegum_96_defconfig
+index 4b00a177f5..2a48cc96bb 100644
+--- a/configs/bubblegum_96_defconfig
++++ b/configs/bubblegum_96_defconfig
+@@ -1,5 +1,6 @@
+ CONFIG_ARM=y
+ CONFIG_ARM_SMCCC=y
++CONFIG_ARM_PSCI_FW=y
+ CONFIG_ARCH_OWL=y
+ CONFIG_SYS_TEXT_BASE=0x11000000
+ CONFIG_TARGET_BUBBLEGUM_96=y
+diff --git a/configs/dragonboard820c_defconfig b/configs/dragonboard820c_defconfig
+index 97d828f441..d35309303a 100644
+--- a/configs/dragonboard820c_defconfig
++++ b/configs/dragonboard820c_defconfig
+@@ -1,5 +1,6 @@
+ CONFIG_ARM=y
+ CONFIG_ARM_SMCCC=y
++CONFIG_ARM_PSCI_FW=y
+ CONFIG_ARCH_SNAPDRAGON=y
+ CONFIG_SYS_TEXT_BASE=0x80080000
+ CONFIG_TARGET_DRAGONBOARD820C=y
+diff --git a/configs/qemu_arm64_defconfig b/configs/qemu_arm64_defconfig
+index 7fd726fdda..e6e5e0b51c 100644
+--- a/configs/qemu_arm64_defconfig
++++ b/configs/qemu_arm64_defconfig
+@@ -1,5 +1,6 @@
+ CONFIG_ARM=y
+ CONFIG_ARM_SMCCC=y
++CONFIG_ARM_PSCI_FW=y
+ CONFIG_ARCH_QEMU=y
+ CONFIG_SYS_TEXT_BASE=0x00000000
+ CONFIG_TARGET_QEMU_ARM_64BIT=y
+diff --git a/configs/qemu_arm_defconfig b/configs/qemu_arm_defconfig
+index fbceaf3c52..4e3f713d2b 100644
+--- a/configs/qemu_arm_defconfig
++++ b/configs/qemu_arm_defconfig
+@@ -1,5 +1,6 @@
+ CONFIG_ARM=y
+ CONFIG_ARM_SMCCC=y
++CONFIG_ARM_PSCI_FW=y
+ CONFIG_ARCH_QEMU=y
+ CONFIG_SYS_TEXT_BASE=0x00000000
+ CONFIG_TARGET_QEMU_ARM_32BIT=y
+diff --git a/configs/uniphier_v8_defconfig b/configs/uniphier_v8_defconfig
+index 5ec39126b3..00db181ed2 100644
+--- a/configs/uniphier_v8_defconfig
++++ b/configs/uniphier_v8_defconfig
+@@ -1,5 +1,6 @@
+ CONFIG_ARM=y
+ CONFIG_ARM_SMCCC=y
++CONFIG_ARM_PSCI_FW=y
+ CONFIG_ARCH_UNIPHIER=y
+ CONFIG_SYS_TEXT_BASE=0x84000000
+ CONFIG_SYS_MALLOC_F_LEN=0x2000
+-- 
+2.23.0.rc1
+

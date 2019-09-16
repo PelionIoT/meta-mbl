@@ -1,0 +1,33 @@
+From 2ac07e5ed20d22dbd941d57eb291cc1affa5fd60 Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Tue, 22 Jan 2019 14:33:49 +0800
+Subject: [PATCH 18/24] serial: add skipping init option
+
+add skipping init option to avoid corrupt data in console
+if serial is already initilized when u-boot start its excution.
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+---
+ drivers/serial/Kconfig | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/serial/Kconfig b/drivers/serial/Kconfig
+index 5fa27254e3..2270243065 100644
+--- a/drivers/serial/Kconfig
++++ b/drivers/serial/Kconfig
+@@ -671,6 +671,12 @@ config ZYNQ_SERIAL
+ 	  This driver supports the Cadence UART. It is found e.g. in Xilinx
+ 	  Zynq/ZynqMP.
+ 
++config UART_SKIP_INIT
++	bool "Skip UART initialization"
++	help
++	  Select this if the UART you want to use for output is already
++	  initialized by the time U-Boot starts its execution.
++
+ config MPC8XX_CONS
+ 	bool "Console driver for MPC8XX"
+ 	depends on MPC8xx
+-- 
+2.23.0.rc1
+

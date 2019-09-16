@@ -1,0 +1,70 @@
+From 40791bc7c2c2afbb4163673f7d8356c3972a3f8e Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Thu, 13 Dec 2018 15:59:42 +0800
+Subject: [PATCH 13/24] pico: Modify defconfig to support boot.scr
+
+Remove boot command and menu in defconfig and enable hush parser
+to support boot from boot.scr
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+---
+ configs/pico-pi-imx7d_defconfig | 21 +++++++++------------
+ 1 file changed, 9 insertions(+), 12 deletions(-)
+
+diff --git a/configs/pico-pi-imx7d_defconfig b/configs/pico-pi-imx7d_defconfig
+index 73800fc8eb..11df5a68b5 100644
+--- a/configs/pico-pi-imx7d_defconfig
++++ b/configs/pico-pi-imx7d_defconfig
+@@ -12,17 +12,15 @@ CONFIG_SPL_LIBDISK_SUPPORT=y
+ CONFIG_ARMV7_BOOT_SEC_DEFAULT=y
+ CONFIG_IMX_RDC=y
+ CONFIG_IMX_BOOTAUX=y
+-CONFIG_DISTRO_DEFAULTS=y
+ CONFIG_NR_DRAM_BANKS=1
+ CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=arch/arm/mach-imx/spl_sd.cfg"
+-CONFIG_BOOTCOMMAND="run findfdt; run finduuid; run distro_bootcmd"
+ CONFIG_DEFAULT_FDT_FILE="imx7d-pico-pi.dtb"
+ CONFIG_SPL_I2C_SUPPORT=y
+ CONFIG_SPL_USB_HOST_SUPPORT=y
+ CONFIG_SPL_USB_GADGET_SUPPORT=y
+ CONFIG_SPL_USB_SDP_SUPPORT=y
++CONFIG_HUSH_PARSER=y
+ # CONFIG_CMD_BOOTD is not set
+-CONFIG_CMD_BOOTMENU=y
+ # CONFIG_CMD_IMI is not set
+ # CONFIG_CMD_XIMG is not set
+ CONFIG_CMD_SPL=y
+@@ -35,17 +33,12 @@ CONFIG_CMD_MMC=y
+ CONFIG_CMD_USB=y
+ CONFIG_CMD_USB_SDP=y
+ CONFIG_CMD_USB_MASS_STORAGE=y
+-# CONFIG_CMD_SETEXPR is not set
+-# CONFIG_CMD_MII is not set
++CONFIG_CMD_DHCP=y
+ CONFIG_CMD_CACHE=y
+-CONFIG_CMD_EXT4_WRITE=y
++CONFIG_CMD_FAT=y
++CONFIG_CMD_FS_GENERIC=y
++CONFIG_NET_RANDOM_ETHADDR=y
+ CONFIG_DFU_MMC=y
+-CONFIG_USB_FUNCTION_FASTBOOT=y
+-CONFIG_FASTBOOT_BUF_ADDR=0x82000000
+-CONFIG_FASTBOOT_BUF_SIZE=0x10000000
+-CONFIG_FASTBOOT_FLASH=y
+-CONFIG_FASTBOOT_FLASH_MMC_DEV=0
+-CONFIG_FASTBOOT_CMD_OEM_FORMAT=y
+ CONFIG_FSL_ESDHC=y
+ CONFIG_PHYLIB=y
+ CONFIG_MII=y
+@@ -58,4 +51,8 @@ CONFIG_USB_GADGET_MANUFACTURER="FSL"
+ CONFIG_USB_GADGET_VENDOR_NUM=0x0525
+ CONFIG_USB_GADGET_PRODUCT_NUM=0xa4a5
+ CONFIG_CI_UDC=y
++CONFIG_USB_GADGET_DOWNLOAD=y
++CONFIG_USB_ETHER=y
++CONFIG_USB_ETH_CDC=y
++CONFIG_USBNET_HOST_ADDR="de:ad:be:af:00:00"
+ CONFIG_OF_LIBFDT=y
+-- 
+2.23.0.rc1
+

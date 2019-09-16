@@ -1,0 +1,63 @@
+From c9c520b295d65cba77233fff7155e3338f5219c0 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 17 Dec 2018 23:56:16 +0000
+Subject: [PATCH 12/24] cmd: image_info: Add checking of default FIT config
+
+This patch adds a check for the default FIT config to iminfo. Once applied
+any signing of the config will show a pass fail similar to rsa+/rsa- for
+pass/fail.
+
+Output looks like this:
+
+   Hash(es) for Image 0 (kernel@1): sha1+
+   Hash(es) for Image 1 (fdt@imx7s-warp.dtb): sha1+
+   Hash(es) for Image 2 (ramdisk@1): sha1+
+   Hash(es) for Image 3 (bootscr): sha1+
+   Hash for default configuration: sha1,rsa2048:mbl-fit-rot-key+
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Cc: Jun Nie <jun.nie@linaro.org>
+Cc: Simon Glass <sjg@chromium.org>
+Cc: Tom Rini <trini@konsulko.com>
+---
+ cmd/bootm.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/cmd/bootm.c b/cmd/bootm.c
+index c3a063474a..5d30430ca9 100644
+--- a/cmd/bootm.c
++++ b/cmd/bootm.c
+@@ -244,6 +244,9 @@ static int do_iminfo(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+ 
+ static int image_info(ulong addr)
+ {
++#if defined(CONFIG_FIT)
++	int cfg_noffset, noffset;
++#endif
+ 	void *hdr = (void *)addr;
+ 
+ 	printf("\n## Checking Image at %08lx ...\n", addr);
+@@ -294,6 +297,20 @@ static int image_info(ulong addr)
+ 			return 1;
+ 		}
+ 
++		cfg_noffset = fit_conf_get_node(hdr, NULL);
++		if (!cfg_noffset) {
++			printf("Could not find configuration node: %s\n",
++			       fdt_strerror(cfg_noffset));
++			return 1;
++		}
++
++		puts("   Hash for default configuration: ");
++		if (fit_config_verify(hdr, cfg_noffset)) {
++			puts("Unable to verify default fit config\n");
++			return 1;
++		}
++		puts("\n");
++
+ 		return 0;
+ #endif
+ 	default:
+-- 
+2.23.0.rc1
+

@@ -1,0 +1,32 @@
+From e767d75b2ae4ac064578dd1ecb1b9d740f15ce51 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 12 Aug 2019 12:51:40 +0100
+Subject: [PATCH 05/13] imx: imx6: Add arch_misc_init
+
+In order to facilitate calling into sec_init() in the same manner as is
+done on the imx7 soc series this patch adds arch_misc_init. A subsequent
+patch will add a call to sec_init().
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ arch/arm/mach-imx/mx6/soc.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm/mach-imx/mx6/soc.c b/arch/arm/mach-imx/mx6/soc.c
+index 075d2467ce..e5878bfa17 100644
+--- a/arch/arm/mach-imx/mx6/soc.c
++++ b/arch/arm/mach-imx/mx6/soc.c
+@@ -685,3 +685,10 @@ void gpr_init(void)
+ 		writel(0x007F007F, &iomux->gpr[7]);
+ 	}
+ }
++
++#ifdef CONFIG_ARCH_MISC_INIT
++int arch_misc_init(void)
++{
++	return 0;
++}
++#endif
+-- 
+2.22.0
+

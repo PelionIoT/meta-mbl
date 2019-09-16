@@ -1,0 +1,28 @@
+From 0c6ab3e8826d666b6c01ed5f3d9966354533c67e Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Fri, 23 Nov 2018 10:35:03 +0000
+Subject: [PATCH 10/24] warp7_bl33: configs: Enable CONFIG_OF_LIBFDT_OVERLAY
+
+This commit enables CONFIG_OF_LIBFDT_OVERLAY a requirement to perform a
+merge of an OPTEE provided DTB overlay into our main kernel DTB image.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ configs/warp7_bl33_defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/configs/warp7_bl33_defconfig b/configs/warp7_bl33_defconfig
+index d1befc42dc..4a6ac5d6bd 100644
+--- a/configs/warp7_bl33_defconfig
++++ b/configs/warp7_bl33_defconfig
+@@ -39,6 +39,7 @@ CONFIG_USB_ETHER=y
+ CONFIG_USB_ETH_CDC=y
+ CONFIG_USBNET_HOST_ADDR="de:ad:be:af:00:00"
+ CONFIG_OF_LIBFDT=y
++CONFIG_OF_LIBFDT_OVERLAY=y
+ CONFIG_OPTEE_TZDRAM_SIZE=0x2000000
+ CONFIG_FIT=y
+ CONFIG_FIT_SIGNATURE=y
+-- 
+2.23.0.rc1
+

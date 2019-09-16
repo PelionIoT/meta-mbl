@@ -1,0 +1,33 @@
+From ee3b9f43dfdde29ba939342bbdc22a0549015979 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Fri, 16 Aug 2019 13:31:56 +0100
+Subject: [PATCH 07/13] pico-imx6ul: Reserve region of memory to OPTEE
+
+Ensure the part of DRAM OP-TEE has been loaded into is excluded from the
+available set of DRAM and u-boot cannot claim this part of memory during
+relocation.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ board/technexion/pico-imx6ul/pico-imx6ul.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/board/technexion/pico-imx6ul/pico-imx6ul.c b/board/technexion/pico-imx6ul/pico-imx6ul.c
+index 95b482a602..2a9cfd6fdd 100644
+--- a/board/technexion/pico-imx6ul/pico-imx6ul.c
++++ b/board/technexion/pico-imx6ul/pico-imx6ul.c
+@@ -119,6 +119,11 @@ int dram_init(void)
+ {
+ 	gd->ram_size = imx_ddr_size();
+ 
++	/* Subtract the defined OPTEE runtime firmware length */
++#ifdef CONFIG_OPTEE_TZDRAM_SIZE
++		gd->ram_size -= CONFIG_OPTEE_TZDRAM_SIZE;
++#endif
++
+ 	return 0;
+ }
+ 
+-- 
+2.22.0
+

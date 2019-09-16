@@ -1,0 +1,43 @@
+From 9b4f14c1b6b4905e611d82f24684f63dc52cdc18 Mon Sep 17 00:00:00 2001
+From: Rui Miguel Silva <rui.silva@linaro.org>
+Date: Fri, 29 Jun 2018 15:33:28 +0100
+Subject: [PATCH 04/24] warp7: include: configs: set skip low level init
+
+If we have defined the OPTEE ram size and not OPTEE means that we are in
+the case where OPTEE is loaded already (maybe by ARM Trusted Firmware) and
+that most of the low level initialization is already done and that we
+may/should skip it doing them here.
+
+Signed-off-by: Rui Miguel Silva <rui.silva@linaro.org>
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Cc: Fabio Estevam <fabio.estevam@nxp.com>
+Cc: u-boot@lists.denx.de
+---
+ include/configs/warp7.h | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/include/configs/warp7.h b/include/configs/warp7.h
+index 1b656a5aaf..a391dfb5c1 100644
+--- a/include/configs/warp7.h
++++ b/include/configs/warp7.h
+@@ -13,6 +13,17 @@
+ 
+ #define PHYS_SDRAM_SIZE			SZ_512M
+ 
++/*
++ * If we have defined the OPTEE ram size and not OPTEE it means that we were
++ * launched by OPTEE, because of that we shall skip all the low level
++ * initialization since it was already done by ATF or OPTEE
++ */
++#ifdef CONFIG_OPTEE_TZDRAM_SIZE
++#ifndef CONFIG_OPTEE
++#define CONFIG_SKIP_LOWLEVEL_INIT
++#endif
++#endif
++
+ #define CONFIG_MXC_UART_BASE		UART1_IPS_BASE_ADDR
+ 
+ /* Size of malloc() pool */
+-- 
+2.23.0.rc1
+

@@ -1,0 +1,27 @@
+From f92426e2fd2e63f77ae9fc17c138fdcf254b7544 Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Tue, 19 Feb 2019 10:26:49 +0800
+Subject: [PATCH 22/24] pico: fall back to hab_failsafe when fitimage fail
+
+fall back to hab_failsafe when fitimage fail for security concern.
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+---
+ include/configs/pico-imx7d.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/configs/pico-imx7d.h b/include/configs/pico-imx7d.h
+index 4d82fb9e2c..95110df09c 100644
+--- a/include/configs/pico-imx7d.h
++++ b/include/configs/pico-imx7d.h
+@@ -117,6 +117,7 @@
+ 			"run bootscript; " \
+ 		"else " \
+ 			"echo Fail to load fitImage with boot script;" \
++			   "hab_failsafe;" \
+ 		"fi; " \
+ 	"fi"
+ 
+-- 
+2.23.0.rc1
+

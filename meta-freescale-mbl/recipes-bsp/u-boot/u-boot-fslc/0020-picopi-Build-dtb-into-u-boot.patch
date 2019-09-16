@@ -1,0 +1,84 @@
+From 8db2fed815c32ed09a5ac76d3e73307c7cbfc36b Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Fri, 25 Jan 2019 16:47:06 +0800
+Subject: [PATCH 20/24] picopi: Build dtb into u-boot
+
+Add u-boot.dtb so that key for signature can be
+stored in it.
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+---
+ arch/arm/dts/Makefile           |  1 +
+ arch/arm/dts/imx7-picopi.dts    | 17 +++++++++++++++++
+ configs/pico-pi-imx7d_defconfig |  7 ++++++-
+ 3 files changed, 24 insertions(+), 1 deletion(-)
+ create mode 100644 arch/arm/dts/imx7-picopi.dts
+
+diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
+index 1e893e1b74..8a08c457d1 100644
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -449,6 +449,7 @@ dtb-$(CONFIG_MX6ULL) += imx6ull-14x14-evk.dtb
+ dtb-$(CONFIG_MX7) += imx7-colibri.dtb \
+ 	imx7d-sdb.dtb \
+ 	imx7d-sdb-qspi.dtb \
++	imx7-picopi.dtb \
+ 	imx7s-warp7.dtb
+ 
+ dtb-$(CONFIG_ARCH_MX7ULP) += imx7ulp-evk.dtb
+diff --git a/arch/arm/dts/imx7-picopi.dts b/arch/arm/dts/imx7-picopi.dts
+new file mode 100644
+index 0000000000..58ddb4029e
+--- /dev/null
++++ b/arch/arm/dts/imx7-picopi.dts
+@@ -0,0 +1,17 @@
++// SPDX-License-Identifier: GPL-2.0+ OR X11
++/*
++ * Copyright 2016 Toradex AG
++ */
++
++/dts-v1/;
++#include <dt-bindings/gpio/gpio.h>
++#include "imx7d.dtsi"
++
++/ {
++	model = " iMX7D Pico Pi";
++	compatible = "fsl,imx7";
++
++	chosen {
++		stdout-path = &uart5;
++	};
++};
+diff --git a/configs/pico-pi-imx7d_defconfig b/configs/pico-pi-imx7d_defconfig
+index 3b1ec20343..5bd1352532 100644
+--- a/configs/pico-pi-imx7d_defconfig
++++ b/configs/pico-pi-imx7d_defconfig
+@@ -4,6 +4,9 @@ CONFIG_SYS_TEXT_BASE=0x87800000
+ CONFIG_SECURE_BOOT=y
+ CONFIG_TARGET_PICO_IMX7D=y
+ CONFIG_ARMV7_BOOT_SEC_DEFAULT=y
++CONFIG_FIT=y
++CONFIG_FIT_SIGNATURE=y
++CONFIG_FIT_VERBOSE=y
+ CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/technexion/pico-imx7d/pico-imx7d.cfg"
+ CONFIG_PRE_CONSOLE_BUFFER=y
+ CONFIG_PRE_CON_BUF_ADDR=0x8c000000
+@@ -26,6 +29,8 @@ CONFIG_CMD_DHCP=y
+ CONFIG_CMD_CACHE=y
+ CONFIG_CMD_FAT=y
+ CONFIG_CMD_FS_GENERIC=y
++CONFIG_OF_CONTROL=y
++CONFIG_DEFAULT_DEVICE_TREE="imx7-picopi"
+ CONFIG_NET_RANDOM_ETHADDR=y
+ CONFIG_DFU_MMC=y
+ CONFIG_FSL_ESDHC=y
+@@ -45,5 +50,5 @@ CONFIG_USB_GADGET_DOWNLOAD=y
+ CONFIG_USB_ETHER=y
+ CONFIG_USB_ETH_CDC=y
+ CONFIG_USBNET_HOST_ADDR="de:ad:be:af:00:00"
+-CONFIG_OF_LIBFDT=y
++CONFIG_OF_LIBFDT_OVERLAY=y
+ CONFIG_OPTEE_TZDRAM_SIZE=0x2000000
+-- 
+2.23.0.rc1
+

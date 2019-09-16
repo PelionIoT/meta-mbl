@@ -1,0 +1,55 @@
+From fe9827490ca8d73d9567c3359354923a4320a45e Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Sat, 7 Sep 2019 11:11:17 +0100
+Subject: [PATCH 11/13] distro_bootcmd: Provide a define to select a FIT
+ subimage
+
+If using FIT images then a FIT subimage name must be specified when
+executing the source command to tell the source command which blob in the
+FIT image is the bootscript.
+
+This patch provides a define BOOTENV_FIT_BOOTSCRIPT_SUBIMAGE which allows
+an individual board-port to specify a subimage name in its board.h
+otherwise the define is ignored.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ include/config_distro_bootcmd.h | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/include/config_distro_bootcmd.h b/include/config_distro_bootcmd.h
+index 3570a32dff..7e78ef38ab 100644
+--- a/include/config_distro_bootcmd.h
++++ b/include/config_distro_bootcmd.h
+@@ -333,6 +333,10 @@
+ #error Please specify an EFI client identifier
+ #endif
+ 
++#ifndef BOOTENV_FIT_BOOTSCRIPT_SUBIMAGE
++#define BOOTENV_FIT_BOOTSCRIPT_SUBIMAGE ""
++#endif
++
+ /*
+  * Ask the dhcp server for an EFI binary. If we get one, check for a
+  * device tree in the same folder. Then boot everything. If the file was
+@@ -366,7 +370,7 @@
+ 		BOOTENV_RUN_NET_USB_START \
+ 		BOOTENV_RUN_PCI_ENUM \
+ 		"if dhcp ${scriptaddr} ${boot_script_dhcp}; then " \
+-			"source ${scriptaddr}; " \
++			"source ${scriptaddr}" BOOTENV_FIT_BOOTSCRIPT_SUBIMAGE "; " \
+ 		"fi;" \
+ 		BOOTENV_EFI_RUN_DHCP \
+ 		"\0"
+@@ -438,7 +442,7 @@
+ 	"boot_a_script="                                                  \
+ 		"load ${devtype} ${devnum}:${distro_bootpart} "           \
+ 			"${scriptaddr} ${prefix}${script}; "              \
+-		"source ${scriptaddr}\0"                                  \
++		"source ${scriptaddr}" BOOTENV_FIT_BOOTSCRIPT_SUBIMAGE ";\0"\
+ 	\
+ 	"scan_dev_for_scripts="                                           \
+ 		"for script in ${boot_scripts}; do "                      \
+-- 
+2.22.0
+

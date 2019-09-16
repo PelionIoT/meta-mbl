@@ -1,0 +1,29 @@
+From c0c4ee5fce01ec0818c4f27ce029d9b16c8849ad Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Wed, 20 Mar 2019 12:14:25 +0800
+Subject: [PATCH 24/24] pico: shrink DRAM size to avoid memory override
+
+Shrink DRAM size to avoid memory override the memory of optee in the
+end of DRAM during u-boot relocation.
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+---
+ board/technexion/pico-imx7d/pico-imx7d.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/board/technexion/pico-imx7d/pico-imx7d.c b/board/technexion/pico-imx7d/pico-imx7d.c
+index 0767d0462f..c5a5aa028e 100644
+--- a/board/technexion/pico-imx7d/pico-imx7d.c
++++ b/board/technexion/pico-imx7d/pico-imx7d.c
+@@ -58,7 +58,7 @@ static struct i2c_pads_info i2c_pad_info4 = {
+ 
+ int dram_init(void)
+ {
+-	gd->ram_size = imx_ddr_size();
++	gd->ram_size = imx_ddr_size() - SZ_128M;
+ 
+ 	return 0;
+ }
+-- 
+2.23.0.rc1
+

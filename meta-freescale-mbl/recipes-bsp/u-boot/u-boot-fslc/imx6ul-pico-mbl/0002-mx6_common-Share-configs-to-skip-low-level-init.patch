@@ -1,0 +1,33 @@
+From a77970701e4e71fdeba792856e11615b176cd7fb Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 5 Aug 2019 16:32:27 +0100
+Subject: [PATCH 02/13] mx6_common: Share configs to skip low level init
+
+This commit replicates for i.MX6 the same fix as was applied for i.MX7 to
+share and aggregate the logic for skipping low-level init.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ include/configs/mx6_common.h | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/include/configs/mx6_common.h b/include/configs/mx6_common.h
+index 2b8ce9d71d..cd2deea72c 100644
+--- a/include/configs/mx6_common.h
++++ b/include/configs/mx6_common.h
+@@ -65,4 +65,12 @@
+ #endif
+ #endif
+ 
++/*
++ * If OPTEE_SKIP_LOWLEVEL_INIT is flagged indicate CONFIG_SKIP_LOWLEVEL_INIT and
++ * subsequently skip over reserved a range of reserved low-level bit twiddling.
++ */
++#ifdef CONFIG_OPTEE_SKIP_LOWLEVEL_INIT
++#define CONFIG_SKIP_LOWLEVEL_INIT
++#endif
++
+ #endif
+-- 
+2.22.0
+

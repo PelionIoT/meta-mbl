@@ -1,0 +1,26 @@
+From 6e88ef92c63e1ccfab30b65f823fd12894070379 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Fri, 6 Sep 2019 11:37:29 +0100
+Subject: [PATCH 10/13] pico-imx6ul_bl33: configs: Enable
+ CONFIG_OF_LIBFDT_OVERLAY
+
+This commit enables CONFIG_OF_LIBFDT_OVERLAY a requirement to perform a
+merge of an OPTEE provided DTB overlay into our main kernel DTB image.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ configs/pico-imx6ul_bl33_defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/configs/pico-imx6ul_bl33_defconfig b/configs/pico-imx6ul_bl33_defconfig
+index ae059debaa..04fcb542b7 100644
+--- a/configs/pico-imx6ul_bl33_defconfig
++++ b/configs/pico-imx6ul_bl33_defconfig
+@@ -65,3 +65,4 @@ CONFIG_FIT=y
+ CONFIG_FIT_SIGNATURE=y
+ CONFIG_FIT_VERBOSE=y
+ CONFIG_OF_LIBFDT=y
++CONFIG_OF_LIBFDT_OVERLAY=y
+-- 
+2.22.0
+

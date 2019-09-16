@@ -1,0 +1,54 @@
+From 963ce4a5b3c0a4ab56bd5178f270b1712600ef4b Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Tue, 22 Jan 2019 14:35:35 +0800
+Subject: [PATCH 19/24] pico: skip uart initialization
+
+skip uart initialization to avoid corrupted data in console.
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+---
+ configs/pico-pi-imx7d_defconfig | 1 +
+ drivers/serial/serial_mxc.c     | 4 ++++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/configs/pico-pi-imx7d_defconfig b/configs/pico-pi-imx7d_defconfig
+index 316b0563fe..3b1ec20343 100644
+--- a/configs/pico-pi-imx7d_defconfig
++++ b/configs/pico-pi-imx7d_defconfig
+@@ -31,6 +31,7 @@ CONFIG_DFU_MMC=y
+ CONFIG_FSL_ESDHC=y
+ CONFIG_PHYLIB=y
+ CONFIG_MII=y
++CONFIG_UART_SKIP_INIT=y
+ CONFIG_USB=y
+ CONFIG_USB_EHCI_HCD=y
+ CONFIG_MXC_USB_OTG_HACTIVE=y
+diff --git a/drivers/serial/serial_mxc.c b/drivers/serial/serial_mxc.c
+index 4f1f822c58..7f8bce5538 100644
+--- a/drivers/serial/serial_mxc.c
++++ b/drivers/serial/serial_mxc.c
+@@ -226,9 +226,11 @@ static int mxc_serial_tstc(void)
+  */
+ static int mxc_serial_init(void)
+ {
++#ifndef CONFIG_UART_SKIP_INIT
+ 	_mxc_serial_init(mxc_base);
+ 
+ 	serial_setbrg();
++#endif
+ 
+ 	return 0;
+ }
+@@ -271,7 +273,9 @@ static int mxc_serial_probe(struct udevice *dev)
+ {
+ 	struct mxc_serial_platdata *plat = dev->platdata;
+ 
++#ifndef CONFIG_UART_SKIP_INIT
+ 	_mxc_serial_init(plat->reg);
++#endif
+ 
+ 	return 0;
+ }
+-- 
+2.23.0.rc1
+

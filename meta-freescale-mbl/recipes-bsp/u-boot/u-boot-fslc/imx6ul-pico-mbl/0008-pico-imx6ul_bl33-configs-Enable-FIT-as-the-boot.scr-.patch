@@ -1,0 +1,28 @@
+From 8167dc81350af7e0dc3d67739ee91dd02ea0ad3c Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Fri, 6 Sep 2019 11:34:56 +0100
+Subject: [PATCH 08/13] pico-imx6ul_bl33: configs: Enable FIT as the boot.scr
+ format
+
+This patch switches on FIT verification of boot.scr. After this commit your
+boot.scr must be in the FIT format.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ configs/pico-imx6ul_bl33_defconfig | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/configs/pico-imx6ul_bl33_defconfig b/configs/pico-imx6ul_bl33_defconfig
+index aebbbf20ee..bd1e075a90 100644
+--- a/configs/pico-imx6ul_bl33_defconfig
++++ b/configs/pico-imx6ul_bl33_defconfig
+@@ -61,3 +61,6 @@ CONFIG_OPTEE=y
+ CONFIG_OPTEE_TZDRAM_SIZE=0x02000000
+ CONFIG_OPTEE_TZDRAM_BASE=0x9e000000
+ CONFIG_OPTEE_SKIP_LOWLEVEL_INIT=y
++CONFIG_FIT=y
++CONFIG_FIT_SIGNATURE=y
++CONFIG_FIT_VERBOSE=y
+-- 
+2.22.0
+

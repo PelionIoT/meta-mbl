@@ -1,0 +1,44 @@
+From 63c897678a680d32ed1fd6424050b68ad57fa1a1 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Tue, 6 Aug 2019 12:06:25 +0100
+Subject: [PATCH 01/13] optee: Add CONFIG_OPTEE_SKIP_LOWLEVEL_INIT
+
+When chainloading from OPTEE into u-boot it can be the case on certain
+architectures, for example on i.MX systems, that some low-level
+initialization functions are permission prohibited.
+
+This patch provides a Kconfig option to flag if/when low-level
+initialization should be skipped because of a TrustZone agent such as OPTEE
+moving the system into a secure state, prior to u-boot.
+
+This option will select CONFIG_SKIP_LOWLEVEL_INIT.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ lib/optee/Kconfig | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/lib/optee/Kconfig b/lib/optee/Kconfig
+index c398f9b953..26f357e6d7 100644
+--- a/lib/optee/Kconfig
++++ b/lib/optee/Kconfig
+@@ -39,3 +39,16 @@ config BOOTM_OPTEE
+ 	  Select this command to enable chain-loading of a Linux kernel
+ 	  via an OPTEE firmware.
+ 	  The bootflow is BootROM -> u-boot -> OPTEE -> Linux in this case.
++
++config OPTEE_SKIP_LOWLEVEL_INIT
++	bool "Skip low-level init when chain-loading from OPTEE"
++	depends on OPTEE
++	select SKIP_LOWLEVEL_INIT
++	default n
++	help
++	  Select this option if OPTEE runs prior to u-boot.
++	  BootROM -> OPTEE -> u-boot.
++	  When OPTEE or another secure monitor runs prior to u-boot then on
++	  certain architectures some low-level initialization is either not
++	  required or u-boot does not have permission that low-level
++	  initialization.
+-- 
+2.22.0
+

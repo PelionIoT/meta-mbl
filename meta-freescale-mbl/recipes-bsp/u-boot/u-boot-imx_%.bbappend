@@ -5,7 +5,11 @@
 inherit mbl-uboot-sign
 
 SRCBRANCH = "imx_v2018.03_4.14.78_1.0.0_ga-mbl"
-SRC_URI = "git://git.linaro.org/landing-teams/working/mbl/u-boot.git;protocol=https;nobranch=1 \
+SRC_URI = "git://source.codeaurora.org/external/imx/uboot-imx.git;protocol=https;nobranch=1 \
+    file://0001-imx8mm_evk_mbl-Add-an-mbed-Linux-imx8mm_evk-defconfi.patch \
+    file://0002-imx8mm_evk_mbl-Add-an-mbed-Linux-imx8mm_evk-defconfi.patch \
+    file://0003-arm-imx-Add-mbl-specific-boot-option.patch \
+    file://0004-cmd-image_info-Add-checking-of-default-FIT-config.patch \
 "
 
 SRC_URI_append_imx8mmevk = " \
@@ -15,7 +19,7 @@ SRC_URI_append_imx8mmevk = " \
 # MBL_UBOOT_VERSION should be updated to match version pointed to by SRCREV
 MBL_UBOOT_VERSION = "2018.03"
 
-SRCREV = "e9cb2c6d8a6227a189702ab2cfc7b1273689ddb2"
+SRCREV = "7ade5b407fe6164c0d07f32f72e487ae5f6f3964"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/u-boot-imx:"
 

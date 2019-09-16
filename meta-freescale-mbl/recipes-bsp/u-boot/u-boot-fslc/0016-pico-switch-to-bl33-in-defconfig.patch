@@ -1,0 +1,84 @@
+From d824371b7225874c9f5039c5a0df1b6a007f2629 Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Thu, 20 Dec 2018 14:39:51 +0800
+Subject: [PATCH 16/24] pico: switch to bl33 in defconfig
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+---
+ configs/pico-pi-imx7d_defconfig |  7 ++++---
+ include/configs/mx7_common.h    | 11 +++++++++++
+ include/configs/warp7.h         | 11 -----------
+ 3 files changed, 15 insertions(+), 14 deletions(-)
+
+diff --git a/configs/pico-pi-imx7d_defconfig b/configs/pico-pi-imx7d_defconfig
+index 35f0b27536..da7c34208c 100644
+--- a/configs/pico-pi-imx7d_defconfig
++++ b/configs/pico-pi-imx7d_defconfig
+@@ -1,14 +1,14 @@
+ CONFIG_ARM=y
+ CONFIG_ARCH_MX7=y
++CONFIG_SECURE_BOOT=y
+ CONFIG_SYS_TEXT_BASE=0x87800000
+ CONFIG_TARGET_PICO_IMX7D=y
+ CONFIG_ARMV7_BOOT_SEC_DEFAULT=y
+-CONFIG_IMX_RDC=y
+-CONFIG_IMX_BOOTAUX=y
+-CONFIG_NR_DRAM_BANKS=1
+ CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/technexion/pico-imx7d/pico-imx7d.cfg"
+ CONFIG_DEFAULT_FDT_FILE="imx7d-pico-pi.dtb"
+ CONFIG_HUSH_PARSER=y
++CONFIG_CMD_BOOTZ=y
++CONFIG_CMD_MEMTEST=y
+ # CONFIG_CMD_BOOTD is not set
+ # CONFIG_CMD_IMI is not set
+ # CONFIG_CMD_XIMG is not set
+@@ -43,3 +43,4 @@ CONFIG_USB_ETHER=y
+ CONFIG_USB_ETH_CDC=y
+ CONFIG_USBNET_HOST_ADDR="de:ad:be:af:00:00"
+ CONFIG_OF_LIBFDT=y
++CONFIG_OPTEE_TZDRAM_SIZE=0x2000000
+diff --git a/include/configs/mx7_common.h b/include/configs/mx7_common.h
+index b0b7e1edd4..0b550afff7 100644
+--- a/include/configs/mx7_common.h
++++ b/include/configs/mx7_common.h
+@@ -58,4 +58,15 @@
+ #endif
+ #endif
+ 
++/*
++ * If we have defined the OPTEE ram size and not OPTEE it means that we were
++ * launched by OPTEE, because of that we shall skip all the low level
++ * initialization since it was already done by ATF or OPTEE
++ */
++#ifdef CONFIG_OPTEE_TZDRAM_SIZE
++#ifndef CONFIG_OPTEE
++#define CONFIG_SKIP_LOWLEVEL_INIT
++#endif
++#endif
++
+ #endif
+diff --git a/include/configs/warp7.h b/include/configs/warp7.h
+index 9507cf4175..9197c06bdb 100644
+--- a/include/configs/warp7.h
++++ b/include/configs/warp7.h
+@@ -13,17 +13,6 @@
+ 
+ #define PHYS_SDRAM_SIZE			SZ_512M
+ 
+-/*
+- * If we have defined the OPTEE ram size and not OPTEE it means that we were
+- * launched by OPTEE, because of that we shall skip all the low level
+- * initialization since it was already done by ATF or OPTEE
+- */
+-#ifdef CONFIG_OPTEE_TZDRAM_SIZE
+-#ifndef CONFIG_OPTEE
+-#define CONFIG_SKIP_LOWLEVEL_INIT
+-#endif
+-#endif
+-
+ #define CONFIG_MXC_UART_BASE		UART1_IPS_BASE_ADDR
+ 
+ /* Size of malloc() pool */
+-- 
+2.23.0.rc1
+

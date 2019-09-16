@@ -1,0 +1,150 @@
+From e148dbb455e326936314b3013ab2296e4c232955 Mon Sep 17 00:00:00 2001
+From: Jun Nie <jun.nie@linaro.org>
+Date: Mon, 17 Dec 2018 16:26:33 +0800
+Subject: [PATCH 14/24] pico: Disable SPL and add DCD file
+
+Disable SPL and add DCD file, so that u-boot does not need
+SPL to initilize DDR memory.
+
+Signed-off-by: Jun Nie <jun.nie@linaro.org>
+---
+ board/technexion/pico-imx7d/Makefile       |  2 +-
+ board/technexion/pico-imx7d/pico-imx7d.cfg | 79 ++++++++++++++++++++++
+ configs/pico-pi-imx7d_defconfig            | 15 +---
+ 3 files changed, 81 insertions(+), 15 deletions(-)
+ create mode 100644 board/technexion/pico-imx7d/pico-imx7d.cfg
+
+diff --git a/board/technexion/pico-imx7d/Makefile b/board/technexion/pico-imx7d/Makefile
+index 4ae3d606b5..6cfa80368d 100644
+--- a/board/technexion/pico-imx7d/Makefile
++++ b/board/technexion/pico-imx7d/Makefile
+@@ -1,4 +1,4 @@
+ # SPDX-License-Identifier: GPL-2.0+
+ # (C) Copyright 2017 NXP Semiconductors
+ 
+-obj-y  := pico-imx7d.o spl.o
++obj-y  := pico-imx7d.o
+diff --git a/board/technexion/pico-imx7d/pico-imx7d.cfg b/board/technexion/pico-imx7d/pico-imx7d.cfg
+new file mode 100644
+index 0000000000..e5de62859e
+--- /dev/null
++++ b/board/technexion/pico-imx7d/pico-imx7d.cfg
+@@ -0,0 +1,79 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (C) 2018 Arm Ltd.
++ *
++ * Refer doc/README.imximage for more details about how-to configure
++ * and create imximage boot image
++ *
++ * The syntax is taken as close as possible with the kwbimage
++ */
++
++#define __ASSEMBLY__
++#include <config.h>
++
++IMAGE_VERSION	2
++
++BOOT_FROM	sd
++
++/*
++ * Device Configuration Data (DCD)
++ *
++ * Each entry must have the format:
++ * Addr-type           Address        Value
++ *
++ * where:
++ *	Addr-type register length (1,2 or 4 bytes)
++ *	Address	  absolute address of the register
++ *	value	  value to be stored in the register
++ */
++
++DATA 4 0x30340004 0x4F400005
++DATA 4 0x30391000 0x00000002
++DATA 4 0x307a0000 0x01040001
++DATA 4 0x307a0064 0x00400046
++DATA 4 0x307a0490 0x00000001
++DATA 4 0x307a00d4 0x00690000
++DATA 4 0x307a00d0 0x00020083
++DATA 4 0x307a00dc 0x09300004
++DATA 4 0x307a00e0 0x04080000
++DATA 4 0x307a00e4 0x00100004
++DATA 4 0x307a00f4 0x0000033f
++DATA 4 0x307a0100 0x09081109
++DATA 4 0x307a0104 0x0007020d
++DATA 4 0x307a0108 0x03040407
++DATA 4 0x307a010c 0x00002006
++DATA 4 0x307a0110 0x04020205
++DATA 4 0x307a0114 0x03030202
++DATA 4 0x307a0120 0x00000803
++DATA 4 0x307a0180 0x00800020
++DATA 4 0x307a0190 0x02098204
++DATA 4 0x307a0194 0x00030303
++DATA 4 0x307a01a0 0x80400003
++DATA 4 0x307a01a4 0x00100020
++DATA 4 0x307a01a8 0x80100004
++DATA 4 0x307a0200 0x0000001f
++DATA 4 0x307a0204 0x00080808
++DATA 4 0x307a0210 0x00000f0f
++DATA 4 0x307a0214 0x07070707
++DATA 4 0x307a0218 0x0f0f0707
++DATA 4 0x307a0240 0x06000604
++DATA 4 0x307a0244 0x00000001
++CHECK_BITS_SET 0x30391000 0x2
++DATA 4 0x30790000 0x17420f40
++DATA 4 0x30790004 0x10210100
++DATA 4 0x30790010 0x00060807
++DATA 4 0x307900b0 0x1010007e
++DATA 4 0x3079009c 0x00000d6e
++DATA 4 0x30790030 0x08080808
++DATA 4 0x30790020 0x08080808
++DATA 4 0x30790050 0x01000010
++DATA 4 0x30790050 0x00000010
++DATA 4 0x30790018 0x0000000f
++DATA 4 0x307900c0 0x0e407304
++DATA 4 0x307900c0 0x0e447304
++DATA 4 0x307900c0 0x0e447306
++DATA 4 0x307900c0 0x0e447304
++DATA 4 0x307900c0 0x0e447304
++DATA 4 0x30384130 0x00000000
++DATA 4 0x30340020 0x00000178
++DATA 4 0x30384130 0x00000002
+diff --git a/configs/pico-pi-imx7d_defconfig b/configs/pico-pi-imx7d_defconfig
+index 11df5a68b5..35f0b27536 100644
+--- a/configs/pico-pi-imx7d_defconfig
++++ b/configs/pico-pi-imx7d_defconfig
+@@ -1,30 +1,17 @@
+ CONFIG_ARM=y
+ CONFIG_ARCH_MX7=y
+ CONFIG_SYS_TEXT_BASE=0x87800000
+-CONFIG_SPL_GPIO_SUPPORT=y
+-CONFIG_SPL_LIBCOMMON_SUPPORT=y
+-CONFIG_SPL_LIBGENERIC_SUPPORT=y
+ CONFIG_TARGET_PICO_IMX7D=y
+-CONFIG_SPL_MMC_SUPPORT=y
+-CONFIG_SPL_SERIAL_SUPPORT=y
+-CONFIG_SPL=y
+-CONFIG_SPL_LIBDISK_SUPPORT=y
+ CONFIG_ARMV7_BOOT_SEC_DEFAULT=y
+ CONFIG_IMX_RDC=y
+ CONFIG_IMX_BOOTAUX=y
+ CONFIG_NR_DRAM_BANKS=1
+-CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=arch/arm/mach-imx/spl_sd.cfg"
++CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/technexion/pico-imx7d/pico-imx7d.cfg"
+ CONFIG_DEFAULT_FDT_FILE="imx7d-pico-pi.dtb"
+-CONFIG_SPL_I2C_SUPPORT=y
+-CONFIG_SPL_USB_HOST_SUPPORT=y
+-CONFIG_SPL_USB_GADGET_SUPPORT=y
+-CONFIG_SPL_USB_SDP_SUPPORT=y
+ CONFIG_HUSH_PARSER=y
+ # CONFIG_CMD_BOOTD is not set
+ # CONFIG_CMD_IMI is not set
+ # CONFIG_CMD_XIMG is not set
+-CONFIG_CMD_SPL=y
+-CONFIG_CMD_SPL_WRITE_SIZE=0x20000
+ CONFIG_CMD_DFU=y
+ CONFIG_CMD_GPIO=y
+ CONFIG_CMD_GPT=y
+-- 
+2.23.0.rc1
+

@@ -1,0 +1,32 @@
+From 2ccdb910c023a691ac00ed40b3f3aacf45c82cde Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 12 Aug 2019 13:10:21 +0100
+Subject: [PATCH 06/13] imx: imx6: arch_misc_init: Call into sec_init
+
+Call into sec_init() if directed to do so by
+
+- CONFIG_ARCH_MISC_INIT
+- CONFIG_FSL_CAAM
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ arch/arm/mach-imx/mx6/soc.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/mach-imx/mx6/soc.c b/arch/arm/mach-imx/mx6/soc.c
+index e5878bfa17..f370b07e05 100644
+--- a/arch/arm/mach-imx/mx6/soc.c
++++ b/arch/arm/mach-imx/mx6/soc.c
+@@ -689,6 +689,9 @@ void gpr_init(void)
+ #ifdef CONFIG_ARCH_MISC_INIT
+ int arch_misc_init(void)
+ {
++#ifdef CONFIG_FSL_CAAM
++	sec_init();
++#endif
+ 	return 0;
+ }
+ #endif
+-- 
+2.22.0
+

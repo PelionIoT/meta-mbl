@@ -1,0 +1,53 @@
+From 7ba5dd8723eeae9d27c2fb56d05e83978a4a60d7 Mon Sep 17 00:00:00 2001
+From: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Date: Mon, 15 Oct 2018 16:33:24 +0100
+Subject: [PATCH 07/24] warp7: include: configs: Differentiate bootscript
+ address from loadaddr
+
+Reusing the loadaddr to load the boot script breaks some of the logic we
+want to have around the bootscript/FIT load addresses. Making a dedicated
+bootscript address allows us to differentiate the bootscript load address
+from the Linux Kernel or OPTEE load address, thus ensuring that no matter
+what the load sequence the bootscript and Kernel/OPTEE binary load
+addresses do not conflict.
+
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ include/configs/warp7.h | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/include/configs/warp7.h b/include/configs/warp7.h
+index a391dfb5c1..f185663791 100644
+--- a/include/configs/warp7.h
++++ b/include/configs/warp7.h
+@@ -45,6 +45,7 @@
+ 	CONFIG_DFU_ENV_SETTINGS \
+ 	"script=boot.scr\0" \
+ 	"script_signed=boot.scr.imx-signed\0" \
++	"bootscriptaddr=0x83200000\0" \
+ 	"image=zImage\0" \
+ 	"console=ttymxc0\0" \
+ 	"ethact=usb_ether\0" \
+@@ -65,16 +66,16 @@
+ 	"warp7_auth_or_fail=hab_auth_img_or_fail ${hab_ivt_addr} ${filesize} 0;\0" \
+ 	"do_bootscript_hab=" \
+ 		"if test ${hab_enabled} -eq 1; then " \
+-			"setexpr hab_ivt_addr ${loadaddr} - ${ivt_offset}; " \
++			"setexpr hab_ivt_addr ${bootscriptaddr} - ${ivt_offset}; " \
+ 			"setenv script ${script_signed}; " \
+ 			"load mmc ${mmcdev}:${mmcpart} ${hab_ivt_addr} ${script}; " \
+ 			"run warp7_auth_or_fail; " \
+ 			"run bootscript; "\
+ 		"fi;\0" \
+ 	"loadbootscript=" \
+-		"load mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
++		"load mmc ${mmcdev}:${mmcpart} ${bootscriptaddr} ${script};\0" \
+ 	"bootscript=echo Running bootscript from mmc ...; " \
+-		"source\0" \
++		BOOT_SCR_STRING \
+ 	"loadimage=load mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
+ 	"loadfdt=load mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+ 	"mmcboot=echo Booting from mmc ...; " \
+-- 
+2.23.0.rc1
+

@@ -10,6 +10,7 @@ do_compile[depends] += " optee-os:do_deploy"
 do_compile[depends] += " atf-${MACHINE}:do_deploy"
 do_compile[depends] += " firmware-imx-8m:do_deploy"
 
+DEPENDS += " virtual/atf"
 ATF_MACHINE_NAME_mx8mm = "bl2-${MACHINE}.bin"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files/:"

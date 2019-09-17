@@ -13,4 +13,6 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 # if_updown_ext_dhcp.cfg unsets CONFIG_FEATURE_IFUPDOWN_EXTERNAL_DHCP.
 # This means busybox ifup/ifdown will ignore an external managers such as ConnMan.
-SRC_URI += "file://if_updown_ext_dhcp.cfg"
+SRC_URI += "file://if_updown_ext_dhcp.cfg \
+    file://dd_ibs_obs.cfg \
+    "

@@ -1,0 +1,27 @@
+Index: git/include/configs/imx8mm_evk.h
+===================================================================
+--- git.orig/include/configs/imx8mm_evk.h
++++ git/include/configs/imx8mm_evk.h
+@@ -92,10 +92,6 @@
+ 
+ /* ENET Config */
+ /* ENET1 */
+-#if defined(CONFIG_CMD_NET)
+-#define CONFIG_CMD_PING
+-#define CONFIG_CMD_DHCP
+-#define CONFIG_CMD_MII
+ #define CONFIG_MII
+ #define CONFIG_ETHPRIME                 "FEC"
+ 
+@@ -109,6 +105,11 @@
+ 
+ #define CONFIG_PHYLIB
+ #define CONFIG_PHY_ATHEROS
++
++#if defined(CONFIG_CMD_NET)
++#define CONFIG_CMD_PING
++#define CONFIG_CMD_DHCP
++#define CONFIG_CMD_MII
+ #endif
+ 
+ #define CONFIG_SYS_BOOTM_LEN         SZ_64M

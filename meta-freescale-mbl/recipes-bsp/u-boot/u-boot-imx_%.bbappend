@@ -10,10 +10,12 @@ SRC_URI = "git://source.codeaurora.org/external/imx/uboot-imx.git;protocol=https
     file://0002-imx8mm_evk_mbl-Add-an-mbed-Linux-imx8mm_evk-defconfi.patch \
     file://0003-arm-imx-Add-mbl-specific-boot-option.patch \
     file://0004-cmd-image_info-Add-checking-of-default-FIT-config.patch \
+    file://0005-enable-fec-without-net-cmd.patch \
 "
 
 SRC_URI_append_imx8mmevk = " \
     ${@bb.utils.contains_any('PACKAGECONFIG','noconsole silent',' file://0003-set-silent-envs.patch','',d)} \
+    ${@bb.utils.contains('PACKAGECONFIG','minimal',' file://0002-disable-dm-eth-mbl.cfg','',d)} \
     "
 
 # MBL_UBOOT_VERSION should be updated to match version pointed to by SRCREV

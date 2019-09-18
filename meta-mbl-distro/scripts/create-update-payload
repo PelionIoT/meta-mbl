@@ -84,7 +84,7 @@ def parse_args():
     )
     parser.add_argument(
         "-b",
-        "--bootloader-component",
+        "--bootloader-components",
         dest="bootloader_components",
         help="Add one or more bootloader components (N) to the payload.",
         metavar="N",
@@ -108,8 +108,9 @@ def parse_args():
     parser.add_argument(
         "-r",
         "--rootfs",
-        help="Add the root file system to the payload",
-        action="store_true",
+        help="Add the root file system to the payload, must provide the image "
+        "name e.g mbl-image-development",
+        metavar="IMAGE_NAME",
     )
     parser.add_argument(
         "-o",
@@ -413,28 +414,26 @@ def get_payload_files_data(args, tinfoil):
     return fname_var_map
 
 
-def get_rootfs_path(tinfoil):
+def get_rootfs_path(image_name, tinfoil):
     deploy_dir = get_bitbake_conf_var("DEPLOY_DIR_IMAGE", tinfoil)
     if not deploy_dir:
         bb.fatal("Failed to get value of DEPLOY_DIR_IMAGE variable")
-
-    distro = get_bitbake_conf_var("DISTRO", tinfoil)
-    if not distro:
-        bb.fatal("Failed to get value of DISTRO variable")
 
     machine = get_bitbake_conf_var("MACHINE", tinfoil)
     if not machine:
         bb.fatal("Failed to get value of MACHINE variable")
 
-    if distro == "mbl-production":
-        image_name = "mbl-image-production"
-    elif distro == "mbl-development":
-        image_name = "mbl-image-development"
-    else:
-        bb.fatal('Unrecognized DISTRO value "{}"'.format(distro))
-
     rootfs_filename = "{}-{}.tar.xz".format(image_name, machine)
-    rootfs_image_path = pathlib.Path(deploy_dir, rootfs_filename).resolve()
+    try:
+        rootfs_image_path = pathlib.Path(deploy_dir, rootfs_filename).resolve()
+    except FileNotFoundError:
+        bb.fatal(
+            "The rootfs image with filename {} was not found. Have you "
+            "provided the correct image-name? Have you built the rootfs "
+            "image and is it located in {}?".format(
+                rootfs_filename, deploy_dir
+            )
+        )
 
     if not rootfs_image_path.exists():
         bb.fatal(
@@ -462,7 +461,7 @@ def create_payload(fname_var_map, rootfs, apps, output_path, tinfoil):
         copy_to_staging_dir(fname_var_map, staging_dir, tinfoil=tinfoil)
 
         if rootfs:
-            rootfs_path = get_rootfs_path(tinfoil)
+            rootfs_path = get_rootfs_path(rootfs, tinfoil)
         else:
             rootfs_path = None
 

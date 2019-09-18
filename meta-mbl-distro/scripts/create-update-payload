@@ -7,16 +7,14 @@
 """
 This script will create an update payload tar archive.
 
-The tar achive is uncompressed, but the files within it are compressed with xz.
-
 To use the script you can either pass in a space separated list of file names
-or a list of bootloader slot numbers. Bootloader slot numbers are a way to
-reference a particular bootloader partition, i.e passing 1 will reference
-bootloader partition 1, etc.
+or a list of bootloader component numbers. Bootloader component numbers
+reference a particular bootloader component to update: passing 1 will select
+bootloader component 1, etc.
 
-We rename the files MBL_WKS_BOOTLOADER[n] so the update scripts on the target
-only have to know which bootloader slot they're updating, and are generic for
-any MACHINE target.
+We collect the files/directories which need to be included in the payload,
+compress the files/directories with gz and pack them into an uncompressed
+tar archive.
 
 The script assumes the files you want to archive are in DEPLOY_DIR_IMAGE in
 your MBL workspace.
@@ -25,17 +23,18 @@ The script supports multi-component or single component payloads.
 
 Example invocation:
 
-create-update-payload --bootloader-slots 1 2 --output-tar-path tmp/payload.tar
+create-update-payload --bootloader-components 1 2 -o tmp/payload.tar
 
-This will create the update payload containing the bootloader partition 1 and
-bootloader partition 2 components at tmp/payload.tar.
+This will create the update payload containing bootloader component 1 and
+bootloader component 2 and output the archive to tmp/payload.tar.
 
 The script looks for the files in DEPLOY_DIR_IMAGE, you need to have an MBL
 workspace set up and you must have sourced setup-environment.
 
 We have to set the import path relative to this script so python can import the
-bitbake and oe libs, so it cannot be moved from the meta-mbl-distro/scripts
-folder, as the paths are worked out relative to the location of this file.
+bitbake and oe libs, the script cannot be moved from the
+meta-mbl-distro/scripts folder, as the import paths are relative to the
+location of this file.
 
 The script must be executed from TOPDIR, which is the build directory created
 when you source setup-environment, or bitbake can't resolve the paths it needs.
@@ -44,15 +43,16 @@ TOPDIR is ./mbl-manifest/build-mbl-development or
 ./mbl-manifest/build-mbl-production in the MBL workspace.
 """
 
-import gzip
+import io
+import itertools
 import pathlib
-import re
 import shutil
 import sys
 import tarfile
 import tempfile
+import time
 
-
+from argparse import RawTextHelpFormatter
 # Set the PYTHONPATH so we can import openembedded scripts/lib modules.
 oe_scripts_path = (
     pathlib.Path(__file__).resolve().parent.parent.parent.parent
@@ -73,22 +73,43 @@ import bb.tinfoil
 import argparse_oe
 
 
+MBL_BOOT_ID = "BOOT"
+PAYLOAD_FORMAT_VERSION = b"1"
+
+
 def parse_args():
     """Parse the command line arguments."""
-    parser = argparse_oe.ArgumentParser(description=__doc__)
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        "-f",
-        "--filenames",
-        nargs="+",
-        help="Space separated list of filenames of update components.",
+    parser = argparse_oe.ArgumentParser(
+        description=__doc__, formatter_class=RawTextHelpFormatter
     )
-    group.add_argument(
+    parser.add_argument(
         "-b",
-        "--bootloader-slots",
+        "--bootloader-component",
+        dest="bootloader_components",
+        help="Add one or more bootloader components (N) to the payload.",
+        metavar="N",
         nargs="+",
-        help="Space separated list of bootloader slot numbers. e.g 1 would"
-        " correspond to bootloader slot one.",
+    )
+    parser.add_argument(
+        "-a",
+        "--apps",
+        dest="apps",
+        help="Add one or more ipk files for apps to the payload",
+        metavar="IPK_PATH",
+        type=lambda x: pathlib.Path(x).absolute(),
+        nargs="+",
+    )
+    parser.add_argument(
+        "-k",
+        "--kernel",
+        help="Add the kernel image to the payload",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-r",
+        "--rootfs",
+        help="Add the root file system to the payload",
+        action="store_true",
     )
     parser.add_argument(
         "-o",
@@ -96,120 +117,358 @@ def parse_args():
         type=lambda x: pathlib.Path(x).absolute(),
         default="payload.tar",
         help="Output path for tar archive containing the update payload.",
+        metavar="PATH",
     )
+
     args = parser.parse_args()
+    if (
+        args.bootloader_components is None
+        and args.apps is None
+        and not args.kernel
+        and not args.rootfs
+    ):
+        parser.error("No input arguments given.")
+
+    if args.apps is not None:
+        # Check for duplicate app filenames and missing ".ipk" extensions
+        app_basenames_to_paths = dict()
+        for app_path in args.apps:
+            if not str(app_path).endswith(".ipk"):
+                parser.error(
+                    'App file "{}" does not have an "ipk" extension'.format(
+                        app_path
+                    )
+                )
+            if app_path.name in app_basenames_to_paths:
+                duplicate_path = app_basenames_to_paths[app_path.name]
+                parser.error(
+                    'Duplicate file name for app paths "{}" and "{}"'.format(
+                        app_path, duplicate_path
+                    )
+                )
+            app_basenames_to_paths[app_path.name] = app_path
 
     return args
 
 
-def match_varnames_to(filenames, tinfoil=None):
+def get_bitbake_conf_var(var_name, tinfoil):
+    val = tinfoil.config_data.getVar(var_name)
+    if val is None:
+        return val
+    return val.strip()
+
+
+def img_boot_files_val_to_map_val(img_bf_val, image_deploy_dir):
     """
-    Match bitbake variable names to the given file names.
+    Convert a value from the IMAGE_BOOT_FILES var to a list of paths.
 
-    Parse the bitbake config data using the tinfoil API and find the
-    variable which is bound to the file name.
+    The values in the IMAGE_BOOT_FILES var can be a string filename,
+    a filename with an 'output name' separated by a semi-colon, or a directory
+    with a glob expression. This function will convert these strings to lists
+    of Path objects according to the following rules:
 
-    Return a dict with the variable names as keys and
-    file names as values.
+    * dir with glob, e.g mbl-bootfiles/*: list of Path objects, each
+    representing a file in the directory.
 
-    :param filenames list: List of file names to look for.
-    :param tinfoil Tinfoil: bitbake tinfoil object.
+    * filename: a list of Path objects with one element.
+
+    * filename with output name, e.g uImage;kernel: A tuple where
+    tuple element 0 is the original file name as a Path and tuple element 1 is
+    the output file name as a Path.
+
+    :param img_bf_val str: the IMAGE_BOOT_FILES value.
+    :param deploy_dir_img Path: path to the image deploy dir.
     """
-    output_map = {}
-    for cvar in tinfoil.config_data:
-        if cvar.startswith("MBL_WKS"):
-            val = tinfoil.config_data.getVar(cvar).strip()
-            if val in filenames:
-                output_map[cvar.split("_FILENAME")[0]] = val
-
-    if not output_map:
-        raise FileNotFoundError(
-            "No matching vars were found."
-            "\nThe available config data is: {}"
-            "\n\nThe filenames we are trying to match are: {}".format(
-                list(tinfoil.config_data), filenames
+    installed_name_delim = ";"
+    if img_bf_val.endswith(r"/*"):
+        return list(pathlib.Path(image_deploy_dir).glob(img_bf_val))
+    elif installed_name_delim in img_bf_val:
+        orig_name, installed_name = img_bf_val.split(installed_name_delim)
+        return [
+            (
+                pathlib.Path(image_deploy_dir, orig_name),
+                pathlib.Path(installed_name),
             )
-        )
-    return output_map
+        ]
+    elif img_bf_val:
+        return [pathlib.Path(image_deploy_dir, img_bf_val)]
 
 
-def match_filenames_to(bootloader_slots, tinfoil=None):
+def get_path_for_bootloader_slot(bootloader_slot_name, deploy_dir, tinfoil):
     """
-    Look up the bitbake variables corresponding to the bootloader slots.
+    Get the path to the file for the given bootloader component.
 
-    Parse the bitbake config data using the tinfoil API and match the
-    MBL_WKS_BOOTLOADER variable to the given bootloader slot.
-
-    Return a dict with the variable name as the key and the file name as the
-    value.
-
-    :param bootloader_slots list: List of bootloader slots e.g [1, 2]
+    :param bootloader_slot_name str: name of the bootloader slot, e.g.
+    WKS_BOOTLOADER1
+    :param deploy_dir Path: path to DEPLOY_DIR_IMAGE.
     :param tinfoil Tinfoil: bitbake tinfoil object.
     """
-    output_map = {}
-    for conf_var in tinfoil.config_data:
-        match = re.match(r"MBL_WKS_BOOTLOADER_?([A-Z0-9])_FILENAME", conf_var)
-        if match and match.group(1).lower() in bootloader_slots:
-            output_map[
-                conf_var.split("_FILENAME")[0]
-            ] = tinfoil.config_data.getVar(conf_var).strip()
+    filename_var_name = "MBL_{}_FILENAME".format(bootloader_slot_name)
+    filename = get_bitbake_conf_var(filename_var_name, tinfoil)
+    if not filename:
+        bb.fatal("Failed to get value of {}".format(filename_var_name))
+    return deploy_dir / filename
 
-    return output_map
+
+def get_files_for_boot_part(deploy_dir, tinfoil=None):
+    """
+    Match all files for the BOOT partition (or BLFS).
+
+    Looks up the value of the IMAGE_BOOT_FILES bb variable. Returns a list of
+    paths as the value.
+
+    :param deploy_dir Path: path to DEPLOY_DIR_IMAGE.
+    :param tinfoil Tinfoil: BitBake tinfoil object.
+    """
+    image_boot_files = get_bitbake_conf_var("IMAGE_BOOT_FILES", tinfoil)
+    if not image_boot_files:
+        bb.fatal("Failed to find any files in IMAGE_BOOT_FILES")
+
+    boot_file_specs = image_boot_files.split()
+    boot_files = list(
+        itertools.chain(
+            *[
+                img_boot_files_val_to_map_val(elem, deploy_dir)
+                for elem in boot_file_specs
+            ]
+        )
+    )
+    if not boot_files:
+        bb.fatal("Failed to convert IMAGE_BOOT_FILES value into list of files")
+    return boot_files
+
+
+def copy_files_to_subdir(paths, dst_dir):
+    """
+    Copy files to a destination directory, renaming them when specified.
+
+    :param paths list<Path|tuple<Path, Path>>: a list of specifications of
+    files to copy to a destination directory. Each element can just be a
+    plain Path, in which case it is copied to the destination directory with
+    its existing filename; otherwise the element should be a 2-tuple of Paths
+    (src_path, dst_name) where src_path will be copied to dst_dir with the name
+    dst_name.
+
+    :param dst_dir Path: the directory into which files will be copied.
+    """
+    for path in paths:
+        if isinstance(path, tuple):
+            src_path = path[0]
+            dst_name = path[1].name
+        else:
+            src_path = path
+            dst_name = path.name
+        # copy2 preserves file metadata and follows symlinks
+        try:
+            shutil.copy2(str(src_path), str(dst_dir / dst_name))
+        except FileNotFoundError:
+            bb.fatal(
+                "File for the {} update component was not found at path {}. "
+                "Have you built the update components?".format(
+                    dst_name, str(src_path)
+                )
+            )
 
 
 def copy_to_staging_dir(filename_var_map, staging_dir, tinfoil=None):
     """
-    Copy files to a staging dir, renaming them as MBL_WKS_BOOTLOADER[n].
+    Copy files to a staging dir and rename as is appropriate for inclusion into
+    the payload.
 
-    :param filename_var_map dict: Mapping of bitbake variable names to files.
+    :param filename_var_map dict: mapping of component names to files.
     :param staging dir Path: path to the dir where the files will be copied to.
     """
+    for component_name, paths in filename_var_map.items():
+        if isinstance(paths, list):
+            dst_dir = staging_dir / component_name
+            dst_dir.mkdir(exist_ok=True)
+        else:
+            paths = [(paths, pathlib.Path(component_name))]
+            dst_dir = staging_dir
+
+        copy_files_to_subdir(paths, dst_dir)
+
+
+def add_payload_format_version_to_tar_archive(tar):
+    buf = io.BytesIO(PAYLOAD_FORMAT_VERSION)
+    tar_info = tarfile.TarInfo(name="payload_format_version")
+    tar_info.size = len(buf.getvalue())
+    tar_info.mode = 0o444
+    tar_info.uid = 0
+    tar_info.gid = 0
+    tar_info.uname = "root"
+    tar_info.gname = "root"
+    tar_info.mtime = time.time()
+    tar.addfile(tar_info, buf)
+
+
+def create_tar_archive(
+    tar_archive_name, dir_path, fname_var_map, rootfs_path, apps
+):
+    """
+    Create a tar archive.
+
+    The tar archive is uncompressed but the files within it are compressed
+    using xz.
+
+    :param tar_archive_name str: path to the tar archive.
+    :param dir_path Path: path to the directory of the files to archive.
+    :param fname_var_map dict: mapping of bitbake variable names to files.
+    """
+    files_for_tar = []
+    for tar_member_path in dir_path.iterdir():
+        for var in fname_var_map:
+            if tar_member_path.is_dir():
+                arcname = tar_member_path.name
+            elif tar_member_path.name == var:
+                arcname = var
+                break
+
+        compressed_tar_path = (dir_path / arcname).with_suffix(".tar.xz")
+        files_for_tar.append(compressed_tar_path)
+
+        with tarfile.open(str(compressed_tar_path), mode="w:xz") as tar_file:
+            tar_file.add(str(tar_member_path), arcname=arcname)
+
+    with tarfile.open(tar_archive_name, mode="w") as tar:
+        add_payload_format_version_to_tar_archive(tar)
+        for arc_path in files_for_tar:
+            tar.add(str(arc_path), arcname=arc_path.name)
+
+        if rootfs_path:
+            tar.add(str(rootfs_path), arcname="rootfs.tar.xz")
+
+        for app in apps:
+            tar.add(str(app), arcname=app.name)
+
+
+def _bootloader_one_with_kernel(bootloader_components, tinfoil):
+    return (
+        get_bitbake_conf_var("MBL_WKS_BOOTLOADER1_SKIP", tinfoil) == "1"
+        and "1" in bootloader_components
+    )
+
+
+def _kernel_with_bootloader_one(bootloader_components, tinfoil):
+    return get_bitbake_conf_var("MBL_WKS_BOOTLOADER1_SKIP", tinfoil) == "1"
+
+
+def get_payload_files_data(args, tinfoil):
+    """
+    Retrieve the file data for the payload.
+
+    Checks an argparse.Namespace object for valid arguments
+    and retrieves the file data associated with the chosen payload(s).
+
+    :param args Namespace: argparse Namespace object.
+    :param tinfoil Tinfoil: bitbake Tinfoil object.
+    """
     deploy_dir_img = pathlib.Path(
-        tinfoil.config_data.getVar("DEPLOY_DIR_IMAGE")
+        get_bitbake_conf_var("DEPLOY_DIR_IMAGE", tinfoil)
     )
     if deploy_dir_img is None:
-        raise EnvironmentError(
+        bb.fatal(
             "DEPLOY_DIR_IMAGE was not found. "
             "You must be in a valid bitbake environment and you must "
             "have built an MBL image first so DEPLOY_DIR_IMAGE exists."
         )
 
-    for var, fname in filename_var_map.items():
-        src = deploy_dir_img / fname
-        dest = staging_dir / fname
-        shutil.copy2(str(src), str(dest))
+    fname_var_map = {}
+    if args.bootloader_components:
+        bootloader_components_copy = args.bootloader_components.copy()
+        if _bootloader_one_with_kernel(args.bootloader_components, tinfoil):
+            if not args.kernel:
+                bb.warn(
+                    "On this target the bootloader 1 component and kernel must"
+                    " be updated together. Adding kernel to payload..."
+                )
+                fname_var_map[MBL_BOOT_ID] = get_files_for_boot_part(
+                    deploy_dir_img, tinfoil
+                )
 
+            bootloader_components_copy.remove("1")
 
-def create_payload_tar_archive(tar_archive_name, dir_path, fname_var_map):
-    """
-    Create the payload tar archive.
+        for bootloader_slot_number in bootloader_components_copy:
+            slot_name = "WKS_BOOTLOADER{}".format(bootloader_slot_number)
+            path = get_path_for_bootloader_slot(
+                slot_name, deploy_dir_img, tinfoil
+            )
+            fname_var_map[slot_name] = path
 
-    The tar archive is uncompressed but the files within it are compressed
-    using xz.
-
-    :param tar_archive_name str: Path to the tar archive.
-    :param dir_path Path: Path to the directory of the files to archive.
-    :param fname_var_map dict: Mapping of bitbake variable names to files.
-    """
-    files_for_tar = []
-    for fname in dir_path.iterdir():
-        # Look up a dictionary key by value, so we can name the file with
-        # the bitbake variable name.
-        gzip_fname = "{}.gz".format(
-            list(fname_var_map.keys())[
-                list(fname_var_map.values()).index(fname.name)
-            ]
+    if args.kernel:
+        if _kernel_with_bootloader_one(args.bootloader_components, tinfoil):
+            if "1" not in args.bootloader_components:
+                bb.warn(
+                    "On this target the bootloader 1 component and kernel must"
+                    " be updated together. Adding bootloader 1 component to "
+                    "payload..."
+                )
+        fname_var_map[MBL_BOOT_ID] = get_files_for_boot_part(
+            deploy_dir_img, tinfoil
         )
-        gzip_path = dir_path / gzip_fname
-        files_for_tar.append(gzip_path)
 
-        with fname.open(mode="rb") as f_obj:
-            with gzip.open(str(gzip_path), "wb") as gzip_arc:
-                shutil.copyfileobj(f_obj, gzip_arc)
+    if args.apps is None:
+        args.apps = []
 
-    with tarfile.open(tar_archive_name, mode="w") as tar:
-        for arc_path in files_for_tar:
-            tar.add(str(arc_path), arcname=arc_path.name)
+    return fname_var_map
+
+
+def get_rootfs_path(tinfoil):
+    deploy_dir = get_bitbake_conf_var("DEPLOY_DIR_IMAGE", tinfoil)
+    if not deploy_dir:
+        bb.fatal("Failed to get value of DEPLOY_DIR_IMAGE variable")
+
+    distro = get_bitbake_conf_var("DISTRO", tinfoil)
+    if not distro:
+        bb.fatal("Failed to get value of DISTRO variable")
+
+    machine = get_bitbake_conf_var("MACHINE", tinfoil)
+    if not machine:
+        bb.fatal("Failed to get value of MACHINE variable")
+
+    if distro == "mbl-production":
+        image_name = "mbl-image-production"
+    elif distro == "mbl-development":
+        image_name = "mbl-image-development"
+    else:
+        bb.fatal('Unrecognized DISTRO value "{}"'.format(distro))
+
+    rootfs_filename = "{}-{}.tar.xz".format(image_name, machine)
+    rootfs_image_path = pathlib.Path(deploy_dir, rootfs_filename).resolve()
+
+    if not rootfs_image_path.exists():
+        bb.fatal(
+            'Can\'t find rootfs image file "{}"'.format(rootfs_image_path)
+        )
+
+    return rootfs_image_path
+
+
+def create_payload(fname_var_map, rootfs, apps, output_path, tinfoil):
+    """
+    Create an update payload.
+
+    Copy the payload contents to a TemporaryDirectory where the files are renamed
+    and archived.
+
+    :param fname_var_map dict: mapping of payload component names to file names.
+    :param rootfs: rootfs file to include in the payload (can be None).
+    :param apps: list of apps to include in the payload (can be an empty list).
+    :param output_path Path: path where we output the payload tar archive.
+    :param tinfoil Tinfoil: bitbake Tinfoil object.
+    """
+    with tempfile.TemporaryDirectory() as staging_dir:
+        staging_dir = pathlib.Path(staging_dir)
+        copy_to_staging_dir(fname_var_map, staging_dir, tinfoil=tinfoil)
+
+        if rootfs:
+            rootfs_path = get_rootfs_path(tinfoil)
+        else:
+            rootfs_path = None
+
+        create_tar_archive(
+            str(output_path), staging_dir, fname_var_map, rootfs_path, apps
+        )
 
 
 def main(args):
@@ -218,7 +477,6 @@ def main(args):
 
     :param args Namespace: argparse Namespace object.
     """
-    fname_var_map = {}
     with bb.tinfoil.Tinfoil() as tinfoil:
         try:
             tinfoil.prepare(config_only=True)
@@ -234,18 +492,15 @@ def main(args):
                 "https://www.yoctoproject.org/docs/latest/mega-manual/"
                 "mega-manual.html#var-BBPATH"
             )
-        if args.filenames is not None:
-            fname_var_map = match_varnames_to(args.filenames, tinfoil=tinfoil)
 
-        if args.bootloader_slots is not None:
-            fname_var_map = match_filenames_to(
-                args.bootloader_slots, tinfoil=tinfoil
-            )
-
-        with tempfile.TemporaryDirectory() as staging_dir:
-            staging_dir = pathlib.Path(staging_dir)
-            copy_to_staging_dir(fname_var_map, staging_dir, tinfoil=tinfoil)
-            create_payload_tar_archive(str(args.tar_output_path), staging_dir, fname_var_map)
+        fname_var_map = get_payload_files_data(args, tinfoil)
+        create_payload(
+            fname_var_map,
+            args.rootfs,
+            args.apps,
+            args.tar_output_path,
+            tinfoil,
+        )
 
 
 if __name__ == "__main__":

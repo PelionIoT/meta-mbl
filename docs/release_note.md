@@ -15,7 +15,7 @@ For more information about the features and product vision, please see the [intr
 The main additions to 0.8 over 0.7:
 
 * Partial BSP support for the [TechNexion PICO-PI development board with an i.MX6UL System on Module](https://os.mbed.com/docs/mbed-linux-os/v0.8/first-image/hardware.html).
-* New [meta-psa layer](https://github.com/ARMmbed/meta-mbl/tree/mbl-os-0.8/meta-psa) that adds support for [Mbed Crypto](https://github.com/ARMmbed/mbed-crypto).
+* Initial implementation of the [meta-psa layer](https://github.com/ARMmbed/meta-mbl/tree/mbl-os-0.8/meta-psa) that adds support for [Mbed Crypto](https://github.com/ARMmbed/mbed-crypto).
 * Beta [standalone signing tool](https://github.com/ARMmbed/meta-mbl/tree/mbl-os-0.8/openembedded-core-mbl/scripts/signctl/README.md) to simplify the certificate generation and signing of the boot loaders and update components.
 
 ## Known issues

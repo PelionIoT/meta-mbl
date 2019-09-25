@@ -55,4 +55,10 @@ PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " connman"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " connman-client"
 PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " systemd-net-conf"
 
+# Packages to be installed when 'production-dbg' PACKAGECONFIG is set
+PACKAGEGROUP_MBL_PRODUCTION_PKGS_append = " \
+    ${@ bb.utils.contains('COMBINED_FEATURES', 'usbgadget', 'systemd-net-conf-dbg-iface', '', d) if bb.utils.contains('PACKAGECONFIG', 'production-eth-dbg', 'True', '', d) else ''} \
+    ${@ bb.utils.contains('PACKAGECONFIG', 'production-eth-dbg', 'dropbear', '', d)} \
+    "
+
 RDEPENDS_packagegroup-mbl-production += "${PACKAGEGROUP_MBL_PRODUCTION_PKGS}"

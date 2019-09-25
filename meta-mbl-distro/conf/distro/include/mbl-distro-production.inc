@@ -32,3 +32,13 @@ PACKAGECONFIG_append_pn-optee-os = " ${OPTEE_PRODUCTION_CFG}"
 # For production images we want to set the minimum password length to 12
 # characters.
 MBL_PASS_MIN_LEN = "12"
+
+# The MBL_PRODUCTION_ETH_DBG variable controls whether or not we want
+# the production images to have an (usbgadget) ethernet debug interface
+# and applies specific PACKAGECONFIG to the following packages.
+# The debug interface name is set in the ${MACHINE}.conf file via
+# MBL_DBG_IFNAME variable.
+MBL_PRODUCTION_ETH_DBG ?= "1"
+PACKAGECONFIG_append_pn-packagegroup-mbl-production = " ${@bb.utils.contains('MBL_PRODUCTION_ETH_DBG', '1', 'production-eth-dbg', '', d)}"
+PACKAGECONFIG_pn-systemd-net-conf = " ${@bb.utils.contains('MBL_PRODUCTION_ETH_DBG', '1', 'eth-dbg-only', '', d)}"
+PACKAGECONFIG_append_pn-dropbear = " ${@bb.utils.contains('MBL_PRODUCTION_ETH_DBG', '1', 'eth-dbg-only', '', d)}"

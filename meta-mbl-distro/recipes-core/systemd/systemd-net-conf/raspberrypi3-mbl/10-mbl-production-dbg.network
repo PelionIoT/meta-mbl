@@ -1,0 +1,13 @@
+# Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+[Match]
+Name=!usb*
+Driver=cdc_ether
+# Rule for exclude Rpi3 onboard ethernet interface
+Path=!usb-usb-0:1.1.1:1.0
+
+[Network]
+LinkLocalAddressing=ipv6
+MulticastDNS=yes
+LLMNR=no

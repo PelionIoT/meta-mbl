@@ -1,0 +1,11 @@
+# Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+[Match]
+Name=__REPLACE_ME_WITH_MBL_DBG_IFNAME__
+
+[Network]
+LinkLocalAddressing=ipv6
+MulticastDNS=yes
+LLMNR=no

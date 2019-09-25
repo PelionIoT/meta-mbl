@@ -1,0 +1,20 @@
+# Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+[Unit]
+Description=Dropbear Activation Socket
+DefaultDependencies=no
+Requires=sysinit.target system.slice
+Before=shutdown.target
+Conflicts=dropbear.service shutdown.target
+After=sys-subsystem-net-devices-__REPLACE_ME_WITH_MBL_DBG_IFNAME__.device system.slice sysinit.target
+
+[Socket]
+ListenStream=22
+Accept=yes
+BindToDevice=__REPLACE_ME_WITH_MBL_DBG_IFNAME__
+
+[Install]
+Also=dropbearkey.service
+WantedBy=multi-user.target

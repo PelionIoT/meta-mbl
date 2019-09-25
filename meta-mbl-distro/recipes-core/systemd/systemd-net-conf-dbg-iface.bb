@@ -11,6 +11,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 
 SRC_URI = "file://mbl-usb-gether-mac-addr.service \
            file://mbl-usb-gether-mac-addr.sh \
+           file://10-mbl-dbg.link \
           "
 
 inherit systemd
@@ -30,9 +31,14 @@ do_install() {
 
     install -d ${D}/opt/arm/
     install -m 0744 ${WORKDIR}/mbl-usb-gether-mac-addr.sh ${D}/opt/arm/mbl-usb-gether-mac-addr.sh
+
+    install -d ${D}${systemd_unitdir}/network/
+    install -m 0644 ${WORKDIR}/10-mbl-dbg.link ${D}${systemd_unitdir}/network/
 }
 
-FILES_${PN} = "/opt/arm/mbl-usb-gether-mac-addr.sh"
+FILES_${PN} = "/opt ${systemd_unitdir}"
 
-MBL_VAR_PLACEHOLDER_FILES = "${D}/opt/arm/mbl-usb-gether-mac-addr.sh"
+MBL_VAR_PLACEHOLDER_FILES = "${D}/opt/arm/mbl-usb-gether-mac-addr.sh \
+    ${D}${systemd_unitdir}/network/10-mbl-dbg.link \
+    "
 inherit mbl-var-placeholders

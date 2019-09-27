@@ -2,7 +2,7 @@
 
 Copyright © 2018-2019 Arm Limited.
 
-We are pleased to announce that [Mbed Linux OS 0.8.0][mbl-release] is now available as a public preview release.
+We are pleased to announce that [Mbed Linux OS 0.8.1][mbl-release] is now available as a public preview release.
 
 ## Summary
 
@@ -49,7 +49,7 @@ The supporting repositories are:
 Thhe main documentation is on the [website][mbl-introduction]. There are some supporting reference and technical documentation in [meta-mbl/docs][mbl-extra-docs].
 
 
-[mbl-release]: https://github.com/ARMmbed/mbl-manifest/releases/tag/mbl-os-0.8.0
+[mbl-release]: https://github.com/ARMmbed/mbl-manifest/releases/tag/mbl-os-0.8.1
 [mbl-extra-docs]: https://github.com/ARMmbed/meta-mbl/tree/mbl-os-0.8/docs
 [mbl-start-guide]: https://os.mbed.com/docs/mbed-linux-os/v0.8/welcome/index.html#getting-started
 [mbl-introduction]: https://os.mbed.com/docs/mbed-linux-os/v0.8/welcome/index.html

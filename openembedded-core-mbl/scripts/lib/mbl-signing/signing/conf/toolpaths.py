@@ -13,5 +13,5 @@ class ToolPaths:
 
     # Default assumes fiptool is installed with the package.
     # This can be changed by binding this variable to a different path.
-    FIPTOOL_BIN = str(pathlib.Path(__file__).parent.parent / "fiptool")
+    FIPTOOL_BIN = str(pathlib.Path("/home/robwal02/mbl/build/machine-imx8mmevk-mbl/mbl-manifest/build-mbl-development/tmp/work/imx7d_pico_mbl-oe-linux-gnueabi/atf-imx7d-pico-mbl/2.1+gitAUTOINC+89a4d26914-r0/git/tools/fiptool/fiptool").absolute())
     MKIMAGE_BIN = "mkimage"

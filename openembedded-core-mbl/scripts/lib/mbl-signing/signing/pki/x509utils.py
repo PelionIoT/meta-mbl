@@ -317,3 +317,7 @@ def add_extensions(cert_pem, encoding, extensions):
         return certificate
     else:
         raise ValueError("encoding must be 'der' 'pem' or 'raw'.")
+
+
+def extract_rsa_signature(pub_key):
+    pass

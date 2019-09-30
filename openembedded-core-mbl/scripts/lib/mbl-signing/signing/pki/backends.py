@@ -252,3 +252,15 @@ class VaultBackend(SigningBackend):
         return self._client.secrets.pki.list_certificates(
             mount_point=issuer_name
         )
+
+    def generate_encryption_key(self, name, **params):
+        self._client.sys.enable_secrets_engine(backend_type="transit", path=name)
+        return self._client.secrets.transit.create_key(
+            name, **params, mount_point=name
+        )
+
+    def read_encryption_key(self, name):
+        return self._client.secrets.transit.read_key(name, mount_point=name)
+
+    def encrypt_data(self, name, **params):
+        return self._client.secrets.transit.encrypt_data(name, **params, mount_point=name)

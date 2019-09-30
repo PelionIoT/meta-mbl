@@ -18,8 +18,6 @@ module.
 import json
 import logging
 import multiprocessing
-import pathlib
-import subprocess
 import time
 
 import requests
@@ -117,6 +115,10 @@ class KeyStore:
         params["common_name"] = common_name
         return KeyStoreResponse(requests.post(endpoint, json=params))
 
+    def generate_encryption_key(self, name, **params):
+        endpoint = _format_path(self._path, "encryption", "keys", name)
+        return KeyStoreResponse(requests.post(endpoint, json=params))
+
     def generate_intermediate(
         self, common_name, int_type, issuer_name, **params
     ):
@@ -133,6 +135,10 @@ class KeyStore:
         params["common_name"] = common_name
         params["root_name"] = issuer_name
         return KeyStoreResponse(requests.post(endpoint, json=params))
+
+    def read_encryption_key(self, name):
+        endpoint = _format_path(self._path, "encryption", "keys", name)
+        return KeyStoreResponse(requests.post(endpoint))
 
     def read_certificate(self, serial, issuer_name):
         """
@@ -173,6 +179,10 @@ class KeyStore:
         """
         endpoint = _format_path(self._path, "roles", role_name)
         params["issuer"] = issuer_name
+        return KeyStoreResponse(requests.post(endpoint, json=params))
+
+    def encrypt_data(self, name, **params):
+        endpoint = _format_path(self._path, "encryption", "encrypt", name)
         return KeyStoreResponse(requests.post(endpoint, json=params))
 
 

@@ -29,8 +29,10 @@ import logging
 import os
 import pathlib
 import sys
+import tempfile
 
 from signing.fip import fiptool
+from signing.fitimage.mkimage import MkImage
 from signing.pki import keystore
 from signing.pki import tbbr_defs
 from signing.pki.x509utils import extract_public_key, cert_pem_to_der
@@ -119,6 +121,10 @@ def parse_args():
         )
     )
     dump_cmd.add_argument(
+        "--fit-rot",
+        action="store_true",
+    )
+    dump_cmd.add_argument(
         "--ca-ttl",
         default="8750h",
         help="Issuer TTL."
@@ -141,16 +147,34 @@ def parse_args():
     )
     dump_cmd.set_defaults(func=handle_gen_cmd)
 
-    sign_cmd = commands.add_parser("sign-tfa", help="Sign TF-A BL and FIP.")
+    sign_cmd = commands.add_parser(
+        "sign", help="Sign TF-A bootloader components and u-boot FIT binary."
+    )
     sign_cmd.add_argument(
-        "--rpi-armstub8", type=abspath, help="Path to armstub8.bin"
+        "--rpi-armstub8",
+        type=abspath,
+        help="Path to a Raspberry-PI 3 VC4 firmware image (e.g armstub8.bin) to be signed."
+    )
+    sign_cmd.add_argument(
+        "--bl2",
+        type=abspath,
+        help="Path to a TF-A BL2 image to be signed."
+    )
+    sign_cmd.add_argument(
+        "--imximage",
+        type=abspath,
+        metavar="U-BOOT.CFGOUT PATH",
     )
     sign_cmd.add_argument(
         "--fip",
         type=abspath,
         nargs="+",
-        required=True,
         help="Path to one or more FIPs to be signed.",
+    )
+    sign_cmd.add_argument(
+        "--fit",
+        type=abspath,
+        help="Path to a FIT to be signed.",
     )
     sign_cmd.add_argument(
         "--patch-rotkey",
@@ -212,6 +236,11 @@ def generate_srks(
         fp_der.write_bytes(der)
 
 
+def generate_fit_rot(key_store):
+    issuer = "FIT-ROT"
+    key_store.generate_encryption_key(issuer, key_type="rsa-2048")
+
+
 def generate_keys(key_store, key_list, ca_ttl="8750h", cert_ttl="430h"):
     """Generate root signing keypairs, return the public keys."""
     pub_keys = dict()
@@ -235,13 +264,18 @@ def make_cert_chain(images_dir, img_spec, key_store, pub_keys, output_dir):
     """Make a certificate chain for a FIP image."""
     ext_val = tbbr_defs.ExtensionValueGetter(pub_keys, images_dir)
     for cert_name in img_spec:
+        if "cert" not in cert_name:
+            continue
+
         cert = tbbr_defs.cot_certs.get(cert_name, None)
         if cert is None:
-            continue
+            raise ValueError("Cert {} not found in chain of trust".format(cert_name))
+
         extensions = list()
         for ext in cert:
             ext.encode_value(ext_val.get(ext, cert))
             extensions.append(str(ext))
+
         response = key_store.request_certificate(
             cert.signer,
             cert.file_name[:-4],
@@ -285,6 +319,8 @@ def replace_bl_rotkey(rotpk_hash, bl_path):
     der_begin = bl_bytes.find(sub_pk_info_header) + len(sub_pk_info_header)
     der_end = der_begin + len(rotpk_hash)
     embedded_rotpk = bl_bytes[der_begin:der_end]
+    print("Found embedded ROTPK hash {}".format(embedded_rotpk))
+    print("Replacing ROTPK hash with {}".format(rotpk_hash))
     bl_bytes = bl_bytes.replace(embedded_rotpk, rotpk_hash)
     bl_path.write_bytes(bl_bytes)
 
@@ -303,6 +339,22 @@ def fetch_keys(key_store, key_ids):
         response = key_store.read_certificate("ca", key)
         pub_keys[key] = extract_public_key(response.data["certificate"], "der")
     return pub_keys
+
+
+def sign_fit_binary(fit_path, key_dir):
+    mkimg = MkImage()
+    mkimg.modify_fit_img(fit_path, key_dir=key_dir, key_required=True)
+
+
+def make_imx_image(output_path, cfg_path, bl2_path):
+    mkimg = MkImage()
+    mkimg.create_legacy_image(
+        output_path=output_path,
+        img_type="imximage",
+        name=str(cfg_path),
+        entry_point="0x9df00000",
+        data_file_path=str(bl2_path)
+    )
 
 
 @api_server_session
@@ -326,45 +378,54 @@ def handle_tfa_sign_cmd(args, key_store):
         args.fip.append(fip1_path)
         imgs_to_patch.append(bl1_path)
 
-    fip_specs = {
-        fpath.name: fiptool.unpack(fpath, out=FIP_COMPONENTS_DIR)
-        for fpath in args.fip
-    }
+    if args.fip:
+        fip_specs = {
+            fpath.name: fiptool.unpack(fpath, out=FIP_COMPONENTS_DIR)
+            for fpath in args.fip
+        }
 
-    for spec in fip_specs.values():
-        resolve_fip_component_paths(spec, FIP_COMPONENTS_DIR)
-        if "tb-fw" in spec:
-            imgs_to_patch.append(spec["tb-fw"]["path"])
+        for spec in fip_specs.values():
+            resolve_fip_component_paths(spec, FIP_COMPONENTS_DIR)
+            if "tb-fw" in spec:
+                imgs_to_patch.append(spec["tb-fw"]["path"])
 
-    pub_keys = fetch_keys(key_store, tbbr_defs.cot_keys)
+        pub_keys = fetch_keys(key_store, tbbr_defs.cot_keys)
 
-    if args.patch_rotkey and imgs_to_patch:
-        rotpk = hashlib.sha256(pub_keys["rot-key"]).digest()
-        for img in imgs_to_patch:
-            print("Patching rotkey in image: {}".format(str(img)))
-            replace_bl_rotkey(rotpk, pathlib.Path(img))
+        if args.patch_rotkey and imgs_to_patch:
+            rotpk = hashlib.sha256(pub_keys["rot-key"]).digest()
+            for img in imgs_to_patch:
+                print("Patching rotkey in image: {}".format(str(img)))
+                replace_bl_rotkey(rotpk, pathlib.Path(img))
 
-    SIGNED_IMGS_DIR = args.output_dir / "signed_images"
-    SIGNED_IMGS_DIR.mkdir(exist_ok=True)
+        SIGNED_IMGS_DIR = args.output_dir / "signed_images"
+        SIGNED_IMGS_DIR.mkdir(exist_ok=True)
 
-    for name, spec in fip_specs.items():
-        print(
-            "Creating certificates in directory: {}".format(str(NEW_KEYS_DIR))
-        )
-        make_cert_chain(
-            FIP_COMPONENTS_DIR, spec, key_store, pub_keys, NEW_KEYS_DIR
-        )
-        resolve_fip_certificate_paths(spec, NEW_KEYS_DIR)
-        fipout_path = SIGNED_IMGS_DIR / name
-        print("Creating signed FIP at path: {}".format(str(fipout_path)))
-        fiptool.create(spec, fipout_path)
-        if args.rpi_armstub8 and name == fip1_path.name:
+        for name, spec in fip_specs.items():
             print(
-                "Creating armstub8_new.bin in directory: {}".format(
-                    str(SIGNED_IMGS_DIR)
-                )
+                "Creating certificates in directory: {}".format(str(NEW_KEYS_DIR))
             )
-            regen_unified_binary(bl1_path, fipout_path, SIGNED_IMGS_DIR)
+            make_cert_chain(
+                FIP_COMPONENTS_DIR, spec, key_store, pub_keys, NEW_KEYS_DIR
+            )
+            resolve_fip_certificate_paths(spec, NEW_KEYS_DIR)
+            fipout_path = SIGNED_IMGS_DIR / name
+            print("Creating signed FIP at path: {}".format(str(fipout_path)))
+            fiptool.create(spec, fipout_path)
+            if args.rpi_armstub8 and name == fip1_path.name:
+                print(
+                    "Creating armstub8_new.bin in directory: {}".format(
+                        str(SIGNED_IMGS_DIR)
+                    )
+                )
+                regen_unified_binary(bl1_path, fipout_path, SIGNED_IMGS_DIR)
+
+    if args.imximage:
+        print("Making imximage at path {}".format(str(SIGNED_IMGS_DIR / "bl2.bin.imx")))
+        make_imx_image(
+            SIGNED_IMGS_DIR / "bl2.bin.imx",
+            args.imximage,
+            spec["tb-fw"]["path"]
+        )
 
 
 @api_server_session
@@ -382,6 +443,9 @@ def handle_gen_cmd(args, key_store):
         generate_keys(
             key_store, tbbr_defs.cot_keys, args.ca_ttl, args.cert_ttl
         )
+
+    if args.fit_rot:
+        generate_fit_rot(key_store)
 
 
 def main():

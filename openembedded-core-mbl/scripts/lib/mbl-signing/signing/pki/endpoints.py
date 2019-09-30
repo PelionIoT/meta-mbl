@@ -84,6 +84,22 @@ def read_certificate(serial, **body):
     return resp, 200
 
 
+def generate_encryption_key(name, **body):
+    params = body["params"]
+    engine.generate_encryption_key(name, **params)
+    return {}, 200
+
+
+def read_encryption_key(name):
+    resp = engine.read_encryption_key(name)
+    return resp.json(), 200
+
+
+def encrypt_data(name, **params):
+    resp = engine.encrypt_data(name, **params)
+    return resp.json(), 200
+
+
 def main():
     """Entry point."""
     # This is needed because global variables don't work in python without it.

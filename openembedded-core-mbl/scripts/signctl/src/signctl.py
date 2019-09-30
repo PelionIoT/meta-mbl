@@ -137,7 +137,7 @@ def parse_args():
     dump_cmd.add_argument(
         "--hab-srks",
         action="store_true",
-        help="Generate super root public keys for NXP HAB.",
+        help="Generate super root keys for NXP HAB.",
     )
     dump_cmd.add_argument(
         "--output-dir",
@@ -179,7 +179,7 @@ def parse_args():
     sign_cmd.add_argument(
         "--patch-rotkey",
         action="store_true",
-        help="Patch root of trust public key hash into BL1 and BL2.",
+        help="Patch root of trust public key hash into boot ROM.",
     )
     sign_cmd.add_argument(
         "--output-dir",
@@ -187,10 +187,11 @@ def parse_args():
         default=SCRIPT_DIR,
         help="Output dir for signed images and the original fip components.",
     )
-    sign_cmd.set_defaults(func=handle_tfa_sign_cmd)
+    sign_cmd.set_defaults(func=handle_sign_cmd)
     args = parser.parse_args()
     if not hasattr(args, "func"):
         parser.error("No arguments given.")
+
     return args
 
 
@@ -341,7 +342,7 @@ def fetch_keys(key_store, key_ids):
     return pub_keys
 
 
-def sign_fit_binary(fit_path, key_dir):
+def sign_fit_binary(fit_path, key_store):
     mkimg = MkImage()
     mkimg.modify_fit_img(fit_path, key_dir=key_dir, key_required=True)
 
@@ -358,7 +359,7 @@ def make_imx_image(output_path, cfg_path, bl2_path):
 
 
 @api_server_session
-def handle_tfa_sign_cmd(args, key_store):
+def handle_sign_cmd(args, key_store):
     """Entry point for the sign-tfa command."""
     key_store.connect(args.backend_url)
 

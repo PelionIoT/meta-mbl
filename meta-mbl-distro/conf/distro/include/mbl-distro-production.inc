@@ -41,4 +41,9 @@ MBL_PASS_MIN_LEN = "12"
 MBL_PRODUCTION_ETH_DBG ?= "1"
 PACKAGECONFIG_append_pn-packagegroup-mbl-production = " ${@bb.utils.contains('MBL_PRODUCTION_ETH_DBG', '1', 'production-eth-dbg', '', d)}"
 PACKAGECONFIG_pn-systemd-net-conf = " ${@bb.utils.contains('MBL_PRODUCTION_ETH_DBG', '1', 'eth-dbg-only', '', d)}"
-PACKAGECONFIG_append_pn-dropbear = " ${@bb.utils.contains('MBL_PRODUCTION_ETH_DBG', '1', 'eth-dbg-only', '', d)}"
+# We disabe the ssh password login
+PACKAGECONFIG_append_pn-dropbear = " ${@bb.utils.contains('MBL_PRODUCTION_ETH_DBG', '1', 'eth-dbg-only dis-passwd-login', '', d)}"
+
+# The SSH Authorized Keys file for the root user to be installed
+# in the production image.
+MBL_SSH_AUTHORIZED_KEYS_FILENAMES = "root_authorized_keys"

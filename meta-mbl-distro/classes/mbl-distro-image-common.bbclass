@@ -34,3 +34,4 @@ inherit mbl-secure-boot-image
 inherit mbl-firmware-update-header
 inherit image-license-checker
 inherit license-json
+inherit mbl-external-ssh-pub-key

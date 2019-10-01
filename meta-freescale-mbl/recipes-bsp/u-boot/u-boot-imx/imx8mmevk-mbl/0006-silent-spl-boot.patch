@@ -1,0 +1,172 @@
+Index: git/common/spl/spl.c
+===================================================================
+--- git.orig/common/spl/spl.c
++++ git/common/spl/spl.c
+@@ -383,7 +383,7 @@ static int boot_from_devices(struct spl_
+ 		loader = spl_ll_find_loader(spl_boot_list[i]);
+ #if defined(CONFIG_SPL_SERIAL_SUPPORT) && defined(CONFIG_SPL_LIBCOMMON_SUPPORT)
+ 		if (loader)
+-			printf("Trying to boot from %s\n", loader->name);
++			debug("Trying to boot from %s\n", loader->name);
+ 		else
+ 			puts("SPL: Unsupported Boot Device!\n");
+ #endif
+Index: git/drivers/ddr/imx8m/ddrphy_train.c
+===================================================================
+--- git.orig/drivers/ddr/imx8m/ddrphy_train.c
++++ git/drivers/ddr/imx8m/ddrphy_train.c
+@@ -28,7 +28,7 @@ void ddr_cfg_phy(struct dram_timing_info
+ 	/* load the frequency setpoint message block config */
+ 	fsp_msg = dram_timing->fsp_msg;
+ 	for (i = 0; i < dram_timing->fsp_msg_num; i++) {
+-		printf("DRAM PHY training for %dMTS\n", fsp_msg->drate);
++		debug("DRAM PHY training for %dMTS\n", fsp_msg->drate);
+ 		/* set dram PHY input clocks to desired frequency */
+ 		ddrphy_init_set_dfi_clk(fsp_msg->drate);
+ 
+Index: git/drivers/ddr/imx8m/ddrphy_utils.c
+===================================================================
+--- git.orig/drivers/ddr/imx8m/ddrphy_utils.c
++++ git/drivers/ddr/imx8m/ddrphy_utils.c
+@@ -96,10 +96,10 @@ void wait_ddrphy_training_complete(void)
+ 		if (mail == 0x08) {
+ 			decode_streaming_message();
+ 		} else if (mail == 0x07) {
+-			printf("Training PASS\n");
++			debug("Training PASS\n");
+ 			break;
+ 		} else if (mail == 0xff) {
+-			printf("Training FAILED\n");
++			debug("Training FAILED\n");
+ 			break;
+ 		}
+ 	}
+Index: git/drivers/ddr/imx8m/helper.c
+===================================================================
+--- git.orig/drivers/ddr/imx8m/helper.c
++++ git/drivers/ddr/imx8m/helper.c
+@@ -58,7 +58,7 @@ void ddr_load_train_firmware(enum fw_typ
+ 		i += 4;
+ 	}
+ 
+-	printf("check ddr4_pmu_train_imem code\n");
++	debug("check ddr4_pmu_train_imem code\n");
+ 	pr_from32 = imem_start;
+ 	pr_to32 = DDR_TRAIN_CODE_BASE_ADDR + 4 * IMEM_OFFSET_ADDR;
+ 	for (i = 0x0; i < IMEM_LEN; ) {
+@@ -67,7 +67,7 @@ void ddr_load_train_firmware(enum fw_typ
+ 		tmp32 += ((readw(pr_to32) & 0x0000ffff) << 16);
+ 
+ 		if(tmp32 != readl(pr_from32)){
+-			printf("%lx %lx\n", pr_from32, pr_to32);
++			debug("%lx %lx\n", pr_from32, pr_to32);
+ 			error++;
+ 		}
+ 		pr_from32 += 4;
+@@ -75,12 +75,12 @@ void ddr_load_train_firmware(enum fw_typ
+ 		i += 4;
+ 	}
+ 	if (error) {
+-		printf("check ddr4_pmu_train_imem code fail=%d\n",error);
++		debug("check ddr4_pmu_train_imem code fail=%d\n",error);
+ 	} else {
+-		printf("check ddr4_pmu_train_imem code pass\n");
++		debug("check ddr4_pmu_train_imem code pass\n");
+ 	}
+ 
+-	printf("check ddr4_pmu_train_dmem code\n");
++	debug("check ddr4_pmu_train_dmem code\n");
+ 	pr_from32 = dmem_start;
+ 	pr_to32 = DDR_TRAIN_CODE_BASE_ADDR + 4 * DMEM_OFFSET_ADDR;
+ 	for (i = 0x0; i < DMEM_LEN;) {
+@@ -88,7 +88,7 @@ void ddr_load_train_firmware(enum fw_typ
+ 		pr_to32 += 4;
+ 		tmp32 += ((readw(pr_to32) & 0x0000ffff) << 16);
+ 		if (tmp32 != readl(pr_from32)) {
+-			printf("%lx %lx\n", pr_from32, pr_to32);
++			debug("%lx %lx\n", pr_from32, pr_to32);
+ 			error++;
+ 		}
+ 		pr_from32 += 4;
+@@ -97,9 +97,9 @@ void ddr_load_train_firmware(enum fw_typ
+ 	}
+ 
+ 	if (error) {
+-		printf("check ddr4_pmu_train_dmem code fail=%d",error);
++		debug("check ddr4_pmu_train_dmem code fail=%d",error);
+ 	} else {
+-		printf("check ddr4_pmu_train_dmem code pass\n");
++		debug("check ddr4_pmu_train_dmem code pass\n");
+ 	}
+ }
+ 
+Index: git/drivers/ddr/imx8m/lpddr4_init.c
+===================================================================
+--- git.orig/drivers/ddr/imx8m/lpddr4_init.c
++++ git/drivers/ddr/imx8m/lpddr4_init.c
+@@ -27,7 +27,7 @@ void ddr_init(struct dram_timing_info *d
+ {
+ 	unsigned int tmp;
+ 
+-	printf("DDRINFO: start lpddr4 ddr init\n");
++	debug("DDRINFO: start lpddr4 ddr init\n");
+ 	/* step 1: reset */
+ 	if (is_imx8mq()) {
+ 		reg32_write(SRC_DDRC_RCR_ADDR + 0x04, 0x8F00000F);
+@@ -117,7 +117,7 @@ void ddr_init(struct dram_timing_info *d
+ 		tmp = reg32_read(DDRPHY_CalBusy(0));
+ 	} while ((tmp & 0x1));
+ 
+-	printf("DDRINFO:ddrphy calibration done\n");
++	debug("DDRINFO:ddrphy calibration done\n");
+ 
+ 	/* step15 [0]--0: to enable quasi-dynamic programming */
+ 	reg32_write(DDRC_SWCTL(0), 0x00000000);
+@@ -182,7 +182,7 @@ void ddr_init(struct dram_timing_info *d
+ 
+ 	/* enable port 0 */
+ 	reg32_write(DDRC_PCTRL_0(0), 0x00000001);
+-	printf("DDRINFO: ddrmix config done\n");
++	debug("DDRINFO: ddrmix config done\n");
+ 
+ 	/* save the dram timing config into memory */
+ 	dram_config_save(dram_timing, CONFIG_SAVED_DRAM_TIMING_BASE);
+Index: git/drivers/power/pmic/pmic_bd71837.c
+===================================================================
+--- git.orig/drivers/power/pmic/pmic_bd71837.c
++++ git/drivers/power/pmic/pmic_bd71837.c
+@@ -27,7 +27,7 @@ int power_bd71837_init (unsigned char bu
+ 	p->hw.i2c.tx_num = 1;
+ 	p->bus = bus;
+ 
+-	printf("power_bd71837_init\n");
++	debug("power_bd71837_init\n");
+ 
+ 	return 0;
+ }
+Index: git/include/configs/imx8mm_evk.h
+===================================================================
+--- git.orig/include/configs/imx8mm_evk.h
++++ git/include/configs/imx8mm_evk.h
+@@ -42,6 +42,8 @@
+ #define CONFIG_SYS_ICACHE_OFF
+ #define CONFIG_SYS_DCACHE_OFF
+ 
++#define CONFIG_SPL_DISABLE_BANNER_PRINT
++
+ #define CONFIG_MALLOC_F_ADDR		0x912000 /* malloc f used before GD_FLG_FULL_MALLOC_INIT set */
+ 
+ #define CONFIG_SPL_ABORT_ON_RAW_IMAGE /* For RAW image gives a error info not panic */
+Index: git/board/freescale/imx8mm_evk/spl.c
+===================================================================
+--- git.orig/board/freescale/imx8mm_evk/spl.c
++++ git/board/freescale/imx8mm_evk/spl.c
+@@ -201,7 +201,7 @@ void spl_board_init(void)
+ 		restore_boot_params();
+ 	}
+ #endif
+-	puts("Normal Boot\n");
++	debug("Normal Boot\n");
+ }
+ 
+ #ifdef CONFIG_SPL_LOAD_FIT

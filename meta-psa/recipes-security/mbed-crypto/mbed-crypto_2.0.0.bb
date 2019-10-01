@@ -14,8 +14,8 @@ LIC_FILES_CHKSUM = " \
 SECTION = "libs"
 
 SRC_URI = "https://github.com/ARMmbed/mbed-crypto/archive/mbedcrypto-${PV}.tar.gz"
-SRC_URI[md5sum] = "06dd48905c236f7939d03b09bcf7f1a2"
-SRC_URI[sha256sum] = "70b3bde55c943b931fd296bba3936fa677416b3997aac10ed3ba193ba16e8037"
+SRC_URI[md5sum] = "195f7271f90807790a30170367b30282"
+SRC_URI[sha256sum] = "a2e6c0a8c43bab0d6d0aa7b7a9fb8f951994edef66ba7a4d59b47c899d51fda1"
 
 S = "${WORKDIR}/${BPN}-mbedcrypto-${PV}"
 

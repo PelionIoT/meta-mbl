@@ -1,0 +1,2 @@
+# Disable password logins by default
+DROPBEAR_EXTRA_ARGS="-s"

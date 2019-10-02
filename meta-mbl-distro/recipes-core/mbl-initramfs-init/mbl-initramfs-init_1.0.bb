@@ -13,13 +13,27 @@ SRC_URI = "file://initramfs-init-script.sh"
 
 S = "${WORKDIR}"
 
+export SYS_DEFAULT_DIRS = " \
+    /proc \
+    /sys \
+    /dev \
+"
+
 do_install() {
-        install -m 0755 ${WORKDIR}/initramfs-init-script.sh ${D}/init
+    # Create system defaults directories
+    for dir in ${SYS_DEFAULT_DIRS}; do
+        bbnote "Creating ${dir} directory"
+        mkdir -p ${D}${dir}
+    done
+
+    mknod -m 600 ${D}/dev/console c 5 1
+
+    install -m 0755 ${WORKDIR}/initramfs-init-script.sh ${D}/init
 }
 
 inherit allarch
 
-FILES_${PN} += "/init"
+FILES_${PN} = "/init /dev/console ${SYS_DEFAULT_DIRS}"
 
 inherit mbl-var-placeholders
 MBL_VAR_PLACEHOLDER_FILES = "${D}/init"

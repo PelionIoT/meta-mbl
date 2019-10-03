@@ -1,7 +1,7 @@
 # Introduction to Mbed Linux OS (MBL) OpenEmbedded Layer meta-mbl
 
 This is the Mbed Linux OS [OpenEmbedded][openembedded-homepage] (OE) distribution for creating Mbed Linux OS IoT (Internet of Things) file system images.
-Mbed Linux OS provides the software stack for a secure trusted execution environment for applications and gateways.
+Mbed Linux OS provides the software stack for a secure trusted execution environment for applications.
 
 meta-mbl provides the layers and recipes for building the above software by leveraging the Yocto-OE-Bitbake ecosystem.
 Here is an overview of the layers:
@@ -11,14 +11,9 @@ Here is an overview of the layers:
 * `meta-mbl-bsp-common` - MBL layer for BSP (Board Support Platform) meta-data commonly used by more than one target BSP.
 * `*-mbl` - MBL staging layers for the community layers, containing MBL customizations. For example `meta-raspberrypi-mbl` is the staging layer for `meta-raspberrypi`.
 
-The main components of the MBL distribution layer are split into development and production:
-
-* Development - distribution and image for development with Mbed Linux OS.
-    * `meta-mbl-distro/conf/distro/mbl-development.conf` - The OE distribution configuration for development.
-    * `meta-mbl-distro/recipes-core/images/mbl-image-development.bb` - The OE recipe for creating a development image.
-* Production - distribution and image for a production version of Mbed Linux OS.
-    * `meta-mbl-distro/conf/distro/mbl-production.conf` - The OE distribution configuration for production.
-    * `meta-mbl-distro/recipes-core/images/mbl-image-production.bb` - The OE recipe for creating a production image.
+The main components of the MBL distribution layer are:
+* `meta-mbl-distro/conf/distro/mbl.conf` - This is the OE distribution configuration for creating an mbed linux distribution
+* `meta-mbl-distro/recipes-core/images/mbl-image-development.bb` - This is the OE recipe for creating an image for testing and development.
 
 For more information on the layers, please see the [BSP porting guide][mbl-bsp-guide].
 

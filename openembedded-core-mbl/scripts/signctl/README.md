@@ -3,31 +3,32 @@
 ## Overview
 
 This signing tool is an early release and is still under development. It has the following restrictions:
-* The tool has only been tested with the Raspberry Pi 3B+
-* The tool uses Hashicorp Vault as an example back-end for the private key storage and signing operations.
-* The tool only supports signing for a single device at the moment.
+* The tool has been tested with the Raspberry Pi 3B+, PICO PI with IMX7D SoM, PICO-PI with IMX6UL SoM and NXP 8M Mini EVK devices.
+* The tool uses Hashicorp Vault as an example backend for the private key storage and signing operations.
+* The tool only supports signing for a single device at the moment. Although a multi-device flow is possible if you configure a separate Vault instance for each device.
 
-The release version of the tool will support multiple devices; we will provide documentation and guidance for setting access control policies in Vault, and for locking down the Vault machine for production use. **The current flow is only for development use.**
+The release version of the tool will provide full support for multiple devices; we will also provide documentation and guidance for setting access control policies in Vault and for locking down the Vault machine for production use. **The current flow is only for development use.**
 
-The `signctl` tool automates the basic signing flow for Raspberry PI 3. For more information on the background and details of the signing operations see [the basic signing flow document][mbl-basic-signing-flow].
+The `signctl` tool automates the signing flow for Trusted Firmware on Cortex A (TF-A) BL2 and FIP images. For more information on the background and details of the signing operations see [the basic signing flow document][mbl-basic-signing-flow].
 
-The signing tool uses [Hashicorp Vault](https://www.hashicorp.com/products/vault/) (as an example back-end) to generate and store the certificates required to verify the Trusted Firmware on Cortex A (TF-A) boot chain.
+The signing tool uses [Hashicorp Vault](https://www.hashicorp.com/products/vault/) (as an example backend) to generate and store the certificates required to verify the TF-A boot chain.
 
 The Vault secrets model uses 'paths' to 'mount' secrets engines. The 'path' is a REST API endpoint and can be accessed via HTTP requests.
 
-Please see the [Vault secrets engine model](https://www.vaultproject.io/intro/getting-started/secrets-engines#secrets-engines) for more information on how this works.
+See the [Vault secrets engine model](https://www.vaultproject.io/intro/getting-started/secrets-engines#secrets-engines) for more information on how this works.
 
 In the Vault PKI engine, each 'mount' of the secrets engine is usually a root CA or intermediate CA, which can then sign and issue certificates from the endpoints created under the base path. Only one CA is allowed per instance of the PKI engine.
 
-The `signctl` tool uses a CA configured at its own mount to represent the private key for each node in the certificate chain of trust.
+The `signctl` tool uses a CA, configured at a Vault PKI mount, to represent the private key for each node in the certificate chain of trust.
 The tool then requests leaf certificates from the appropriate mount path, so the corresponding cert is signed by the correct private key.
 
 For more background on the PKI secrets engine see [the Vault documentation](https://www.vaultproject.io/docs/secrets/pki/index.html#one-ca-certificate-one-secrets-engine).
 
+For more information on the TF-A boot flow see the [trusted board boot documentation](https://github.com/ARM-software/arm-trusted-firmware/blob/master/docs/design/trusted-board-boot.rst).
 
 ## Install Prerequisites
 
-Before installing the `signctl` tool, you should set up a local dev instance of Vault. The [Vault website](https://www.vaultproject.io/docs/install/#compiling-from-source) provides background information on this.
+Before installing the `signctl` tool, you should set up a local dev instance of Vault. You must also apply the git patch included in this directory to Vault. The patch changes the Vault interface to support the TF-A public key infrastructure. The [Vault website](https://www.vaultproject.io/docs/install/#compiling-from-source) provides background information on the Vault installation.
 
 A helper shell script is included to install `go` and Vault. The script is in the `signctl` dir and is named `setup-vault.sh`. If you don't want to use the shell script (maybe you already have `go` installed), the script automates the following steps:
 
@@ -86,7 +87,7 @@ $ exec $SHELL
 ```
 </span>
 
-1. Apply the git patch (replacing `/path/to` with the actual path to the `signctl` dir).
+1. Apply the git patch (replacing `/path/to` with the path to the `signctl` dir).
 ```
 $ git am /path/to/signctl/0001-Add-x509v3-extensions-and-signature-alg-parameters.patch
 ```
@@ -176,46 +177,48 @@ $ pip install .
 
 ## Signing Tool Command Line Interface
 ```
-usage: signctl [-h] [--backend-url BACKEND_URL] {generate,sign-tfa} ...
+usage: signctl [-h] [--backend-url BACKEND_URL] {generate,sign} ...         
+                                                                            
+positional arguments:                                                       
+  {generate,sign}                                                           
+    generate            Generate a keychain and store it in the storage     
+                        backend.                                            
+    sign                Sign TF-A bootloader components.                    
+                                                                            
+optional arguments:                                                         
+  -h, --help            show this help message and exit                     
+  --backend-url BACKEND_URL                                                 
 
-positional arguments:
-  {generate,sign-tfa}
-    generate            Generate a keychain and store it in the storage
-                        backend.
-    sign-tfa            Sign TF-A BL and FIP.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --backend-url BACKEND_URL
 ```
 ```
-usage: signctl generate [-h] [--cot-keys] [--ca-ttl CA_TTL]
-                        [--cert-ttl CERT_TTL] [--hab-srks]
-                        [--output-dir OUTPUT_DIR]
+usage: signctl sign [-h] [--rpi-vc4-fw PATH | --bl2 PATH]                          
+                    [--fip PATH [PATH ...]]                                        
+                                                                                   
+optional arguments:                                                                
+  -h, --help            show this help message and exit                            
+  --rpi-vc4-fw PATH     Path to a Raspberry-PI 3 VC4 firmware image (e.g           
+                        armstub8.bin) to be signed. Note, TF-A BL2 is also in      
+                        the VC4 firmware image. To sign BL2 on raspberrypi3        
+                        use this option, not the --bl2 option.                     
+  --bl2 PATH            Path to a TF-A BL2 image to be signed.                     
+  --fip PATH [PATH ...]                                                            
+                        Path to one or more FIPs to be signed.                     
 
-optional arguments:
-  -h, --help            show this help message and exit
-  --cot-keys            Generate a TF-A chain of trust keychain, store the
-                        private keys.
-  --ca-ttl CA_TTL       Issuer TTL.
-  --cert-ttl CERT_TTL   End entity certificate TTL.
-  --hab-srks            Generate super root public keys for NXP HAB.
-  --output-dir OUTPUT_DIR
-                        The output directory for the HAB SRKs (public part).
 ```
 ```
-usage: signctl sign-tfa [-h] [--rpi-armstub8 RPI_ARMSTUB8] --fip FIP [FIP ...]
-                        [--patch-rotkey] [--output-dir OUTPUT_DIR]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --rpi-armstub8 RPI_ARMSTUB8
-                        Path to the armstub8.bin
-  --fip FIP [FIP ...]   Path to one or more FIPs to be signed.
-  --patch-rotkey        Patch root of trust public key hash in to BL1 and BL2.
-  --output-dir OUTPUT_DIR
-                        Output dir for signed images and the original fip
-                        components.
+usage: signctl generate [-h] [--cot-keys] [--ca-ttl CA_TTL]                      
+                        [--cert-ttl CERT_TTL] [--hab-srks]                       
+                        [--output-dir OUTPUT_DIR]                                
+                                                                                 
+optional arguments:                                                              
+  -h, --help            show this help message and exit                          
+  --cot-keys            Generate a TF-A chain of trust keychain, store the       
+                        private keys.                                            
+  --ca-ttl CA_TTL       Issuer TTL.                                              
+  --cert-ttl CERT_TTL   End entity certificate TTL.                              
+  --hab-srks            Generate super root keys for NXP HAB.                    
+  --output-dir OUTPUT_DIR                                                        
+                        The output directory for the HAB SRKs (public part).     
 ```
 
 ## Generating Chain of Trust (CoT) Keychain
@@ -248,91 +251,46 @@ The keys should be shown as generated in the Vault server output. If the `signct
 
 After the keys have been generated and stored in Vault, you can use them to sign the certificates needed to verify the FIP.
 
-To produce the signed leaf certificates and pack them into a FIP use the `signctl sign-tfa` command.
+You can also use the root-of-trust (ROT) key generated earlier to patch BL2 (which is contained in the VC4 firmware binary) with the ROT public key, which is also required for the certificate verification.
+
+To produce the signed leaf certificates and pack them into a FIP use the `signctl sign` command.
 
 If you saved your Vault server URL in a `.signctl.conf` file as described in the previous section, the `signctl` tool will automatically connect to the Vault server. If not you will have to pass the server URL again on the command line.
 
-You can also patch the root of trust public keys into BL1 and BL2 by using the `--patch-rotkeys` command. The background for this is described in the [the basic signing flow document][mbl-basic-signing-flow].
+To sign the FIP and patch the ROT public key into the VC4 firmware, follow the steps below:
 
-To sign the FIP, and patch BL1 and BL2, follow the steps below:
-
-1. Locate `armstub8.bin` and `fip2.bin` in the build deploy directory.
-2. Enter the following comand
+1. Locate the VC4 binary (`armstub8.bin`) and `fip2.bin` in the build deploy directory.
+2. Execute the `sign` command
+   
 ```
-$ signctl sign-tfa --rpi-armstub8 /path/to/armstub8.bin --fip /path/to/fip2.bin --patch-rotkey --output-dir /path/to/output/dir/
-```
-
-Several folders will be created in your output directory:
-
-```
-├── armstub8_components
-│   ├── bl1_new.bin
-│   └── fip1_new.bin
-├── fip_components
-│   ├── nt-fw.bin
-│   ├── nt-fw-cert.bin
-│   ├── nt-fw-key-cert.bin
-│   ├── soc-fw.bin
-│   ├── soc-fw-cert.bin
-│   ├── soc-fw-key-cert.bin
-│   ├── tb-fw.bin
-│   ├── tb-fw-cert.bin
-│   ├── tos-fw.bin
-│   ├── tos-fw-cert.bin
-│   ├── tos-fw-extra1.bin
-│   ├── tos-fw-extra2.bin
-│   ├── tos-fw-key-cert.bin
-│   └── trusted-key-cert.bin
-├── new_certs
-│   ├── nt-fw-cert.bin
-│   ├── nt-fw-key-cert.bin
-│   ├── soc-fw-cert.bin
-│   ├── soc-fw-key-cert.bin
-│   ├── tb-fw-cert.bin
-│   ├── tos-fw-cert.bin
-│   ├── tos-fw-key-cert.bin
-│   └── trusted-key-cert.bin
-└── signed_images
-    ├── armstub8_new.bin
-    ├── fip1_new.bin
-    └── fip2.bin
+$ signctl sign --rpi-vc4-fw /path/to/armstub8.bin --fip /path/to/fip2.bin
 ```
 
-The signed_images directory contains the signed `armstub8.bin` and `fip2.bin`.
+The images will be signed in-place; the output path for the signed image will be the same as the input path.
 
-## Writing the Signed Components to the SD Card
+## Signing NXP IMX Boot Components
 
-Connect your SD card, containing an Mbed Linux OS Raspberry PI Image, to your pc. Ensure the partitions are unmounted.
+As above, you can use the keys generated earlier to sign the certificates needed to verify the FIP.
 
-Write `fip2.bin` to a "raw partition" on the flash.
-Assuming your SD card is located at `/dev/sdc` run the following command.
+You also must to patch BL2 with the ROT public key, as TF-A uses this to verify the root of the certificate chain.
 
-```
-$ sudo dd if=signed_images/fip2.bin of=/dev/sdc bs=512 seek=2048
-1650+1 records in
-1650+1 records out
-845177 bytes (845 kB, 825 KiB) copied, 0.148319 s, 5.7 MB/s
-```
+To sign the FIP, and patch BL2, follow the steps below:
 
-Mount the boot partition and copy `armstub8_new.bin` to it.
+1. Locate `bl2.bin.imx` and `fip.bin` in the build deploy directory.
+2. Execute the `sign` command
 
 ```
-$ udisksctl mount -b /dev/sdc1
-Mounted /dev/sdc1 at /media/<user>/boot.
-```
-```
-$ cp signed_imgs/armstub8_new.bin /media/<user>/boot/armstub8.bin
-```
-```
-$ sync
-```
-```
-$ udisksctl unmount -b /dev/sdc1
-Unmounted /dev/sdc1.
+$ signctl sign --bl2 /path/to/bl2.bin --fip /path/to/fip.bin
 ```
 
-You can now place the SD card in your RPi3 and it will verify and load the FIP image.
-If you're using an Mbed Linux OS distribution it will boot and load Mbed Linux OS.
+<span class="notes">**Note:** On NXP 8M Mini EVK devices, BL2 is contained in `imx-boot-imx8mmevk-mbl-sd.bin-flash_evk` the path of which should be passed to the `--bl2` option instead of `bl2.bin.imx`.</span>
 
+## Create an update payload using the signed images
+
+Use the `create-update-payload` script as described in the [updating a device document](https://os.mbed.com/docs/mbed-linux-os/latest/update/updating-an-mbl-image.html).
+
+You can follow the steps in the update document to update the component on your device.
+
+<span class="notes">**Note:** BL2 is referred to as "boot component 1" and the FIP is "boot component 2" in our update flow.</span>
 
 [mbl-basic-signing-flow]: ../../../docs/basic-signing-flow.md

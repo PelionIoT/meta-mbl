@@ -31,14 +31,20 @@ SRC_URI = "${SRC_URI_COMMON} ${SRC_URI_MBL_CLOUD_CLIENT_PUBLIC}"
 SRCREV = "${SRCREV_MBL_CORE_REPO}"
 
 DEPENDS = " glibc jsoncpp xz util-linux"
-RDEPENDS_${PN} += "${PN}-update"
 
 RDEPENDS_${PN} = "\
-    e2fsprogs-mke2fs \
     libgcc \
     libstdc++ \
-    util-linux \
     mbl-dbus-cloud \
+    ${PN}-update \
+"
+
+RDEPENDS_${PN}-update += "\
+    util-linux-mkfs \
+    util-linux-blkid \
+    util-linux-lsblk \
+    util-linux-mount \
+    util-linux-umount \
 "
 
 # Installed packages

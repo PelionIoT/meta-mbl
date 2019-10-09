@@ -45,8 +45,9 @@ MBL_DEFAULT_MOUNT_OPTS ?= "defaults"
 MBL_DEFAULT_FS_FREQ ?= "0"
 
 # Default fs_passno (the sixth fstab field - see "man 5 fstab") for file system
-# partitions when MBL_<partition>_FS_PASSNO (documented below) isn't set.
-MBL_DEFAULT_FS_PASSNO ?= "0"
+# partitions when MBL_<partition>_FS_PASSNO (documented below) is set to 2 to
+# force the fsck to run.
+MBL_DEFAULT_FS_PASSNO ?= "2"
 
 
 # ------------------------------------------------------------------------------

@@ -14,7 +14,7 @@ SRC_URI = "git://source.codeaurora.org/external/imx/uboot-imx.git;protocol=https
 "
 
 SRC_URI_append_imx8mmevk = " \
-    ${@bb.utils.contains_any('PACKAGECONFIG','noconsole silent',' file://0003-set-silent-envs.patch','',d)} \
+    ${@bb.utils.contains_any('PACKAGECONFIG','noconsole silent',' file://0003-set-silent-envs.patch file://0006-silent-spl-boot.patch','',d)} \
     ${@bb.utils.contains('PACKAGECONFIG','minimal',' file://0002-disable-dm-eth-mbl.cfg','',d)} \
     "
 

@@ -1,0 +1,39 @@
+Index: git/net/net.c
+===================================================================
+--- git.orig/net/net.c
++++ git/net/net.c
+@@ -347,7 +347,9 @@ void net_auto_load(void)
+ #endif
+ 		return;
+ 	}
++#ifdef CONFIG_CMD_TFTPBOOT
+ 	tftp_start(TFTPGET);
++#endif
+ }
+ 
+ static void net_init_loop(void)
+@@ -457,8 +459,10 @@ restart:
+ #ifdef CONFIG_CMD_TFTPPUT
+ 		case TFTPPUT:
+ #endif
++#ifdef CONFIG_CMD_TFTPBOOT
+ 			/* always use ARP to get server ethernet address */
+ 			tftp_start(protocol);
++#endif
+ 			break;
+ #ifdef CONFIG_CMD_TFTPSRV
+ 		case TFTPSRV:
+@@ -478,11 +482,13 @@ restart:
+ 			break;
+ #endif
+ 
++#ifdef CONFIG_CMD_BOOTP
+ 		case BOOTP:
+ 			bootp_reset();
+ 			net_ip.s_addr = 0;
+ 			bootp_request();
+ 			break;
++#endif
+ 
+ #if defined(CONFIG_CMD_RARP)
+ 		case RARP:

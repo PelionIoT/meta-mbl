@@ -18,6 +18,8 @@ SRC_URI_append_raspberrypi3-mbl = " \
 		${@bb.utils.contains('PACKAGECONFIG', 'minimal', '', ' file://enable-random-macaddr-mbl.cfg', d)} \
 		${@bb.utils.contains('PACKAGECONFIG', 'minimal', '', ' file://enable-fastboot-mbl.cfg', d)} \
 		${@bb.utils.contains('PACKAGECONFIG', 'minimal', ' file://0001-rpi3-disable-USB-PXE-and-DHCP-boot.patch', '', d)} \
+		${@bb.utils.contains('PACKAGECONFIG', 'minimal', ' file://0002-enable-net-without-net-commands.patch', '', d)} \
+		${@bb.utils.contains('PACKAGECONFIG', 'minimal', ' file://0003-enable-net-without-net-commands-kconfig.patch', '', d)} \
 "
 
 do_configure_prepend_raspberrypi3-mbl() {

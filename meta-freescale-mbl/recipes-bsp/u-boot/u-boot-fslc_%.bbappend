@@ -41,6 +41,7 @@ SRC_URI_append_imx7s-warp-mbl = " \
      file://0023-warp7-check-fitimage-before-running-boot-script.patch \
      file://0024-pico-shrink-DRAM-size-to-avoid-memory-override.patch \
      ${@bb.utils.contains_any('PACKAGECONFIG','noconsole silent',' file://0002-set-silent-envs.patch','',d)} \
+     ${@bb.utils.contains('PACKAGECONFIG','minimal',' file://0002-enable-net-without-net-commands.patch','',d)} \
      "
 SRC_URI_append_imx7d-pico-mbl = " \
      file://0001-ARM-arm-smccc-Remove-dependency-on-PSCI.patch \
@@ -68,6 +69,7 @@ SRC_URI_append_imx7d-pico-mbl = " \
      file://0023-warp7-check-fitimage-before-running-boot-script.patch \
      file://0024-pico-shrink-DRAM-size-to-avoid-memory-override.patch \
      ${@bb.utils.contains('PACKAGECONFIG','minimal',' file://0001-pico7-disable-PXE-and-DHCP-boot.patch','',d)} \
+     ${@bb.utils.contains('PACKAGECONFIG','minimal',' file://0002-enable-net-without-net-commands.patch','',d)} \
      ${@bb.utils.contains_any('PACKAGECONFIG','noconsole silent',' file://0002-set-silent-envs.patch','',d)} \
      "
 
@@ -87,6 +89,8 @@ SRC_URI_append_imx6ul-pico-mbl = " \
     file://0013-cmd-image_info-Add-checking-of-default-FIT-config.patch \
     ${@bb.utils.contains_any('PACKAGECONFIG','noconsole silent',' file://0002-set-silent-envs.patch','',d)} \
     ${@bb.utils.contains('PACKAGECONFIG','minimal',' file://0009-minimal-U-boot-service-for-pico-imx6ul.patch','',d)} \
+    ${@bb.utils.contains('PACKAGECONFIG','minimal',' file://0002-enable-net-without-net-commands.patch','',d)} \
+    ${@bb.utils.contains('PACKAGECONFIG','minimal',' file://0003-enable-net-without-net-commands-kconfig.patch','',d)} \
     "
 
 

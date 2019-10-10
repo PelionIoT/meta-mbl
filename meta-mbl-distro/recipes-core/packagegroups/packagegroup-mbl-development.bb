@@ -32,7 +32,6 @@ PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " openssh-sftp-server"
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " ${@bb.utils.contains('COMBINED_FEATURES', 'usbgadget', 'systemd-net-conf-dbg-iface', '', d)}"
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " systemd-analyze"
 
-
 ###############################################################################
 # Packages that can optionally be added (irrespective of MACHINE)
 # Uncomment the relevant line to include the package:

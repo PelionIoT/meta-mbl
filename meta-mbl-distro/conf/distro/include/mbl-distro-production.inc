@@ -49,6 +49,12 @@ PACKAGECONFIG_append_pn-dropbear = " ${@bb.utils.contains('MBL_PRODUCTION_ETH_DB
 BUSYBOX_PRODUCTION_CFG ?= "1"
 PACKAGECONFIG_append_pn-busybox = " ${@bb.utils.contains('BUSYBOX_PRODUCTION_CFG', '1', 'minimal', '', d)}"
 
+# For now, on the production images we only allow root login in the
+# kernel serial console which is set in the ${MACHINE}.conf via
+# SERIAL_CONSOLES variable.
+SECURETTY_KERNEL_CONSOLE_ONLY ?= "1"
+PACKAGECONFIG_append_pn-shadow-securetty = " ${@bb.utils.contains('SECURETTY_KERNEL_CONSOLE_ONLY', '1', 'kernel-console-only', '', d)}"
+
 # The SSH Authorized Keys file for the root user to be installed
 # in the production image.
 MBL_SSH_AUTHORIZED_KEYS_FILENAMES = "root_authorized_keys"

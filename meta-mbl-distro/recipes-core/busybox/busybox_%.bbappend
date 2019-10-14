@@ -15,4 +15,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 # This means busybox ifup/ifdown will ignore an external managers such as ConnMan.
 SRC_URI += "file://if_updown_ext_dhcp.cfg \
     file://dd_ibs_obs.cfg \
+    ${@bb.utils.contains('PACKAGECONFIG','minimal',' file://minimal.cfg','',d)} \
     "
+
+PACKAGECONFIG[minimal] = ""

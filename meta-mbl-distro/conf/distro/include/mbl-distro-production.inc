@@ -44,6 +44,11 @@ PACKAGECONFIG_pn-systemd-net-conf = " ${@bb.utils.contains('MBL_PRODUCTION_ETH_D
 # We disabe the ssh password login
 PACKAGECONFIG_append_pn-dropbear = " ${@bb.utils.contains('MBL_PRODUCTION_ETH_DBG', '1', 'eth-dbg-only dis-passwd-login', '', d)}"
 
+# For production image we disable unused busybox applets and commands
+# already provided by other packages like util-linux.
+BUSYBOX_PRODUCTION_CFG ?= "1"
+PACKAGECONFIG_append_pn-busybox = " ${@bb.utils.contains('BUSYBOX_PRODUCTION_CFG', '1', 'minimal', '', d)}"
+
 # The SSH Authorized Keys file for the root user to be installed
 # in the production image.
 MBL_SSH_AUTHORIZED_KEYS_FILENAMES = "root_authorized_keys"

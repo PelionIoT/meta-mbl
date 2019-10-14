@@ -6,6 +6,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+inherit mbl-kernel-config
+
 PV = "${LINUX_VERSION}+git${SRCPV}"
 LINUX_VERSION = "4.14.112"
 SRCREV = "46d7ce67b4e5bab34e42b4e857a7e0cbe9580998"
@@ -24,31 +26,17 @@ SRC_URI = "git://git@github.com/ARMmbed/linux-mbl.git;protocol=ssh;nobranch=1 \
            file://cgroups-mbl.cfg \
            file://namespaces-mbl.cfg \
            file://ecryptfs-mbl.cfg \
+           file://watchdog-mbl.cfg \
            "
 SRC_URI_append_imx6ul-pico-mbl = " file://imx6ul-disable-cpu-idle-mbl.cfg"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
 
-do_preconfigure() {
-	mkdir -p ${B}
-	echo "" > ${B}/.config
-	CONF_SED_SCRIPT=""
-
-	kernel_conf_variable LOCALVERSION "\"${LOCALVERSION}\""
-	kernel_conf_variable LOCALVERSION_AUTO y
-
-	sed -e "${CONF_SED_SCRIPT}" < '${S}/arch/arm/configs/${KBUILD_DEFCONFIG}' >> '${B}/.config'
-
-	cfgs=`find ${WORKDIR}/ -maxdepth 1 -name '*-mbl.cfg' | wc -l`;
-	if [ ${cfgs} -gt 0 ]; then
-		${S}/scripts/kconfig/merge_config.sh -m -O ${B} ${B}/.config ${WORKDIR}/*-mbl.cfg
-	fi
-
-	if [ "${SCMVERSION}" = "y" ]; then
-		# Add GIT revision to the local version
-		head=`git --git-dir=${S}/.git rev-parse --verify --short HEAD 2> /dev/null`
-		printf "%s%s" +g $head > ${S}/.scmversion
-	fi
+# We need to copy and rename the KBUILD_DEFCONFIG because the do_preconfigure
+# task defined in fsl-kernel-localversion.bbclass looks for the defconfig at
+# ${WORKDIR}/defconfig when it creates the final kernel .config file
+do_preconfigure_prepend() {
+	cp ${S}/arch/arm/configs/${KBUILD_DEFCONFIG} ${WORKDIR}/defconfig
 }
 
 # TO-BE-REMOVED: workaround until the following upstream patch

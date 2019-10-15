@@ -58,3 +58,10 @@ PACKAGECONFIG_append_pn-shadow-securetty = " ${@bb.utils.contains('SECURETTY_KER
 # The SSH Authorized Keys file for the root user to be installed
 # in the production image.
 MBL_SSH_AUTHORIZED_KEYS_FILENAMES = "root_authorized_keys"
+
+# Remove unused DISTRO and MACHINE features
+DISTRO_FEATURES_DEFAULT_remove = "alsa irda nfc pcmcia pci pulseaudio"
+MACHINE_FEATURES_remove = "alsa apm ext2 keyboard screen touchscreen"
+
+# For production images we drop the virtual console support
+PACKAGECONFIG_remove_pn-systemd = "vconsole"

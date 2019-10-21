@@ -7,6 +7,7 @@ Description=MBL Cloud Client
 After=mbl-app-update-manager.service
 
 [Service]
+Environment="DBUS_SESSION_BUS_ADDRESS=unix:path=/var/run/dbus/mbl_cloud_bus_socket start-stop-daemon"
 RemainAfterExit=yes
 ExecStart=/opt/arm/mbl-cloud-client
 

@@ -15,6 +15,7 @@ S = "${WORKDIR}/git"
 # common sources for mbl-cloud-client(public) and mbl-cloud-client-internal
 SRC_URI_COMMON = "file://yocto-toolchain.cmake \
   file://mbl-cloud-client.service \
+  file://com.mbed.Pelion1.Connect.xml \
   "
 
 # specific sources for the mbl-cloud-client public version
@@ -30,13 +31,14 @@ SRC_URI = "${SRC_URI_COMMON} ${SRC_URI_MBL_CLOUD_CLIENT_PUBLIC}"
 
 SRCREV = "${SRCREV_MBL_CORE_REPO}"
 
-DEPENDS = " glibc jsoncpp xz util-linux"
+DEPENDS = " glibc jsoncpp xz util-linux systemd"
 
 RDEPENDS_${PN} = "\
     libgcc \
     libstdc++ \
     mbl-dbus-cloud \
     ${PN}-update \
+    jsoncpp \
 "
 
 RDEPENDS_${PN}-update += "\
@@ -54,7 +56,13 @@ FILES_${PN} += "\
     /opt/arm/mbl-cloud-client \
     /opt/arm/pelion-provisioning-util \
     ${sysconfdir}/logrotate.d/mbl-cloud-client-logrotate.conf \
+    ${datadir}/dbus-1/interfaces/com.mbed.Pelion1.Connect.xml \
 "
+
+FILES_${PN}-staticdev += "\
+    ${libdir}/*.a \
+"
+
 FILES_${PN}-update = "\
     /opt/arm/arm_update_activate.sh \
     /opt/arm/arm_update_active_details.sh \
@@ -65,6 +73,10 @@ FILES_${PN}-update = "\
 
 FILES_${PN}-dbg += "/opt/arm/.debug \
                     /usr/src/debug/mbl-cloud-client"
+
+FILES_${PN}-dev += "\
+    ${includedir} \
+"
 
 # !!!
 # Note: currently, we use x86_x64 PC Linux PAL platform implementation that is intented
@@ -106,7 +118,6 @@ do_setup_pal_env[depends] += "python-certifi-native:do_populate_sysroot"
 do_setup_pal_env[depends] += "python-idna-native:do_populate_sysroot"
 
 do_configure() {
-    CUR_DIR=$(pwd)
     cd "${S}/cloud-services/mbl-cloud-client/__${TARGET}"
     cp "${WORKDIR}/yocto-toolchain.cmake" "${S}/cloud-services/mbl-cloud-client/pal-platform/Toolchain/GCC"
 
@@ -121,16 +132,12 @@ do_configure() {
           -DROOTFS2_LABEL="${MBL_ROOT_LABEL}2" \
           -DROOTFS_TYPE="${MBL_ROOT_FSTYPE}" \
           -DFACTORY_CONFIG_PARTITION="${MBL_FACTORY_CONFIG_DIR}"
-
-    cd ${CUR_DIR}
 }
 
 do_compile() {
-    CUR_DIR=$(pwd)
     cd "${S}/cloud-services/mbl-cloud-client/__${TARGET}"
     oe_runmake mbl-cloud-client
     oe_runmake pelion-provisioning-util
-    cd ${CUR_DIR}
 }
 
 do_install() {
@@ -144,8 +151,19 @@ do_install() {
     install -m 755 "${output_dir}/mbl-cloud-client/scripts/arm_update_common.sh" "${D}/opt/arm"
     install -m 755 "${S}/cloud-services/mbl-cloud-client/mbed-cloud-client/update-client-hub/modules/pal-linux/scripts/arm_update_cmdline.sh" "${D}/opt/arm"
 
+    install -d ${D}${datadir}/dbus-1/interfaces
+    install -m 755 "${WORKDIR}/com.mbed.Pelion1.Connect.xml" "${D}/${datadir}/dbus-1/interfaces/com.mbed.Pelion1.Connect.xml"
+
     install -d "${D}${systemd_unitdir}/system/"
     install -m 0644 "${WORKDIR}/mbl-cloud-client.service" "${D}${systemd_unitdir}/system/"
+
+    install -d ${D}${libdir}
+    install -m 0644 ${S}/cloud-services/mbl-cloud-client/__${TARGET}/${RELEASE_TYPE}/*.a ${D}${libdir}
+
+    install -d ${D}${includedir}
+    install -m 0644 ${S}/cloud-services/mbl-cloud-client/*.h ${D}${includedir}
+    install -m 0644 "${S}/cloud-services/mbl-cloud-client/define.txt" ${D}${includedir}
+    cp -r --no-preserve=ownership "${S}/cloud-services/mbl-cloud-client/mbed-cloud-client" ${D}${includedir}/
 }
 
 # Add a logrotate config files

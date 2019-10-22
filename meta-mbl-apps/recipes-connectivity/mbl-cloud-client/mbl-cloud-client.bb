@@ -40,11 +40,14 @@ RDEPENDS_${PN} = "\
 "
 
 RDEPENDS_${PN}-update += "\
+    e2fsprogs-mke2fs \
+    tar \
     util-linux-mkfs \
     util-linux-blkid \
     util-linux-lsblk \
     util-linux-mount \
     util-linux-umount \
+    xz \
 "
 
 # Installed packages

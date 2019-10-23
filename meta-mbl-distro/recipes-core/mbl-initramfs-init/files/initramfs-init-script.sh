@@ -13,6 +13,9 @@ LOG_MOUNT_OPTS="__REPLACE_ME_WITH_MBL_LOG_MOUNT_OPTS__"
 LOG_MOUNT_POINT="__REPLACE_ME_WITH_MBL_LOG_MOUNT_POINT__"
 BOOTFLAGS_DIR="__REPLACE_ME_WITH_MBL_BOOTFLAGS_DIR__"
 ROOTFS_LABEL_BASE="__REPLACE_ME_WITH_MBL_ROOT_LABEL__"
+MBL_WATCHDOG_TIMEOUT_SECS="__REPLACE_ME_WITH_MBL_WATCHDOG_TIMEOUT_SECS__"
+MBL_WATCHDOG_DEVICE_FILENAME="__REPLACE_ME_WITH_MBL_WATCHDOG_DEVICE_FILENAME__"
+
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 
@@ -26,6 +29,12 @@ if [ $(cat /sys/class/tty/console/active | wc -c) -gt 0 ]
 then
     exec </dev/console >/dev/console 2>/dev/console
 fi
+
+# Initialise the hardware watchdog and set the timeout. We need to do this
+# in the initramfs, as the watchdog needs to be started before switching to the rootfs.
+printf "Setting hardware watchdog with device filename %s to timeout of %s seconds\n" \
+    "${MBL_WATCHDOG_DEVICE_FILENAME}" "${MBL_WATCHDOG_TIMEOUT_SECS}"
+mbl-watchdog-init --timeout ${MBL_WATCHDOG_TIMEOUT_SECS} --device ${MBL_WATCHDOG_DEVICE_FILENAME}
 
 echo "Booting from init script in initramfs"
 

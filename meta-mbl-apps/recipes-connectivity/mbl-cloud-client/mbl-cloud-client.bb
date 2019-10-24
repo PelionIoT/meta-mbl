@@ -108,12 +108,24 @@ do_setup_pal_env[depends] += "python-chardet-native:do_populate_sysroot"
 do_setup_pal_env[depends] += "python-certifi-native:do_populate_sysroot"
 do_setup_pal_env[depends] += "python-idna-native:do_populate_sysroot"
 
+MBL_PAL_BASE_CERT_DIR ?= "/config/user/pal"
+MBL_PAL_UPDATE_FIRMWARE_DIR ?= "/scratch/firmware"
+MBL_PROVISIONING_CERT_DIR ?= "/scratch/provisioning-certs"
+
+EXTRA_OECMAKE = "\
+    -DPAL_FS_MOUNT_POINT_PRIMARY=\"${MBL_PAL_BASE_CERT_DIR}\" \
+    -DPAL_FS_MOUNT_POINT_SECONDARY=\"${MBL_PAL_BASE_CERT_DIR}\" \
+    -DPAL_UPDATE_FIRMWARE_DIR=\"${MBL_PAL_UPDATE_FIRMWARE_DIR}\" \
+    -DMBL_PROVISIONING_CERT_DIR=\"${MBL_PROVISIONING_CERT_DIR}\" \
+"
+
 do_configure() {
     CUR_DIR=$(pwd)
     cd "${S}/cloud-services/mbl-cloud-client/__${TARGET}"
     cp "${WORKDIR}/yocto-toolchain.cmake" "${S}/cloud-services/mbl-cloud-client/pal-platform/Toolchain/GCC"
 
     cmake -G "Unix Makefiles" \
+           ${EXTRA_OECMAKE} \
           -DCMAKE_BUILD_TYPE="${RELEASE_TYPE}" \
           -DCMAKE_TOOLCHAIN_FILE="${S}/cloud-services/mbl-cloud-client/pal-platform/Toolchain/GCC/yocto-toolchain.cmake" \
           -DEXTARNAL_DEFINE_FILE="${S}/cloud-services/mbl-cloud-client/define.txt" \

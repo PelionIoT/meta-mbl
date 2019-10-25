@@ -18,7 +18,7 @@ CONFIG_MTD=y
 CONFIG_LUA=y
 CONFIG_LUAPKG="lua"
 # CONFIG_FEATURE_SYSLOG is not set
-
+# CONFIG_SYSTEMD is not set
 #
 # Build Options
 #
@@ -81,7 +81,6 @@ CONFIG_PARSERROOT=""
 # CONFIG_JSON is not set
 # CONFIG_LUAEXTERNAL is not set
 # CONFIG_SETSWDESCRIPTION is not set
-
 #
 # Image Handlers
 #

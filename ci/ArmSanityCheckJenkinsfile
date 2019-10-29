@@ -4,7 +4,7 @@
 
 @Library('mbl-jenkins-library@warrior-dev') _
 
-licensingCheckPipeline {
+sanityCheckPipeline {
     credentialsId = "fc6db1f7-2a3f-4655-b54a-476bac1194e5"
     agent = "builder"
 }

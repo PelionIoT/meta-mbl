@@ -21,6 +21,7 @@ MBL_BOOT_ID = "BOOT"
 MBL_ROOTFS_ID = "ROOTFS"
 MBL_APPS_ID = "APPS"
 
+
 class PayloadImage(abc.ABC):
     @abc.abstractmethod
     def stage(self, staging_dir):
@@ -70,6 +71,7 @@ class PayloadImage(abc.ABC):
         This must be the name of the file that the stage() method creates.
         """
         ...
+
 
 class RootfsImage(PayloadImage):
     def __init__(self, image_name, deploy_dir, tinfoil):

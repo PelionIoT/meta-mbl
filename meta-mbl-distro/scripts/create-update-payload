@@ -109,7 +109,7 @@ def parse_args():
         metavar="PATH",
     )
     parser.add_argument(
-        "-t", "--test-info", help="Generate a test info file", metavar="PATH"
+        "-t", "--testinfo", help="Generate a testinfo file", metavar="PATH"
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Emit verbose output"

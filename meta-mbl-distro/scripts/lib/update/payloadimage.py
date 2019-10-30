@@ -78,31 +78,15 @@ def stage_multi_file_component(staging_dir, file_name, archived_file_specs):
     logging.info('Adding "{}" to payload'.format(file_name))
 
 
-def stage_single_file(staging_dir, archived_file_spec):
+def stage_single_file_with_compression(staging_dir, archived_file_spec):
     """
-    Copy a file to the staging dir acording to the given ArchivedFileSpec.
-
-    Compresses the file if required and the path in the archive ends with
-    ".xz".
+    Stage a single file when compression is required.
     """
     logging.info(
         'Adding "{}" to payload as "{}"'.format(
             archived_file_spec.path, archived_file_spec.archived_path
         )
     )
-    if (
-        archived_file_spec.path.suffix != ".xz"
-        and archived_file_spec.archived_path.suffix == ".xz"
-    ):
-        _stage_single_file_with_compression(staging_dir, archived_file_spec)
-    else:
-        _stage_single_file_without_compression(staging_dir, archived_file_spec)
-
-
-def _stage_single_file_with_compression(staging_dir, archived_file_spec):
-    """
-    Stage a single file when compression is required.
-    """
     out_path = staging_dir / archived_file_spec.archived_path
     with archived_file_spec.path.open("rb") as in_file:
         with lzma.open(str(out_path), "w") as out_file:
@@ -110,10 +94,15 @@ def _stage_single_file_with_compression(staging_dir, archived_file_spec):
                 out_file.write(chunk)
 
 
-def _stage_single_file_without_compression(staging_dir, archived_file_spec):
+def stage_single_file(staging_dir, archived_file_spec):
     """
     Stage a single file when compression is not required.
     """
+    logging.info(
+        'Adding "{}" to payload as "{}"'.format(
+            archived_file_spec.path, archived_file_spec.archived_path
+        )
+    )
     try:
         shutil.copy2(
             str(archived_file_spec.path),

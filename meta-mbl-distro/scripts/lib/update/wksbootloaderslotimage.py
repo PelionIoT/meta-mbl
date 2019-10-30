@@ -20,7 +20,9 @@ class WksBootloaderSlotImage(upi.PayloadImage):
         self._bootloader_slot_name = bootloader_slot_name
 
     def stage(self, staging_dir):
-        upi.stage_single_file(staging_dir, self._archived_file_spec)
+        upi.stage_single_file_with_compression(
+            staging_dir, self._archived_file_spec
+        )
 
     def generate_testinfo(self):
         return [

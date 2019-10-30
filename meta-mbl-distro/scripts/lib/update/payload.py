@@ -12,32 +12,15 @@ import update.images as images
 import update.swdesc as swdesc
 import update.testinfo as testinfo
 
-CURRENT_PAYLOAD_FORMAT_VERSION = 3
-
-PAYLOAD_FORMAT_VERSION_INFO = {
-    3: {
-        "image_format_versions": {
-            images.MBL_WKS_BOOTLOADER1_ID: 3,
-            images.MBL_WKS_BOOTLOADER2_ID: 3,
-            images.MBL_BOOT_ID: 3,
-            images.MBL_ROOTFS_ID: 3,
-            images.MBL_APPS_ID: 3,
-        }
-    }
-}
-
-
 class UpdatePayload:
     def __init__(
         self,
-        payload_format_version,
         tinfoil,
         bootloader_components=[],
         kernel=False,
         rootfs=False,
         apps=[],
     ):
-        self.payload_format_version = payload_format_version
         deploy_dir = pathlib.Path(
             get_bitbake_conf_var("DEPLOY_DIR_IMAGE", tinfoil)
         )
@@ -100,11 +83,6 @@ class UpdatePayload:
                 staging_dir_path, swdesc_name, output_path, create=True
             )
             for image in self.images:
-                self._check_image_format_version(
-                    self.payload_format_version,
-                    image.image_type,
-                    image.image_format_version,
-                )
                 image.stage(staging_dir_path)
                 self._append_to_payload(
                     staging_dir_path, image.archived_path, output_path
@@ -158,32 +136,3 @@ class UpdatePayload:
             input=bytes(str(archived_path), "utf-8"),
             cwd=staging_dir,
         )
-
-    @staticmethod
-    def _check_image_format_version(
-        payload_format_version, image_type, image_format_version
-    ):
-        if payload_format_version not in PAYLOAD_FORMAT_VERSION_INFO:
-            bb.fatal(
-                'Unsupported payload format version "{}"'.format(
-                    payload_format_version
-                )
-            )
-
-        versions = PAYLOAD_FORMAT_VERSION_INFO[payload_format_version][
-            "image_format_versions"
-        ]
-
-        if image_type not in versions:
-            bb.fatal(
-                'No image format version found for image type "{}" and payload format version "{}"'.format(
-                    image_type, payload_format_version
-                )
-            )
-
-        if versions[image_type] != image_format_version:
-            bb.fatal(
-                'Not expecting image format version "{}" for image type "{}" and payload format version "{}"'.format(
-                    image_format_version, image_type, payload_format_version
-                )
-            )

@@ -153,7 +153,6 @@ def main(args):
             )
 
         payload = update.payload.UpdatePayload(
-            payload_format_version=update.payload.CURRENT_PAYLOAD_FORMAT_VERSION,
             tinfoil=tinfoil,
             bootloader_components=args.bootloader_components,
             kernel=args.kernel,

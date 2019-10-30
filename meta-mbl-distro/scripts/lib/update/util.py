@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+"""Utility functions to help with creating firmware update payloads."""
+
 import inspect
 import pathlib
 
@@ -47,7 +49,11 @@ class ArchivedFileSpec:
     @staticmethod
     def _strict_path_resolve(path):
         """
-        Acts like "pathlib.Path(path).resolve(strict=True)" from Python >= 3.6.
+        Resolve a path.
+
+        Acts like
+            pathlib.Path(path).resolve(strict=True)
+        from Python >= 3.6.
         """
         if "strict" in inspect.getfullargspec(path.resolve).args:
             # In python >= 3.6, pathlib.Path.resolve() has a "strict"
@@ -73,15 +79,13 @@ def get_bitbake_conf_var(var_name, tinfoil, missing_ok=False):
     if missing_ok:
         return None
     bb.fatal(
-        'The "{}" BitBake variable is not set. '
-        "Please check that you have set up a valid BitBake environment.".format(
-            var_name
-        )
+        'The "{}" BitBake variable is not set. Please check that you have set '
+        "up a valid BitBake environment.".format(var_name)
     )
 
 
 def read_chunks(f):
-    """Generator to read a file in 4KiB chunks."""
+    """Read 4KiB chunks from a file-like object."""
     while True:
         chunk = f.read(4096)
         if chunk:

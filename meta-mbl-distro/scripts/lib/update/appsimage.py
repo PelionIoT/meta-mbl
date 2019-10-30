@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+"""PayloadImage subclass for apps images."""
+
 import arpy
 import pathlib
 import tarfile
@@ -14,16 +16,27 @@ MBL_APPS_ID = "APPS"
 
 
 class AppsImage(upi.PayloadImage):
+    """Class for creating image files containing apps (Opkg packages)."""
+
     def __init__(self, app_paths):
+        """
+        Create an AppsImage object.
+
+        Args:
+        * app_paths list<str>: list of paths to the ipk files to add to the
+          payload.
+        """
         self._apps = [util.ArchivedFileSpec(app) for app in app_paths]
         _validate_app_paths(self._apps)
 
     def stage(self, staging_dir):
+        """Implement method from PayloadImage ABC."""
         upi.stage_multi_file_component(
             staging_dir, self.archived_path, self._apps
         )
 
     def generate_testinfo(self):
+        """Implement method from PayloadImage ABC."""
         return [
             testinfo.app_bank_compare(_get_app_name(afs.path))
             for afs in self._apps
@@ -31,14 +44,17 @@ class AppsImage(upi.PayloadImage):
 
     @property
     def image_type(self):
+        """Implement method from PayloadImage ABC."""
         return MBL_APPS_ID
 
     @property
     def image_format_version(self):
+        """Implement method from PayloadImage ABC."""
         return 3
 
     @property
     def archived_path(self):
+        """Implement method from PayloadImage ABC."""
         return pathlib.Path("{}.tar.xz".format(MBL_APPS_ID))
 
 

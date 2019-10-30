@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+"""Provides an ABC for creating images for components in an update payload."""
+
 import abc
 import logging
 import lzma
@@ -12,6 +14,8 @@ import update.util as util
 
 
 class PayloadImage(abc.ABC):
+    """ABC for creating image files for components in an update payload."""
+
     @abc.abstractmethod
     def stage(self, staging_dir):
         """
@@ -38,17 +42,16 @@ class PayloadImage(abc.ABC):
     @abc.abstractmethod
     def image_type(self):
         """
-        Get the "type" of this image. I.e. the name of the swupdate handler
-        used to install it.
+        Get the "type" of this image.
+
+        I.e. get the name of the swupdate handler used to install the image.
         """
         ...
 
     @property
     @abc.abstractmethod
     def image_format_version(self):
-        """
-        Get the format version of this image.
-        """
+        """Get the format version of this image."""
         ...
 
     @property
@@ -63,9 +66,7 @@ class PayloadImage(abc.ABC):
 
 
 def stage_multi_file_component(staging_dir, file_name, archived_file_specs):
-    """
-    Create a tar.xz file for a multi-file component in the staging dir.
-    """
+    """Create a tar.xz file for a multi-file component in the staging dir."""
     tar_path = staging_dir / file_name
     with tarfile.open(str(tar_path), mode="w:xz") as tar:
         for file_spec in archived_file_specs:
@@ -79,9 +80,7 @@ def stage_multi_file_component(staging_dir, file_name, archived_file_specs):
 
 
 def stage_single_file_with_compression(staging_dir, archived_file_spec):
-    """
-    Stage a single file when compression is required.
-    """
+    """Stage a single file when compression is required."""
     logging.info(
         'Adding "{}" to payload as "{}"'.format(
             archived_file_spec.path, archived_file_spec.archived_path
@@ -95,9 +94,7 @@ def stage_single_file_with_compression(staging_dir, archived_file_spec):
 
 
 def stage_single_file(staging_dir, archived_file_spec):
-    """
-    Stage a single file when compression is not required.
-    """
+    """Stage a single file when compression is not required."""
     logging.info(
         'Adding "{}" to payload as "{}"'.format(
             archived_file_spec.path, archived_file_spec.archived_path
@@ -110,7 +107,8 @@ def stage_single_file(staging_dir, archived_file_spec):
         )
     except FileNotFoundError:
         bb.fatal(
-            'File "{}" was not found. Have you built the update components?'.format(
+            'File "{}" was not found. '
+            "Have you built the update components?".format(
                 str(archived_file_spec)
             )
         )

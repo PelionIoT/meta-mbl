@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+"""Module for creating update payloads."""
+
 import logging
 import pathlib
 import subprocess
@@ -17,6 +19,8 @@ import update.wksbootloaderslotimage as wksbootloaderslotimage
 
 
 class UpdatePayload:
+    """Class for creating update payloads and metadata."""
+
     def __init__(
         self,
         tinfoil,
@@ -25,6 +29,19 @@ class UpdatePayload:
         rootfs=False,
         apps=[],
     ):
+        """
+        Create an UpdatePayload object.
+
+        Args:
+        * tinfoil Tinfoil: BitBake Tinfoil object.
+        * bootloader_components list<str>: names of bootloader components to
+          add to the payload. I.e. a sublist of ["1", "2"].
+        * kernel bool: True if the kernel component should be added to the
+          payload.
+        * rootfs bool: True if the rootfs component should be added to the
+          payload.
+        * apps list<str|Path>: list of apps (ipk files) to add to the payload.
+        """
         deploy_dir = pathlib.Path(
             util.get_bitbake_conf_var("DEPLOY_DIR_IMAGE", tinfoil)
         )
@@ -34,8 +51,9 @@ class UpdatePayload:
             if _bootloader_one_with_kernel(bootloader_components, tinfoil):
                 if not kernel:
                     logging.warning(
-                        "On this target the bootloader 1 component and kernel must"
-                        " be updated together. Adding kernel to payload..."
+                        "On this target the bootloader 1 component and kernel "
+                        "must be updated together. "
+                        "Adding kernel to payload..."
                     )
                     images.append(bootimage.BootImage(deploy_dir, tinfoil))
 
@@ -53,9 +71,9 @@ class UpdatePayload:
             if _kernel_with_bootloader_one(bootloader_components, tinfoil):
                 if "1" not in bootloader_components:
                     bb.warn(
-                        "On this target the bootloader 1 component and kernel must"
-                        " be updated together. Adding bootloader 1 component to "
-                        "payload..."
+                        "On this target the bootloader 1 component and kernel "
+                        "must be updated together. "
+                        "Adding bootloader 1 component to payload..."
                     )
             self.images.append(bootimage.BootImage(deploy_dir, tinfoil))
 
@@ -91,10 +109,7 @@ class UpdatePayload:
                 )
 
     def create_testinfo_file(self, output_path):
-        """
-        Create a "testinfo" file, containing information about how to test the
-        update payload.
-        """
+        """Create a "testinfo" file for the update payload."""
         testinfo.create_testinfo_file(self.images, output_path)
 
 

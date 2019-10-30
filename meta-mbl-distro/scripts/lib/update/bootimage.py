@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+"""PayloadImage subclass for boot and blfs partition images."""
+
 import itertools
 import pathlib
 
@@ -13,15 +15,26 @@ MBL_BOOT_ID = "BOOT"
 
 
 class BootImage(upi.PayloadImage):
+    """Class for creating image files boot and blfs partitions."""
+
     def __init__(self, deploy_dir, tinfoil):
+        """
+        Create a BootImage object.
+
+        Args:
+        * deploy_dir Path: path to the directory containing build artifacts.
+        * tinfoil Tinfoil: BitBake Tinfoil object.
+        """
         self._boot_files = _get_archived_file_specs(deploy_dir, tinfoil)
 
     def stage(self, staging_dir):
+        """Implement method from PayloadImage ABC."""
         upi.stage_multi_file_component(
             staging_dir, self.archived_path, self._boot_files
         )
 
     def generate_testinfo(self):
+        """Implement method from PayloadImage ABC."""
         return [testinfo.file_compare("/proc/version")] + [
             testinfo.file_sha256(
                 afs.path, pathlib.Path("/boot", afs.archived_path)
@@ -31,14 +44,17 @@ class BootImage(upi.PayloadImage):
 
     @property
     def image_type(self):
+        """Implement method from PayloadImage ABC."""
         return MBL_BOOT_ID
 
     @property
     def image_format_version(self):
+        """Implement method from PayloadImage ABC."""
         return 3
 
     @property
     def archived_path(self):
+        """Implement method from PayloadImage ABC."""
         return pathlib.Path("{}.tar.xz".format(MBL_BOOT_ID))
 
 

@@ -2,13 +2,18 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+"""
+Functions for creating sw-description files.
+
+sw-description files describe the contents of update payloads in the format
+expected by swupdate.
+"""
+
 import libconf
 
 
 def create_swdesc_file(images, path):
-    """
-    Create a sw-description file for an update payload.
-    """
+    """Create a sw-description file for an update payload."""
     with open(str(path), mode="wt") as f:
         libconf.dump(_generate_swdesc(images), f)
 

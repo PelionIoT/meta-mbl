@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+"""PayloadImage subclass for rootfs partition images."""
+
 import update.payloadimage as upi
 import update.testinfo as testinfo
 import update.util as util
@@ -10,7 +12,18 @@ MBL_ROOTFS_ID = "ROOTFS"
 
 
 class RootfsImage(upi.PayloadImage):
+    """Class for creating image files for rootfs partitions."""
+
     def __init__(self, image_name, deploy_dir, tinfoil):
+        """
+        Create a RootfsImage object.
+
+        Args:
+        * image_name str: name of the BitBake image recipe that was used to
+          create the rootfs image.
+        * deploy_dir Path: path to the directory containing build artifacts.
+        * tinfoil Tinfoil: BitBake Tinfoil object.
+        """
         machine = util.get_bitbake_conf_var("MACHINE", tinfoil)
         rootfs_filename = "{}-{}.tar.xz".format(image_name, machine)
         self._archived_file_spec = util.ArchivedFileSpec(
@@ -18,9 +31,11 @@ class RootfsImage(upi.PayloadImage):
         )
 
     def stage(self, staging_dir):
+        """Implement method from PayloadImage ABC."""
         upi.stage_single_file(staging_dir, self._archived_file_spec)
 
     def generate_testinfo(self):
+        """Implement method from PayloadImage ABC."""
         return [
             testinfo.file_timestamp_compare("/etc/build"),
             testinfo.mounted_bank_compare("/"),
@@ -28,12 +43,15 @@ class RootfsImage(upi.PayloadImage):
 
     @property
     def image_type(self):
+        """Implement method from PayloadImage ABC."""
         return MBL_ROOTFS_ID
 
     @property
     def image_format_version(self):
+        """Implement method from PayloadImage ABC."""
         return 3
 
     @property
     def archived_path(self):
+        """Implement method from PayloadImage ABC."""
         return self._archived_file_spec.archived_path

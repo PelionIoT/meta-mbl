@@ -57,6 +57,7 @@ def create_testinfo_file(images, path):
     * images list<PayloadImage>: list of PayloadImages that describe the images
       in the update payload.
     * path <str|Path>: path at which to create the file.
+
     """
     with open(str(path), mode="wt") as f:
         json.dump(_generate_testinfo(images), f, indent=4)

@@ -25,6 +25,7 @@ class AppsImage(upi.PayloadImage):
         Args:
         * app_paths list<str>: list of paths to the ipk files to add to the
           payload.
+
         """
         self._apps = [uutil.ArchivedFileSpec(app) for app in app_paths]
         _validate_app_paths(self._apps)
@@ -83,6 +84,7 @@ def _get_app_name(ipk_path):
 
     Args:
     * ipk_path path-like: the path to the ipk.
+
     """
     with ipk_path.open(mode="rb") as ipk:
         return _get_app_name_from_control_file(
@@ -100,6 +102,7 @@ def _get_control_tgz_from_ipk(ipk, ipk_path):
     Args:
     * ipk file-like: an open ipk file.
     * ipk_path path-like: the path to the ipk (for error messages).
+
     """
     # ipk files are "ar" archives
     ar = arpy.Archive(fileobj=ipk)
@@ -121,6 +124,7 @@ def _get_control_file_from_control_tgz(control_tgz, ipk_path):
     Args:
     * control_tgz file-like: an open control.tar.gz file.
     * ipk_path: the path to the ipk (for error messages).
+
     """
     tar = tarfile.open(fileobj=control_tgz, mode="r|gz")
     for tarinfo in tar:
@@ -137,6 +141,7 @@ def _get_app_name_from_control_file(control_file, ipk_path):
     Args:
     * control_file file-like: an open control file.
     * ipk_path: the path to the ipk (for error messages).
+
     """
     for line in control_file.read().decode("utf-8").splitlines():
         field, value = line.split(sep=":", maxsplit=1)

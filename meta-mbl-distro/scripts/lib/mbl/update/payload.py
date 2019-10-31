@@ -41,6 +41,7 @@ class UpdatePayload:
         * rootfs bool: True if the rootfs component should be added to the
           payload.
         * apps list<str|Path>: list of apps (ipk files) to add to the payload.
+
         """
         deploy_dir = pathlib.Path(
             tutil.get_bitbake_conf_var("DEPLOY_DIR_IMAGE", tinfoil)

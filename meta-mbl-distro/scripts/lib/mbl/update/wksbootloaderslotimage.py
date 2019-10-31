@@ -24,6 +24,7 @@ class WksBootloaderSlotImage(upi.PayloadImage):
         * bootloader_slot_name str: name of the bootloader slot/partition.
         * deploy_dir Path: path to the directory containing build artifacts.
         * tinfoil Tinfoil: BitBake Tinfoil object.
+
         """
         filename_var_name = "MBL_{}_FILENAME".format(bootloader_slot_name)
         filename = tutil.get_bitbake_conf_var(filename_var_name, tinfoil)

@@ -24,6 +24,7 @@ class RootfsImage(upi.PayloadImage):
           create the rootfs image.
         * deploy_dir Path: path to the directory containing build artifacts.
         * tinfoil Tinfoil: BitBake Tinfoil object.
+
         """
         machine = tutil.get_bitbake_conf_var("MACHINE", tinfoil)
         rootfs_filename = "{}-{}.tar.xz".format(image_name, machine)

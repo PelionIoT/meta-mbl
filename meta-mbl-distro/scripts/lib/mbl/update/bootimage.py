@@ -25,6 +25,7 @@ class BootImage(upi.PayloadImage):
         Args:
         * deploy_dir Path: path to the directory containing build artifacts.
         * tinfoil Tinfoil: BitBake Tinfoil object.
+
         """
         self._boot_files = _get_archived_file_specs(deploy_dir, tinfoil)
 

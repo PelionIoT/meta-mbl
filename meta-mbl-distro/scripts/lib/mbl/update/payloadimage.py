@@ -24,6 +24,7 @@ class PayloadImage(abc.ABC):
         Args:
         * staging_dir Path: The directory in which to add the file for this
           image.
+
         """
         ...
 

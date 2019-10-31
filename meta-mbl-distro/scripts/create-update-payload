@@ -62,7 +62,7 @@ import argparse_oe  # noqa: E402
 mbl_lib_path = this_dir / "lib"
 sys.path.insert(0, str(mbl_lib_path))
 
-import mbl.update.payload
+import mbl.update.payload  # noqa: E402
 
 
 def parse_args():

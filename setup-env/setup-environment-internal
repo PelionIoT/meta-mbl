@@ -26,6 +26,50 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
+DEFAULT_DISTRO="mbl-development"
+
+##############################################################################
+# Usage output
+usage () {
+    cat <<EOF
+
+Usage: [MACHINE=<MACHINE>] [DISTRO=<DISTRO>] source setup-environment [BUILDDIR]
+
+If no MACHINE is set, list all MBL machine options.
+If no DISTRO is set, it will be set to $DEFAULT_DISTRO.
+If no BUILDIR is set, it will be set to build-<DISTRO>.
+
+EOF
+}
+
+##############################################################################
+# Set that the EULA is accepted in the auto.conf and create a local flag file
+mbl_eula_accept () {
+    local EULA_ACCEPT_ENV_VAR=$1
+    local EULA_ACCEPT_BB_VAR=$2
+    local EULA_ACCEPT_BB_VALUE=$3
+
+    # Remove any previous setting of the EULA variable
+    sed -i "/${EULA_ACCEPT_BB_VAR}/d" conf/auto.conf
+    # Set the EULA variable and value in auto.conf
+    echo "${EULA_ACCEPT_BB_VAR} = \"${EULA_ACCEPT_BB_VALUE}\"" >> conf/auto.conf
+    # Create a file to indicate that the EULA was already accepted
+    touch "${EULA_ACCEPT_ENV_VAR}"
+}
+
+##############################################################################
+# Remove any EULA acceptance from the auto.conf and remove any local flag file
+mbl_eula_reject () {
+    local EULA_ACCEPT_ENV_VAR=$1
+    local EULA_ACCEPT_BB_VAR=$2
+
+    # Remove any previous setting of the EULA variable
+    sed -i "/${EULA_ACCEPT_BB_VAR}/d" conf/auto.conf
+    # Remove the file to indicating that the EULA was already accepted
+    rm -f "${EULA_ACCEPT_ENV_VAR}"
+}
+
+##############################################################################
 # Handle EULA if needed.
 #
 # We assume that there can only be a single EULA for the current MACHINE and
@@ -59,17 +103,21 @@
 # FIXME: there is a potential issue if the same $MACHINE is set in more than
 # one layer.. but we should assert that earlier
 mbl_eula_handle () {
-    EULA_REJECTED=0
+    # Get the MACHINE without the -mbl suffix
+    local NON_MBL_MACHINE="${MACHINE%-mbl}"
 
-    NON_MBL_MACHINE="${MACHINE%-mbl}"
+    local EULA_ACCEPT_ENV_VAR
+    local EULA_PATH
+    local EULA_ACCEPT_BB_VAR
+    local EULA_ACCEPT_BB_VALUE
 
-    # remove '-' since we are constructing an environment variable name here
+    # Remove any '-' since we are constructing an environment variable name
     EULA_ACCEPT_ENV_VAR="$(echo "ACCEPT_EULA_${NON_MBL_MACHINE}" | sed 's/-//g')"
 
     case "$NON_MBL_MACHINE" in
-        # MBL OS also supports imx7s-warp from meta-freescale, but
-        # we don't use recipes for those MACHINEs that require acceptance of a
-        # EULA. If we start using recipes covered by a EULA without updating this
+        # MBL OS also supports imx7s-warp from meta-freescale, but we don't
+        # use recipes for those MACHINEs that require acceptance of a EULA.
+        # If we start using recipes covered by a EULA without updating this
         # code then those recipes will fail to build due to the missing
         # ACCEPT_FSL_EULA variable.
     imx8mmevk|imx7d-pico|imx6ul-pico)
@@ -84,174 +132,143 @@ mbl_eula_handle () {
         ;;
     esac
 
-    if [ -n "$EULA_PATH" ]; then
+    if [ -z "$EULA_PATH" ]; then
+        # No EULA to accept
+        return 0
+    fi
+    if [ -f "${EULA_ACCEPT_ENV_VAR}" ]; then
+        # EULA has already been accepted
+        return 0
+    fi
 
-        # Check if the EULA has already been accepted before
-        if [ ! -f "${EULA_ACCEPT_ENV_VAR}" ]; then
-            # NOTE: indirect reference / dynamic variable
-            if [ -n "${!EULA_ACCEPT_ENV_VAR}" ]; then
-                # The EULA_ACCEPT_ENV_VAR variable is set in the environment, so we
-                # just configure EULA_ACCEPT_BB_VAR in auto.conf and remove any previous
-                # occurrence
-                sed -i "/${EULA_ACCEPT_BB_VAR}/d" conf/auto.conf
-                echo "${EULA_ACCEPT_BB_VAR} = \"${EULA_ACCEPT_BB_VALUE}\"" >> conf/auto.conf
-                # Create a file to indicate that the EULA was already accepted
-                touch "${EULA_ACCEPT_ENV_VAR}"
-            else
-                # so we need to ask user if he/she accepts the EULA:
-                REJECT_COUNT=0
-                cat <<EOF
+    # Check if the ACCEPT_EULA_MACHINE env var is set
+    # NOTE: indirect reference / dynamic variable
+    if [ -n "${!EULA_ACCEPT_ENV_VAR}" ]; then
+        # The EULA_ACCEPT_ENV_VAR variable is set in the environment, so we
+        # just configure EULA_ACCEPT_BB_VAR in auto.conf
+        mbl_eula_accept "${EULA_ACCEPT_ENV_VAR}" "${EULA_ACCEPT_BB_VAR}" "${EULA_ACCEPT_BB_VALUE}"
+        return 0
+    fi
 
-The BSP for $NON_MBL_MACHINE depends on packages and firmware which are covered by an End
-User License Agreement (EULA). To have the right to use these binaries
-in your images, you need to read and accept the following...
+    # EULA has not been accepted - so ask the user to accept it
+    cat <<EOF
+
+The BSP for $NON_MBL_MACHINE depends on packages and firmware which are
+covered by an End User License Agreement (EULA). To have the right to use
+these binaries in your images, you need to read and accept the following...
 
 EOF
 
-                echo
-                REPLY=
-                while [ -z "$REPLY" ]; do
-                    echo -n "Would you like to read the EULA ? (y/n) "
-                    read -r REPLY
-                    case "$REPLY" in
-                        y|Y)
-                            READ_EULA=1
-                            ;;
-                        n|N)
-                            READ_EULA=0
-                            EULA_REJECTED=1
-                            ;;
-                        *)
-                            REJECT_COUNT=$((REJECT_COUNT+1))
-                            if [ $REJECT_COUNT -eq 3 ]; then
-                                REPLY=q
-                                READ_EULA=0
-                                EULA_REJECTED=1
-                            else
-                                REPLY=
-                            fi
-                            ;;
-                    esac
-                done
+    local REPLY
+    local READ_EULA=0
+    local EULA_REJECTED=0
+    local REJECT_COUNT=0
 
-
-                if [ "$READ_EULA" = 1 ]; then
-                    more -d "${EULA_PATH}"
-                    echo
+    # Ask the user to read the EULA, if they don't the EULA is rejected
+    while [ -z "$REPLY" ]; do
+        echo -n "Would you like to read the EULA ? (y/n) "
+        read -r REPLY
+        case "$REPLY" in
+            y|Y)
+                READ_EULA=1
+                ;;
+            n|N)
+                READ_EULA=0
+                EULA_REJECTED=1
+                ;;
+            *)
+                REJECT_COUNT=$((REJECT_COUNT+1))
+                if [ $REJECT_COUNT -eq 3 ]; then
+                    REPLY=q
+                    READ_EULA=0
+                    EULA_REJECTED=1
+                else
                     REPLY=
-                    while [ -z "$REPLY" ]; do
-                        echo -n "Do you accept the EULA you just read? (y/n) "
-                        read -r REPLY
-                        case "$REPLY" in
-                            y|Y)
-                                echo "EULA has been accepted."
-                                sed -i "/${EULA_ACCEPT_BB_VAR}/d" conf/auto.conf
-                                echo "${EULA_ACCEPT_BB_VAR} = \"${EULA_ACCEPT_BB_VALUE}\"" >> conf/auto.conf
-                                # Create a file to indicate that the EULA was already accepted
-                                touch "${EULA_ACCEPT_ENV_VAR}"
-                                ;;
-                            n|N)
-                                echo "EULA has not been accepted."
-                                sed -i "/${EULA_ACCEPT_BB_VAR}/d" conf/auto.conf
-                                EULA_REJECTED=1
-                                ;;
-                            *)
-                                REPLY=
-                                ;;
-                        esac
-                    done
                 fi
-            fi
-        fi
+                ;;
+        esac
+    done
+
+    # Ask if the user accepts the EULA if they read it
+    if [ "$READ_EULA" = 1 ]; then
+        more -d "${EULA_PATH}"
+        echo
+        REPLY=
+        while [ -z "$REPLY" ]; do
+            echo -n "Do you accept the EULA you just read? (y/n) "
+            read -r REPLY
+            case "$REPLY" in
+                y|Y)
+                    echo "EULA has been accepted."
+                    mbl_eula_accept "${EULA_ACCEPT_ENV_VAR}" "${EULA_ACCEPT_BB_VAR}" "${EULA_ACCEPT_BB_VALUE}"
+                    ;;
+                n|N)
+                    echo "EULA has not been accepted."
+                    mbl_eula_reject "${EULA_ACCEPT_ENV_VAR}" "${EULA_ACCEPT_BB_VAR}"
+                    EULA_REJECTED=1
+                    ;;
+                *)
+                    REPLY=
+                    ;;
+            esac
+        done
     fi
+
     return $EULA_REJECTED
 }
 
-RPBcleanup() {
-        unset MACHINETABLE MACHLAYERS DISTRO_DIRNAME OEROOT
-        unset ITEM MANIFESTS EULA EULA_MACHINE REPLY READ_EULA
-        unset usage oldmach
+##############################################################################
+# Clean up all the variables and functions on finish
+mbl_cleanup() {
+        unset FILE_CHECKS MACHLAYERS OEROOT MANIFESTS STRIPPED_PATH
+        unset DEFAULT_DISTRO usage oldmach olddistro
+        unset mbl_eula_accept mbl_eula_reject mbl_eula_handle
 
         if [ -n "$BUILDDIR" ]; then
                 export BUILDDIR
         fi
 }
-trap RPBcleanup RETURN
+
+##############################################################################
+# Perform the environment set up
+
+trap mbl_cleanup RETURN
+
+# Check number of arguments given
+if [ $# -gt 1 ]; then
+    usage
+    return 2
+fi
 
 if [ "$(whoami)" = "root" ]; then
     echo "ERROR: do not use the BSP as root. Exiting..."
-    return
-fi
-
-if [ -z "$DISTRO" ]; then
-    DISTRO="mbl-development"
-fi
-
-# Avoid symlinks as it can cause modules (such as lvm2) to fail to build
-OEROOT=$(pwd -P)
-cd "$OEROOT"
-if [ -n "$ZSH_VERSION" ]; then
-    setopt sh_word_split
-    setopt clobber
-elif [ -n "$BASH_VERSION" ]; then
-    set +o noclobber
-fi
-
-usage () {
-    cat <<EOF
-
-Usage: [MACHINE=<MACHINE>] source ${BASH_SOURCE[0]} [BUILDDIR]
-
-If no MACHINE is set, list all possible machines, and ask user to choose.
-If no BUILDIR is set, it will be set to build-$DISTRO.
-
-EOF
-}
-
-if [ $# -gt 1 ]; then
-    usage
     return 1
 fi
-# create a common list of "<machine>(<layer>)", sorted by <machine>
-# Blacklist OE-core and meta-linaro, we only want 96boards + vendor layers
-MACHLAYERS=$(find layers -print | grep "conf/machine/.*\.conf" | grep -v scripts | grep -v openembedded-core | grep -v meta-linaro | sed -e 's/\.conf//g' -e 's/layers\///' | awk -F'/conf/machine/' '{print $NF "(" $1 ")"}' | LANG=C sort)
 
-if [ -z "${MACHINE}" ]; then
-    # whiptail
-    which whiptail > /dev/null 2>&1
-    if [ $? -eq 0 ]; then
-        MACHINETABLE=
-        for ITEM in $MACHLAYERS; do
-            MACHINETABLE="${MACHINETABLE} $(echo "$ITEM" | cut -d'(' -f1) $(echo "$ITEM" | cut -d'(' -f2 | cut -d')' -f1)"
-        done
-        MACHINE=$(whiptail --title "Available Machines" --menu \
-            "Please choose a machine" 0 0 20 \
-            ${MACHINETABLE} 3>&1 1>&2 2>&3)
+# Double check that some of the files we expect are present
+FILE_CHECKS="conf/local.conf conf/bblayers.conf .repo/manifests layers"
+for file in $FILE_CHECKS; do
+    if [ ! -e "$file" ]; then
+        echo "ERROR: $file not found"
+        echo "Please check you are performing this setup in a repo checkout of the distro."
+        return 1
     fi
+done
 
-    # dialog
-    if [ -z "$MACHINE" ]; then
-        which dialog > /dev/null 2>&1
-        if [ $? -eq 0 ]; then
-            MACHINETABLE=
-            for ITEM in $MACHLAYERS; do
-                MACHINETABLE="$MACHINETABLE $(echo "$ITEM" | cut -d'(' -f1) $(echo "$ITEM" | cut -d'(' -f2 | cut -d')' -f1)"
-            done
-            MACHINE=$(dialog --title "Available Machines" --menu "Please choose a machine" 0 0 20 $MACHINETABLE 3>&1 1>&2 2>&3)
-        fi
-    fi
+if [ -z "$DISTRO" ]; then
+    DISTRO="$DEFAULT_DISTRO"
 fi
 
-
-# guard against Ctrl-D or cancel
+# Check for machine being set
 if [ -z "$MACHINE" ]; then
-    echo "To choose a machine interactively please install whiptail or dialog."
-    echo "To choose a machine non-interactively please use the following syntax:"
+    # Create a list of MBL machines "<machine>(<layer>)", sorted by <machine>
+    MACHLAYERS=$(find layers -print | grep "conf/machine/.*\.conf" | grep meta-mbl | sed -e 's/\.conf//g' -e 's/layers\///' | awk -F'/conf/machine/' '{print $NF "(" $1 ")"}' | LANG=C sort)
+
+    echo "Please use the following syntax:"
     echo "    MACHINE=<your-machine> . ./setup-environment"
     echo ""
-    echo "Press <ENTER> to see a list of your choices"
-    read -r
-    echo "$MACHLAYERS" | sed -e 's/(/ (/g' | sed -e 's/)/)\n/g' | sed -e 's/^ */\t/g'
+    echo "Possible choices for MBL:"
+    echo "$MACHLAYERS" | sed -e 's/(/ (/g' | sed -e 's/^ */\t/g'
     return
 fi
 
@@ -259,126 +276,88 @@ if [ -z "${SDKMACHINE}" ]; then
     SDKMACHINE='x86_64'
 fi
 
-MANIFESTS="${OEROOT}"/.repo/manifests
+# Set up the OEROOT path
+# Avoid symlinks as it can cause modules (such as lvm2) to fail to build
+OEROOT=$(pwd -P)
+cd "$OEROOT" || return 1
 
-# we can be called with only 1 parameter max, <build> folder, or default to build-$distro
+# Allow overwriting files and other shell options
+if [ -n "$ZSH_VERSION" ]; then
+    setopt sh_word_split
+    setopt clobber
+elif [ -n "$BASH_VERSION" ]; then
+    set +o noclobber
+fi
+
+# Clean up PATH, because if it includes tokens to current directories
+# wrong binaries can be used instead of the expected ones during task execution
+STRIPPED_PATH=$(echo "${PATH}" | sed 's/\(:.\|:\)*:/:/g;s/^.\?://;s/:.\?$//')
+export PATH="${OEROOT}"/layers/openembedded-core/scripts:"${OEROOT}"/layers/meta-mbl/meta-mbl-distro/scripts:"${OEROOT}"/bitbake/bin:"${OEROOT}"/.repo/repo:"${STRIPPED_PATH}"
+# Remove duplicate path entries
+STRIPPED_PATH=$(echo "$PATH" | awk -F: '{for (i=1;i<=NF;i++) { if ( !x[$i]++ ) printf("%s:",$i); }}' | sed 's/:$//')
+export PATH="${STRIPPED_PATH}"
+# Make sure Bitbake doesn't filter out the following variables from our
+# environment. Including allowing for a shared download directory (DL_DIR)
+export BB_ENV_EXTRAWHITE="MACHINE DISTRO TCLIBC TCMODE GIT_PROXY_COMMAND http_proxy ftp_proxy https_proxy all_proxy ALL_PROXY no_proxy SSH_AGENT_PID SSH_AUTH_SOCK BB_SRCREV_POLICY SDKMACHINE BB_NUMBER_THREADS DL_DIR"
+
+# We can be called with only 1 parameter max, <build> folder, or default to
+# build-$distro
 BUILDDIR=build-$DISTRO
 if [ $# -eq 1 ]; then
     BUILDDIR=$1
 fi
 BUILDDIR=$OEROOT/$BUILDDIR
 
-# Clean up PATH, because if it includes tokens to current directories somehow,
-# wrong binaries can be used instead of the expected ones during task execution
-export PATH=$(echo "${PATH}" | sed 's/\(:.\|:\)*:/:/g;s/^.\?://;s/:.\?$//')
-export PATH="${OEROOT}"/layers/openembedded-core/scripts:"${OEROOT}"/layers/meta-mbl/meta-mbl-distro/scripts:"${OEROOT}"/bitbake/bin:"${OEROOT}"/.repo/repo:"${PATH}"
-#remove duplicate path entries
-export PATH=$(echo "$PATH" | awk -F: '{for (i=1;i<=NF;i++) { if ( !x[$i]++ ) printf("%s:",$i); }}' | sed 's/:$//')
-# Make sure Bitbake doesn't filter out the following variables from our
-# environment. Including allowing for a shared download directory (DL_DIR)
-export BB_ENV_EXTRAWHITE="MACHINE DISTRO TCLIBC TCMODE GIT_PROXY_COMMAND http_proxy ftp_proxy https_proxy all_proxy ALL_PROXY no_proxy SSH_AGENT_PID SSH_AUTH_SOCK BB_SRCREV_POLICY SDKMACHINE BB_NUMBER_THREADS DL_DIR"
+# Create the build directory (if it doesn't exist)
+mkdir -p "${BUILDDIR}"/conf || return 1
+cd "${BUILDDIR}" || return 1
 
-# Helper command for building images for mixed 32bit/64bit
-# ARM builds. The command allow to specify a secondary MACHINE
-# and image that will be built next to the primary target.
-# If no secondary image is specified the rpb-minimal-image image
-# will be built.
-
-
-bitbake_secondary_image () {
-    BITBAKE_OPTIONS=""
-    unset EXTRA_MACHINE
-    unset SECONDARY_IMAGE
-
-    SECONDARY_IMAGE='rpb-minimal-image'
-    while [[ $# -gt 1 ]]
-    do
-        key="$1"
-        case $key in
-            --extra-machine)
-            EXTRA_MACHINE="$2"
-            shift
-            ;;
-            --secondary-image)
-            SECONDARY_IMAGE="$2"
-            shift
-            ;;
-        *)
-            BITBAKE_OPTIONS=$BITBAKE_OPTIONS" "$1
-        ;;
-    esac
-    shift
-    done
-    BITBAKE_OPTIONS=$BITBAKE_OPTIONS" "$1
-    if [ -z "$EXTRA_MACHINE" ]
-    then
-        echo "   Error: you need to run $FUNCNAME with --extra-machine agument"
-        echo
-        echo "   Example:"
-        echo "     $ $FUNCNAME --extra-machine hikey rpb-weston-image"
-        return
-    fi
-
-    if [ "$EXTRA_MACHINE" == "$MACHINE" ]
-    then
-        echo "Error: the extra machine must be different from the machine you already set using setup-environment: "$MACHINE
-        return
-    fi
-
-    echo "Building first image. MACHINE:" $EXTRA_MACHINE " DISTRO:" $DISTRO
-
-    MACHINE=$EXTRA_MACHINE bitbake $SECONDARY_IMAGE
-
-    if [ $? != 0 ]; then
-        printf "Error building image"
-        return
-    fi
-    echo "Building second image. MACHINE:" $MACHINE " DISTRO:" $DISTRO
-
-    MACHINE=$MACHINE bitbake $BITBAKE_OPTIONS
-}
-mkdir -p "${BUILDDIR}"/conf && cd "${BUILDDIR}"
+# Get previous details of a build if they exist
 if [ -f "conf/auto.conf" ]; then
-    oldmach=$(egrep "^MACHINE" "conf/auto.conf" | sed -e 's%^MACHINE ?= %%' | sed -e 's/^"//'  -e 's/"$//')
-    olddistro=$(egrep "^DISTRO" "conf/auto.conf" | sed -e 's%^DISTRO ?= %%' | sed -e 's/^"//'  -e 's/"$//')
+    oldmach=$(grep -E "^MACHINE" "conf/auto.conf" | sed -e 's%^MACHINE ?= %%' | sed -e 's/^"//'  -e 's/"$//')
+    olddistro=$(grep -E "^DISTRO" "conf/auto.conf" | sed -e 's%^DISTRO ?= %%' | sed -e 's/^"//'  -e 's/"$//')
 fi
-
-if [ -e conf/checksum -a "${MACHINE}" = "$oldmach" -a "${DISTRO}" = "$olddistro" ]
-then
-    # Even for the case we do not need to perform the setup for
-    # the first build we still need to check if the EULA needs
-    # to be accepted
-    mbl_eula_handle
-    if [ $? -eq 1 ]
-    then
-        echo "ERROR: EULA Has not been read and accepted."
-        return 1
-    fi
-    sha512sum --quiet -c conf/checksum > /dev/null 2>&1
-    if [ $? -eq 0 ]
-    then
+# Check if this is not the first environment setup (a checksum will exist)
+# and the MACHINE and DISTRO are unchanged as we can skip the rest of the
+# setup
+if [ -e conf/checksum ] && [ "${MACHINE}" = "$oldmach" ] && [ "${DISTRO}" = "$olddistro" ]; then
+    # Check that the checksum matches for the setup script
+    if sha512sum --quiet -c conf/checksum > /dev/null 2>&1; then
+        # Double check the EULA has been accepted
+        mbl_eula_handle
+        if [ $? -eq 1 ]; then
+            echo "ERROR: EULA Has not been read and accepted."
+            return 1
+        fi
+        # Checksum matches and EULA accepted, so we can exit early as we have
+        # already performed a setup before for this DISTRO and MACHINE
        return
     fi
 fi
 
-# evaluate new checksum and regenerate the conf files
-sha512sum "${OEROOT}"/setup-environment-internal 2>&1 > conf/checksum
+if [ -f "conf/auto.conf" ]; then
+    echo "Regenerating build environment due to DISTRO, MACHINE or SETUP changes"
+fi
 
+# Create a file to indicate if this setup has already been called
+# and set a new checksum based on this script
+sha512sum "${OEROOT}"/setup-environment-internal > conf/checksum
+
+# Set up the local.conf for this build directory
 ln -sf "${OEROOT}"/conf/local.conf conf/local.conf
 
 # Setup the bblayers.conf
 # Target specific BSP layers are specified in a bblayers_${MACHINE}.conf
-# file. This environment setup script the replaces ##MACHINE## tag in
+# file. This environment setup script replaces the ##MACHINE## tag in
 # bblayers.conf with that specified by MACHINE.
 rm -f conf/bblayers*.conf
 sed -e "s|##MACHINE##|$MACHINE|g"  "${OEROOT}"/conf/bblayers.conf > conf/bblayers.conf
-ln -sf "${OEROOT}"/conf/bblayers_${MACHINE}.conf conf/bblayers_${MACHINE}.conf
 
-
+# Add mbl-manifest readme link in build directory
+MANIFESTS="${OEROOT}"/.repo/manifests
 ln -sf "${MANIFESTS}"/README.md README.md
 
-ln -sf "${MANIFESTS}" "${OEROOT}"/layers/
-
+# Record the machine, distro settings
 cat > conf/auto.conf <<EOF
 DISTRO ?= "${DISTRO}"
 MACHINE ?= "${MACHINE}"
@@ -389,16 +368,19 @@ INHERIT += "rm_work"
 EOF
 
 # Because we are (re-)generating the build conf files, ensure we remove
-# the ACCEPT_EULA_${MACHINE} file to present the EULA to the user
+# all ACCEPT_EULA_MACHINE files to make sure we present the EULA to the user
 rm -rf ACCEPT_EULA_*
+
+# Perform the EULA processing which will update auto.conf as necessary
 mbl_eula_handle
-if [ $? -eq 1 ]
-then
+if [ $? -eq 1 ]; then
     echo "ERROR: EULA Has not been read and accepted."
+    # Delete the auto.conf file as we haven't successfully completed a setup
+    rm conf/auto.conf
     return 1
 fi
 
-
+# Set up the site configuration
 if [ ! -e conf/site.conf ]; then
     cat > conf/site.conf <<_EOF
 
@@ -418,6 +400,7 @@ TMPDIR = "${BUILDDIR}/tmp"
 _EOF
 fi
 
+# Finish with some welcome text
 cat <<EOF
 
 Welcome to Mbed Linux OS (MBL)

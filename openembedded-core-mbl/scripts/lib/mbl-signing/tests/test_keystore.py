@@ -134,16 +134,18 @@ def test_configure_role(mock_responder_and_return_val):
 
 
 @pytest.mark.parametrize(
-    "response, expected_attr, expected_val", [
-        ('{"data": {"certificate": "Test"}}', "data", dict(certificate="Test")),
+    "response, expected_attr, expected_val",
+    [
+        (
+            '{"data": {"certificate": "Test"}}',
+            "data",
+            dict(certificate="Test"),
+        ),
         ('{"response": "204"}', "response", "204"),
-    ]
+    ],
 )
 def test_keystore_response(
-    response,
-    expected_attr,
-    expected_val,
-    mock_responder_and_return_val
+    response, expected_attr, expected_val, mock_responder_and_return_val
 ):
     _, return_val = mock_responder_and_return_val
     ret_val = return_val(response)

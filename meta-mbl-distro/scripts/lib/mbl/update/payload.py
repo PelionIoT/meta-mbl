@@ -147,5 +147,7 @@ def _append_to_payload(staging_dir, archived_path, output_path, create=False):
         cpio_args.append("--append")
 
     subprocess.check_output(
-        cpio_args, input=bytes(str(archived_path), "utf-8"), cwd=staging_dir
+        cpio_args,
+        input=bytes(str(archived_path), "utf-8"),
+        cwd=str(staging_dir),
     )

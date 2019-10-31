@@ -64,6 +64,7 @@ sys.path.insert(0, str(mbl_lib_path))
 
 import mbl.update.payload
 
+
 def parse_args():
     """Parse the command line arguments."""
     parser = argparse_oe.ArgumentParser(

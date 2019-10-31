@@ -7,6 +7,7 @@
 import inspect
 import pathlib
 
+
 def strict_path_resolve(path):
     """
     Resolve a path.

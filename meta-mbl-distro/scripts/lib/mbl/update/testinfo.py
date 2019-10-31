@@ -48,6 +48,7 @@ import json
 
 import mbl.util.fileutil as futil
 
+
 def create_testinfo_file(images, path):
     """
     Create a "testinfo" file for an update payload.

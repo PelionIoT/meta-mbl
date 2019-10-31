@@ -121,9 +121,7 @@ class PKExtension(ATFExtension):
 
         :params pub_key bytes: The raw subject public key bytes.
         """
-        enc_val = asn1parse.encode_asn1_subject_key_info(
-            pub_key
-        )
+        enc_val = asn1parse.encode_asn1_subject_key_info(pub_key)
         self.value = enc_val
 
 

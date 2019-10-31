@@ -16,13 +16,13 @@ oe_scripts_path = (
 lib_path = oe_scripts_path / "lib"
 sys.path.insert(0, str(lib_path))
 
-import scriptpath
-import scriptutils
+import scriptpath  # noqa: E402
+import scriptutils  # noqa: E402
 
 # This is needed so we can import bitbake modules.
 bitbakepath = scriptpath.add_bitbake_lib_path()
 
-import bb.tinfoil
+import bb.tinfoil  # noqa: E402
 
 SCRIPT_NAME = pathlib.Path(__file__).name
 
@@ -172,7 +172,9 @@ def get_notes_col(d, part_name, bank):
     if part_name == "BANK_AND_UPDATE_STATE":
         return "Unused"
     if part_name == "BOOT":
-        if bank == 2 or not int(get_var_for_part(d, "SKIP", "WKS_BOOTLOADER_FS", "1")):
+        if bank == 2 or not int(
+            get_var_for_part(d, "SKIP", "WKS_BOOTLOADER_FS", "1")
+        ):
             return "Unused"
         else:
             return "Contains the kernel"

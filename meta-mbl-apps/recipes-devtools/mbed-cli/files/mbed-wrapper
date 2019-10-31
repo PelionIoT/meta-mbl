@@ -14,7 +14,7 @@ cmd="${shebang#\#\!}"
 
 # A shebang line (on Linux at least) contains an interpreter/executable without
 # spaces and a single optional argument (which may contain spaces)
-read interpreter arg < <(printf "%s\n" "${cmd}")
+read -r interpreter arg < <(printf "%s\n" "${cmd}")
 if [ -n "$arg" ]; then
     exec "$interpreter" "$arg" "$wrapped_mbed_path" "$@"
 else

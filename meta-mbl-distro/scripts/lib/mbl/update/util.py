@@ -4,8 +4,9 @@
 
 """Utility functions to help with creating firmware update payloads."""
 
-import inspect
 import pathlib
+
+import mbl.util.fileutil as futil
 
 
 class ArchivedFileSpec:
@@ -37,7 +38,7 @@ class ArchivedFileSpec:
 
         try:
             # We don't want symlinks in our payloads
-            self.path = self._strict_path_resolve(self.path)
+            self.path = futil.strict_path_resolve(self.path)
         except FileNotFoundError:
             bb.fatal(
                 'The file "{}" was not found.'
@@ -45,50 +46,3 @@ class ArchivedFileSpec:
                     self.path
                 )
             )
-
-    @staticmethod
-    def _strict_path_resolve(path):
-        """
-        Resolve a path.
-
-        Acts like
-            pathlib.Path(path).resolve(strict=True)
-        from Python >= 3.6.
-        """
-        if "strict" in inspect.getfullargspec(path.resolve).args:
-            # In python >= 3.6, pathlib.Path.resolve() has a "strict"
-            # parameter, and we must set it to True to avoid the default
-            # value of False.
-            return pathlib.Path(path).resolve(strict=True)
-        # In python < 3.6, pathlib.Path.resolve() doesn't have a "strict"
-        # parameter, but it always does strict resolution.
-        return pathlib.Path(path).resolve()
-
-
-def get_bitbake_conf_var(var_name, tinfoil, missing_ok=False):
-    """
-    Get the value of a BitBake variable.
-
-    If missing_ok is False then an error is raised if the variable does not
-    exist.
-    If missing_ok is True then None is returned if the variable does not exist.
-    """
-    val = tinfoil.config_data.getVar(var_name)
-    if val is not None:
-        return val.strip()
-    if missing_ok:
-        return None
-    bb.fatal(
-        'The "{}" BitBake variable is not set. Please check that you have set '
-        "up a valid BitBake environment.".format(var_name)
-    )
-
-
-def read_chunks(f):
-    """Read 4KiB chunks from a file-like object."""
-    while True:
-        chunk = f.read(4096)
-        if chunk:
-            yield chunk
-        else:
-            return

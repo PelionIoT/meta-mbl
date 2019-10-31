@@ -4,9 +4,10 @@
 
 """PayloadImage subclass for rootfs partition images."""
 
-import update.payloadimage as upi
-import update.testinfo as testinfo
-import update.util as util
+import mbl.update.payloadimage as upi
+import mbl.update.testinfo as testinfo
+import mbl.update.util as uutil
+import mbl.util.tinfoilutil as tutil
 
 MBL_ROOTFS_ID = "ROOTFS"
 
@@ -24,9 +25,9 @@ class RootfsImage(upi.PayloadImage):
         * deploy_dir Path: path to the directory containing build artifacts.
         * tinfoil Tinfoil: BitBake Tinfoil object.
         """
-        machine = util.get_bitbake_conf_var("MACHINE", tinfoil)
+        machine = tutil.get_bitbake_conf_var("MACHINE", tinfoil)
         rootfs_filename = "{}-{}.tar.xz".format(image_name, machine)
-        self._archived_file_spec = util.ArchivedFileSpec(
+        self._archived_file_spec = uutil.ArchivedFileSpec(
             deploy_dir / rootfs_filename, "{}.tar.xz".format(MBL_ROOTFS_ID)
         )
 

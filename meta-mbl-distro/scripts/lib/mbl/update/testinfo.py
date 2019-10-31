@@ -46,8 +46,7 @@ like:
 import hashlib
 import json
 
-from update.util import read_chunks
-
+import mbl.util.fileutil as futil
 
 def create_testinfo_file(images, path):
     """
@@ -150,6 +149,6 @@ def _generate_testinfo(images):
 def _generate_sha256_hexdigest(path):
     sha = hashlib.sha256()
     with path.open(mode="rb") as f:
-        for chunk in read_chunks(f):
+        for chunk in futil.read_chunks(f):
             sha.update(chunk)
     return sha.hexdigest()

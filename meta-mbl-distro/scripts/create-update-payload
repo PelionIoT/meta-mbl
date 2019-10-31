@@ -62,7 +62,7 @@ import argparse_oe
 mbl_lib_path = this_dir / "lib"
 sys.path.insert(0, str(mbl_lib_path))
 
-import update.payload
+import mbl.update.payload
 
 
 def parse_args():
@@ -152,7 +152,7 @@ def main(args):
                 "mega-manual.html#var-BBPATH"
             )
 
-        payload = update.payload.UpdatePayload(
+        payload = mbl.update.payload.UpdatePayload(
             tinfoil=tinfoil,
             bootloader_components=args.bootloader_components,
             kernel=args.kernel,

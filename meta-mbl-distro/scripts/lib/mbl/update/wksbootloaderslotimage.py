@@ -4,9 +4,10 @@
 
 """PayloadImage subclass for bootloader raw partition images."""
 
-import update.payloadimage as upi
-import update.testinfo as testinfo
-import update.util as util
+import mbl.update.payloadimage as upi
+import mbl.update.testinfo as testinfo
+import mbl.update.util as uutil
+import mbl.util.tinfoilutil as tutil
 
 MBL_WKS_BOOTLOADER1_ID = "WKS_BOOTLOADER1"
 MBL_WKS_BOOTLOADER2_ID = "WKS_BOOTLOADER2"
@@ -25,8 +26,8 @@ class WksBootloaderSlotImage(upi.PayloadImage):
         * tinfoil Tinfoil: BitBake Tinfoil object.
         """
         filename_var_name = "MBL_{}_FILENAME".format(bootloader_slot_name)
-        filename = util.get_bitbake_conf_var(filename_var_name, tinfoil)
-        self._archived_file_spec = util.ArchivedFileSpec(
+        filename = tutil.get_bitbake_conf_var(filename_var_name, tinfoil)
+        self._archived_file_spec = uutil.ArchivedFileSpec(
             deploy_dir / filename, "{}.xz".format(bootloader_slot_name)
         )
         self._bootloader_slot_name = bootloader_slot_name

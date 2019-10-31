@@ -8,9 +8,9 @@ import arpy
 import pathlib
 import tarfile
 
-import update.payloadimage as upi
-import update.testinfo as testinfo
-import update.util as util
+import mbl.update.payloadimage as upi
+import mbl.update.testinfo as testinfo
+import mbl.update.util as uutil
 
 MBL_APPS_ID = "APPS"
 
@@ -26,7 +26,7 @@ class AppsImage(upi.PayloadImage):
         * app_paths list<str>: list of paths to the ipk files to add to the
           payload.
         """
-        self._apps = [util.ArchivedFileSpec(app) for app in app_paths]
+        self._apps = [uutil.ArchivedFileSpec(app) for app in app_paths]
         _validate_app_paths(self._apps)
 
     def stage(self, staging_dir):

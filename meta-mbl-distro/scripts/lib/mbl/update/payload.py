@@ -9,13 +9,13 @@ import pathlib
 import subprocess
 import tempfile
 
-import update.appsimage as appsimage
-import update.bootimage as bootimage
-import update.rootfsimage as rootfsimage
-import update.swdesc as swdesc
-import update.testinfo as testinfo
-import update.util as util
-import update.wksbootloaderslotimage as wksbootloaderslotimage
+import mbl.update.appsimage as appsimage
+import mbl.update.bootimage as bootimage
+import mbl.update.rootfsimage as rootfsimage
+import mbl.update.swdesc as swdesc
+import mbl.update.testinfo as testinfo
+import mbl.update.wksbootloaderslotimage as wksbootloaderslotimage
+import mbl.util.tinfoilutil as tutil
 
 
 class UpdatePayload:
@@ -43,7 +43,7 @@ class UpdatePayload:
         * apps list<str|Path>: list of apps (ipk files) to add to the payload.
         """
         deploy_dir = pathlib.Path(
-            util.get_bitbake_conf_var("DEPLOY_DIR_IMAGE", tinfoil)
+            tutil.get_bitbake_conf_var("DEPLOY_DIR_IMAGE", tinfoil)
         )
         self.images = []
         if bootloader_components:
@@ -115,7 +115,7 @@ class UpdatePayload:
 
 def _is_part_skipped(part_name, tinfoil):
     return (
-        util.get_bitbake_conf_var(
+        tutil.get_bitbake_conf_var(
             "MBL_{}_SKIP".format(part_name), tinfoil, missing_ok=True
         )
         == "1"

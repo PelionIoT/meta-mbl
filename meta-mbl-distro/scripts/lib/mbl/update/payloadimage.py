@@ -10,7 +10,7 @@ import lzma
 import shutil
 import tarfile
 
-import update.util as util
+import mbl.util.fileutil as futil
 
 
 class PayloadImage(abc.ABC):
@@ -89,7 +89,7 @@ def stage_single_file_with_compression(staging_dir, archived_file_spec):
     out_path = staging_dir / archived_file_spec.archived_path
     with archived_file_spec.path.open("rb") as in_file:
         with lzma.open(str(out_path), "w") as out_file:
-            for chunk in util.read_chunks(in_file):
+            for chunk in futil.read_chunks(in_file):
                 out_file.write(chunk)
 
 

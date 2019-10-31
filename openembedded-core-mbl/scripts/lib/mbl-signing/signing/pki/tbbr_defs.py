@@ -166,7 +166,7 @@ trusted_os_firmware_content_cert = X509CertificateExtensions(
             content_file="tos-fw-extra2.bin",
         ),
         TRUSTED_OS_FW_CONFIG_HASH=HashExtension(
-            oid="1.3.6.1.4.1.4128.2100.1004", critical=False,
+            oid="1.3.6.1.4.1.4128.2100.1004", critical=False
         ),
     ),
     file_name="tos-fw-cert.bin",
@@ -203,7 +203,7 @@ non_trusted_firmware_content_cert = X509CertificateExtensions(
             content_file="nt-fw.bin",
         ),
         NON_TRUSTED_FW_CONFIG_HASH=HashExtension(
-            oid="1.3.6.1.4.1.4128.2100.1202", critical=False,
+            oid="1.3.6.1.4.1.4128.2100.1202", critical=False
         ),
     ),
     file_name="nt-fw-cert.bin",

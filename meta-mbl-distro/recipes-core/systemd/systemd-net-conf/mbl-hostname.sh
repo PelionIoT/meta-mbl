@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-if [[ -r __REPLACE_ME_WITH_MBL_CONFIG_DIR__/hostname && -s __REPLACE_ME_WITH_MBL_CONFIG_DIR__/hostname ]]; then
+if [ -r __REPLACE_ME_WITH_MBL_CONFIG_DIR__/hostname ] && [ -s __REPLACE_ME_WITH_MBL_CONFIG_DIR__/hostname ]; then
    cat __REPLACE_ME_WITH_MBL_CONFIG_DIR__/hostname > __REPLACE_ME_WITH_sysconfdir__/hostname
-elif [[ -r __REPLACE_ME_WITH_MBL_FACTORY_CONFIG_DIR__/hostname && -s __REPLACE_ME_WITH_MBL_FACTORY_CONFIG_DIR__/hostname ]]; then
+elif [ -r __REPLACE_ME_WITH_MBL_FACTORY_CONFIG_DIR__/hostname ] && [ -s __REPLACE_ME_WITH_MBL_FACTORY_CONFIG_DIR__/hostname ]; then
     cat __REPLACE_ME_WITH_MBL_FACTORY_CONFIG_DIR__/hostname > __REPLACE_ME_WITH_sysconfdir__/hostname
 else
     rand=$(shuf -i0-9999 -n1)

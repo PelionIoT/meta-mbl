@@ -57,14 +57,14 @@ oe_scripts_path = (
 lib_path = oe_scripts_path / "lib"
 sys.path.insert(0, str(lib_path))
 
-import scriptpath
-import scriptutils
+import scriptpath  # noqa: E402
+import scriptutils  # noqa: E402
 
 # This is needed so we can import bitbake modules.
 bitbakepath = scriptpath.add_bitbake_lib_path()
 
-import bb.tinfoil
-import argparse_oe
+import bb.tinfoil  # noqa: E402
+import argparse_oe  # noqa: E402
 
 
 MBL_BOOT_ID = "BOOT"
@@ -74,6 +74,7 @@ MBL_ROOTFS_ID = "ROOTFS"
 PAYLOAD_FORMAT_VERSION = b"2"
 
 verbose_file = None
+
 
 def _strict_path_resolve(path):
     """
@@ -223,10 +224,8 @@ def get_bitbake_conf_var(var_name, tinfoil, missing_ok=False):
     if missing_ok:
         return None
     bb.fatal(
-        'The "{}" BitBake variable is not set. '
-        "Please check that you have set up a valid BitBake environment.".format(
-            var_name
-        )
+        'The "{}" BitBake variable is not set. Please check that you have set'
+        " up a valid BitBake environment.".format(var_name)
     )
 
 
@@ -392,7 +391,8 @@ def stage_single_file_without_compression(staging_dir, archived_file_spec):
         )
     except FileNotFoundError:
         bb.fatal(
-            'File "{}" was not found. Have you built the update components?'.format(
+            'File "{}" was not found.'
+            "Have you built the update components?".format(
                 str(archived_file_spec)
             )
         )

@@ -4,14 +4,14 @@
 
 
 """
-This is a tool for signing bootloader components for Trusted Firmware for
-Cortex-A (TF-A).
+Tool for signing bootloader images for Trusted Firmware for Cortex-A (TF-A).
 
 The script makes use of the mbl-signing-lib to manage the FIP images and
 to store and generate credentials.
 
 The script creates a set of 'root' CAs as described by the TBBR, it then uses
-the private keys to sign the certificates used by TF-A to verify the boot chain.
+the private keys to sign the certificates used by TF-A to verify the boot
+chain.
 
 
 There are two commands, described below:
@@ -67,6 +67,12 @@ def api_server_session(func):
 
 
 def tmpdir(func):
+    """
+    Open a temporary directory.
+
+    Use as a decorator.
+    """
+    # retain original function metadata
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -125,17 +131,11 @@ def parse_args():
         help=(
             "Generate a TF-A chain of trust keychain, store the private "
             "keys."
-        )
+        ),
     )
+    dump_cmd.add_argument("--ca-ttl", default="8750h", help="Issuer TTL.")
     dump_cmd.add_argument(
-        "--ca-ttl",
-        default="8750h",
-        help="Issuer TTL."
-    )
-    dump_cmd.add_argument(
-        "--cert-ttl",
-        default="4375h",
-        help="End entity certificate TTL."
+        "--cert-ttl", default="4375h", help="End entity certificate TTL."
     )
     dump_cmd.add_argument(
         "--hab-srks",
@@ -160,13 +160,13 @@ def parse_args():
         metavar="PATH",
         help="Path to a Raspberry-PI 3 VC4 firmware image (e.g armstub8.bin) "
         "to be signed. Note, TF-A BL2 is also in the VC4 firmware image. "
-        "To sign BL2 on raspberrypi3 use this option, not the --bl2 option."
+        "To sign BL2 on raspberrypi3 use this option, not the --bl2 option.",
     )
     sign_group.add_argument(
         "--bl2",
         metavar="PATH",
         type=abspath,
-        help="Path to a TF-A BL2 image to be signed."
+        help="Path to a TF-A BL2 image to be signed.",
     )
     sign_cmd.add_argument(
         "--fip",
@@ -196,9 +196,7 @@ def split_unified_binary(
         fip1_output_path.write_bytes(ufb.read())
 
 
-def generate_srks(
-    key_store, num_srks, output_dir, ca_ttl, cert_ttl
-):
+def generate_srks(key_store, num_srks, output_dir, ca_ttl, cert_ttl):
     """Generate SRK pairs, export the public keys."""
     role_name = issuer = "CA1_sha256_2048_65537_v3_ca"
     key_store.generate_root(issuer, mount_point=issuer, ttl=ca_ttl)
@@ -253,7 +251,9 @@ def make_cert_chain(images_dir, img_spec, key_store, pub_keys, output_dir):
 
         cert = tbbr_defs.cot_certs.get(cert_name, None)
         if cert is None:
-            raise ValueError("Cert {} not found in chain of trust".format(cert_name))
+            raise ValueError(
+                "Cert {} not found in chain of trust".format(cert_name)
+            )
 
         extensions = list()
         for ext in cert:
@@ -325,17 +325,24 @@ def fetch_keys(key_store, key_ids):
 
 
 def make_imx_image(output_path, cfg_path, bl2_path):
+    """
+    Create an imximage from BL2.
+
+    :param cfg_path Path: path to an imx image config file.
+    :param bl2_path Path: path to a bl2 image.
+    """
     mkimg = MkImage()
     mkimg.create_legacy_image(
         output_path=output_path,
         img_type="imximage",
         name=str(cfg_path),
         entry_point="0x9df00000",
-        data_file_path=str(bl2_path)
+        data_file_path=str(bl2_path),
     )
 
 
 def unpack_fips(fip_paths, output_dir):
+    """Unpack fip images into FipSpec objects."""
     if fip_paths is None:
         return dict()
 
@@ -368,7 +375,8 @@ def handle_sign_cmd(args, key_store, tmpdir):
     if args.rpi_vc4_fw:
         UNPACKED_BIN_DIR = tmpdir / "armstub8_components"
         UNPACKED_BIN_DIR.mkdir(exist_ok=True)
-        print("Splitting bl1.bin and fip1.bin from {}".format(
+        print(
+            "Splitting bl1.bin and fip1.bin from {}".format(
                 args.rpi_vc4_fw.name
             )
         )
@@ -390,7 +398,8 @@ def handle_sign_cmd(args, key_store, tmpdir):
 
         rotpk = hashlib.sha256(pub_keys["rot-key"]).digest()
         for img in imgs_to_patch:
-            print("Patching root-of-trust public key hash in image: {}".format(
+            print(
+                "Patching root-of-trust public key hash in image: {}".format(
                     str(pathlib.Path(img).name)
                 )
             )

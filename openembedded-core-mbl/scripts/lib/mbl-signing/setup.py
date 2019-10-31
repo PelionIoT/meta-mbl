@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+"""Install mbl-signing-lib package."""
 
 from distutils.command.build import build
 import subprocess
@@ -27,6 +28,7 @@ class ArmTrustedFirmwareToolsBuild(build):
     """Compile the tools from ATF."""
 
     def run(self):
+        """Clone and build the ATF dependencies."""
         subprocess.run(
             [
                 "git",
@@ -61,7 +63,11 @@ setup(
     packages=find_packages(exclude=["*.pyc", "*test_*", "*__pycache__*"]),
     include_package_data=True,
     install_requires=[
-        "hvac", "pyasn1", "cryptography", "connexion[swagger-ui]", "requests"
+        "hvac",
+        "pyasn1",
+        "cryptography",
+        "connexion[swagger-ui]",
+        "requests",
     ],
     tests_require=["pytest", "pexpect"],
     cmdclass={"build": ArmTrustedFirmwareToolsBuild},

@@ -11,23 +11,23 @@ Code that reusing dtb in firmware is disabled.
 
 Signed-off-by: Jun Nie <jun.nie@linaro.org>
 ---
- board/raspberrypi/rpi/rpi.c        |  6 ++++++
- include/configs/rpi.h              |  8 ++++++--
+ board/raspberrypi/rpi/rpi.c | 6 ++++++
+ include/configs/rpi.h       | 8 ++++++--
  2 files changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/board/raspberrypi/rpi/rpi.c b/board/raspberrypi/rpi/rpi.c
-index 35f5939..aaaa8d9 100644
+index 9e0abdd..fec90c9 100644
 --- a/board/raspberrypi/rpi/rpi.c
 +++ b/board/raspberrypi/rpi/rpi.c
-@@ -284,6 +284,7 @@ int dram_init(void)
- 	return 0;
- }
+@@ -322,6 +322,7 @@ int dram_init_banksize(void)
+ #endif
+ #endif
  
 +#ifndef CONFIG_FIT_SIGNATURE
  static void set_fdtfile(void)
  {
  	const char *fdtfile;
-@@ -309,6 +310,7 @@ static void set_fdt_addr(void)
+@@ -347,6 +348,7 @@ static void set_fdt_addr(void)
  
  	env_set_hex("fdt_addr", fw_dtb_pointer);
  }
@@ -35,7 +35,7 @@ index 35f5939..aaaa8d9 100644
  
  /*
   * Prevent relocation from stomping on a firmware provided FDT blob.
-@@ -391,8 +393,10 @@ static void set_serial_number(void)
+@@ -429,8 +431,10 @@ static void set_serial_number(void)
  
  int misc_init_r(void)
  {
@@ -46,7 +46,7 @@ index 35f5939..aaaa8d9 100644
  	set_usbethaddr();
  #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
  	set_board_info();
-@@ -468,6 +472,7 @@ int board_init(void)
+@@ -506,6 +510,7 @@ int board_init(void)
  	return bcm2835_power_on_module(BCM2835_MBOX_POWER_DEVID_USB_HCD);
  }
  
@@ -54,7 +54,7 @@ index 35f5939..aaaa8d9 100644
  /*
   * If the firmware passed a device tree use it for U-Boot.
   */
-@@ -477,6 +482,7 @@ void *board_fdt_blob_setup(void)
+@@ -515,6 +520,7 @@ void *board_fdt_blob_setup(void)
  		return NULL;
  	return (void *)fw_dtb_pointer;
  }
@@ -63,18 +63,18 @@ index 35f5939..aaaa8d9 100644
  int ft_board_setup(void *blob, bd_t *bd)
  {
 diff --git a/include/configs/rpi.h b/include/configs/rpi.h
-index a97550b..2ac4373 100644
+index 77d2d54..a0b1cb3 100644
 --- a/include/configs/rpi.h
 +++ b/include/configs/rpi.h
-@@ -15,6 +15,7 @@
+@@ -14,6 +14,7 @@
+ #endif
  
  /* Architecture, CPU, etc.*/
- #define CONFIG_ARCH_CPU_INIT
 +#define CONFIG_GZIP_COMPRESSED
  
  /* Use SoC timer for AArch32, but architected timer for AArch64 */
  #ifndef CONFIG_ARM64
-@@ -159,7 +160,10 @@
+@@ -186,7 +187,10 @@
  	"dhcpuboot=usb start; dhcp u-boot.uimg; bootm\0" \
  	ENV_DEVICE_SETTINGS \
  	ENV_MEM_LAYOUT_SETTINGS \
@@ -87,6 +87,3 @@ index a97550b..2ac4373 100644
 +		"source ${scriptaddr}:bootscr\0"
  
  #endif
--- 
-2.7.4
-

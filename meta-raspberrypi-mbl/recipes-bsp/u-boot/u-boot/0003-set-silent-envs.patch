@@ -1,9 +1,18 @@
-Index: git/include/configs/rpi.h
-===================================================================
---- git.orig/include/configs/rpi.h
-+++ git/include/configs/rpi.h
-@@ -155,7 +155,22 @@
- 	func(DHCP, dhcp, na)
+From 0bf6cd46fb2ee6f5735630dbe6f8007a725b5427 Mon Sep 17 00:00:00 2001
+From: nobody <nobody@nowhere.arm.com>
+Date: Fri, 1 Nov 2019 16:20:36 +0000
+Subject: [PATCH] set silent envs
+
+---
+ include/configs/rpi.h | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/include/configs/rpi.h b/include/configs/rpi.h
+index a0b1cb3..8a6308a 100644
+--- a/include/configs/rpi.h
++++ b/include/configs/rpi.h
+@@ -183,7 +183,21 @@
+ 
  #include <config_distro_bootcmd.h>
  
 +#if defined(CONFIG_SILENT_CONSOLE)
@@ -18,10 +27,9 @@ Index: git/include/configs/rpi.h
 +#define SILENT_LINUX_CONSOLE_VAL 1
 +#endif
 +
-+
  #define CONFIG_EXTRA_ENV_SETTINGS \
-+    "silent=" __stringify(SILENT_CONSOLE_VAL) "\0" \
-+    "silent_linux=" __stringify(SILENT_LINUX_CONSOLE_VAL) "\0" \
++	"silent=" __stringify(SILENT_CONSOLE_VAL) "\0" \
++	"silent_linux=" __stringify(SILENT_LINUX_CONSOLE_VAL) "\0" \
  	"dhcpuboot=usb start; dhcp u-boot.uimg; bootm\0" \
  	ENV_DEVICE_SETTINGS \
  	ENV_MEM_LAYOUT_SETTINGS \

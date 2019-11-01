@@ -14,10 +14,14 @@ Reported-by: Karl Eaves <karleeaves@gmail.com>
 Signed-off-by: Anton Gerasimov <tossel@gmail.com>
 Reviewed-by: Alexander Graf <agraf@suse.de>
 
-Index: git/board/raspberrypi/rpi/rpi.c
-===================================================================
---- git.orig/board/raspberrypi/rpi/rpi.c
-+++ git/board/raspberrypi/rpi/rpi.c
+---
+ board/raspberrypi/rpi/rpi.c | 36 ++++++++++++++++++++++++++++++++++--
+ 1 file changed, 34 insertions(+), 2 deletions(-)
+
+diff --git a/board/raspberrypi/rpi/rpi.c b/board/raspberrypi/rpi/rpi.c
+index fec90c9..eaae72c 100644
+--- a/board/raspberrypi/rpi/rpi.c
++++ b/board/raspberrypi/rpi/rpi.c
 @@ -61,6 +61,8 @@ struct msg_get_clock_rate {
  	u32 end_tag;
  };
@@ -27,7 +31,7 @@ Index: git/board/raspberrypi/rpi/rpi.c
  #ifdef CONFIG_ARM64
  #define DTB_DIR "broadcom/"
  #else
-@@ -383,8 +385,9 @@ static void set_serial_number(void)
+@@ -424,8 +426,9 @@ static void set_serial_number(void)
  		return;
  	}
  
@@ -39,7 +43,7 @@ Index: git/board/raspberrypi/rpi/rpi.c
  	env_set("serial#", serial_string);
  }
  
-@@ -481,6 +484,33 @@ void *board_fdt_blob_setup(void)
+@@ -522,6 +525,33 @@ void *board_fdt_blob_setup(void)
  }
  #endif
  
@@ -73,7 +77,7 @@ Index: git/board/raspberrypi/rpi/rpi.c
  int ft_board_setup(void *blob, bd_t *bd)
  {
  	/*
-@@ -490,6 +520,8 @@ int ft_board_setup(void *blob, bd_t *bd)
+@@ -531,6 +561,8 @@ int ft_board_setup(void *blob, bd_t *bd)
  	 */
  	lcd_dt_simplefb_add_node(blob);
  

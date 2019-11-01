@@ -10,16 +10,17 @@ DEPENDS_remove = "rpi-u-boot-scr"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/u-boot:"
 SRC_URI_append_raspberrypi3-mbl = " \
-		file://0002-rpi3-Enable-boot-kernel-from-fit-image.patch \
+		file://0001-rpi3-Enable-boot-kernel-from-fit-image.patch \
 		file://change-text-base-mbl.cfg \
 		file://enable-fit-mbl.cfg \
-		file://0004-add-linux-serial-revision-dt-support.patch \
+		file://0002-add-linux-serial-revision-dt-support.patch \
 		${@bb.utils.contains_any('PACKAGECONFIG','noconsole silent',' file://0003-set-silent-envs.patch','',d)} \
 		${@bb.utils.contains('PACKAGECONFIG', 'minimal', '', ' file://enable-random-macaddr-mbl.cfg', d)} \
 		${@bb.utils.contains('PACKAGECONFIG', 'minimal', '', ' file://enable-fastboot-mbl.cfg', d)} \
-		${@bb.utils.contains('PACKAGECONFIG', 'minimal', ' file://0001-rpi3-disable-USB-PXE-and-DHCP-boot.patch', '', d)} \
-		${@bb.utils.contains('PACKAGECONFIG', 'minimal', ' file://0002-enable-net-without-net-commands.patch', '', d)} \
-		${@bb.utils.contains('PACKAGECONFIG', 'minimal', ' file://0003-enable-net-without-net-commands-kconfig.patch', '', d)} \
+		${@bb.utils.contains('PACKAGECONFIG', 'minimal', ' file://0004-rpi3-disable-USB-and-DHCP-boot.patch', '', d)} \
+		${@bb.utils.contains('PACKAGECONFIG', 'minimal', ' file://disable-USB-PXE-and-DHCP-boot.cfg', '', d)} \
+		${@bb.utils.contains('PACKAGECONFIG', 'minimal', ' file://0005-enable-net-without-net-commands.patch', '', d)} \
+		${@bb.utils.contains('PACKAGECONFIG', 'minimal', ' file://0006-enable-net-without-net-commands-kconfig.patch', '', d)} \
 "
 
 do_configure_prepend_raspberrypi3-mbl() {

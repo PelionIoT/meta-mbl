@@ -1,0 +1,30 @@
+From ddd8272f64c0757fc422c3ede73a18f03eadc4ec Mon Sep 17 00:00:00 2001
+From: nobody <nobody@nowhere.arm.com>
+Date: Fri, 1 Nov 2019 15:50:04 +0000
+Subject: [PATCH] disable USB and DHCP boot
+
+---
+ include/configs/rpi.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/include/configs/rpi.h b/include/configs/rpi.h
+index 8a6308a..8b3972a 100644
+--- a/include/configs/rpi.h
++++ b/include/configs/rpi.h
+@@ -87,7 +87,7 @@
+ 
+ /* Environment */
+ #define ENV_DEVICE_SETTINGS \
+-	"stdin=serial,usbkbd\0" \
++	"stdin=serial\0" \
+ 	"stdout=serial,vidconsole\0" \
+ 	"stderr=serial,vidconsole\0"
+ 
+@@ -198,7 +198,6 @@
+ #define CONFIG_EXTRA_ENV_SETTINGS \
+ 	"silent=" __stringify(SILENT_CONSOLE_VAL) "\0" \
+ 	"silent_linux=" __stringify(SILENT_LINUX_CONSOLE_VAL) "\0" \
+-	"dhcpuboot=usb start; dhcp u-boot.uimg; bootm\0" \
+ 	ENV_DEVICE_SETTINGS \
+ 	ENV_MEM_LAYOUT_SETTINGS \
+ 	BOOTENV \

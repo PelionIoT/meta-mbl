@@ -1,7 +1,16 @@
-Index: git/net/net.c
-===================================================================
---- git.orig/net/net.c
-+++ git/net/net.c
+From 740df4c87f0e31479d20374c51fe5dc5e322f8b3 Mon Sep 17 00:00:00 2001
+From: nobody <nobody@nowhere.arm.com>
+Date: Fri, 1 Nov 2019 15:52:46 +0000
+Subject: [PATCH] enable net without net commands
+
+---
+ net/net.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/net/net.c b/net/net.c
+index ded86e7..6ca9d7c 100644
+--- a/net/net.c
++++ b/net/net.c
 @@ -347,7 +347,9 @@ void net_auto_load(void)
  #endif
  		return;

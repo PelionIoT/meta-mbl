@@ -18,7 +18,7 @@ LICENSE += " & Zlib"
 # build the toolchain has been tagged with "gcc-8_2_0-release", and the
 # commit for this tag is specified at SRCREV_${TOOLCHAIN_NAME} below.
 TOOLCHAIN_NAME = "gcc"
-SRC_URI = "git://github.com/gcc-mirror/gcc.git;nobranch=1;name=${TOOLCHAIN_NAME};destsuffix=git/${TOOLCHAIN_NAME}"
+SRC_URI = "git://github.com/gcc-mirror/gcc.git;nobranch=1;protocol=https;name=${TOOLCHAIN_NAME};destsuffix=git/${TOOLCHAIN_NAME}"
 SRCREV_${TOOLCHAIN_NAME} = "9fb89fa845c1b2e0a18d85ada0b077c84508ab78"
 
 # For detailed information on licenses check here: https://spdx.org/licenses.

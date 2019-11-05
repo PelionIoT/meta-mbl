@@ -17,7 +17,7 @@ LIC_FILES_CHKSUM_append = "\
     file://LICENCE.cypress;md5=cbc5f665d04f741f1e006d2096236ba7 \
 "
 
-SRC_URI = "git://github.com/murata-wireless/cyw-bt-patch"
+SRC_URI = "git://github.com/murata-wireless/cyw-bt-patch;protocol=https"
 SRCREV = "748462f0b02ec4aeb500bedd60780ac51c37be31"
 PV = "0.0+git${SRCPV}"
 

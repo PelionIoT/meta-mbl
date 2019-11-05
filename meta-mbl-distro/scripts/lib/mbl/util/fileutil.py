@@ -26,10 +26,22 @@ def strict_path_resolve(path):
     return pathlib.Path(path).resolve()
 
 
-def read_chunks(f):
-    """Read 4KiB chunks from a file-like object."""
+def read_chunks(f, chunk_size=4096):
+    """
+    Read chunks from a file-like object.
+        
+    This function is a generator for reading a file in chunks.
+
+    Args:
+    * f file-like: object from which to read chunks.
+    * chunk_size int: size of chunks to read in bytes. The default chunk_size
+      is 4096.
+    """
+    # Default chunk size 4096 was chosen to because:
+    # * It's small enough that we won't use up too much memory.
+    # * It's a very popular file system block size.
     while True:
-        chunk = f.read(4096)
+        chunk = f.read(chunk_size)
         if chunk:
             yield chunk
         else:

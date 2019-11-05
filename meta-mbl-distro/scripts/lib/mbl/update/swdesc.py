@@ -22,7 +22,6 @@ def _generate_swdesc_for_image(image):
     return {
         "type": image.image_type,
         "filename": str(image.archived_path),
-        "properties": {"image_format_version": image.image_format_version},
     }
 
 

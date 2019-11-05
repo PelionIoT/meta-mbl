@@ -15,7 +15,7 @@ import mbl.util.tinfoilutil as tutil
 MBL_BOOT_ID = "BOOT"
 
 
-class BootImage(upi.PayloadImage):
+class BootImageV3(upi.PayloadImage):
     """Class for creating image files boot and blfs partitions."""
 
     def __init__(self, deploy_dir, tinfoil):
@@ -47,17 +47,12 @@ class BootImage(upi.PayloadImage):
     @property
     def image_type(self):
         """Implement method from PayloadImage ABC."""
-        return MBL_BOOT_ID
-
-    @property
-    def image_format_version(self):
-        """Implement method from PayloadImage ABC."""
-        return 3
+        return "{}v3".format(MBL_BOOT_ID)
 
     @property
     def archived_path(self):
         """Implement method from PayloadImage ABC."""
-        return pathlib.Path("{}.tar.xz".format(MBL_BOOT_ID))
+        return pathlib.Path("{}.tar.xz".format(self.image_type))
 
 
 def _get_archived_file_specs(deploy_dir, tinfoil):

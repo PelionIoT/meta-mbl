@@ -15,7 +15,7 @@ import mbl.update.util as uutil
 MBL_APPS_ID = "APPS"
 
 
-class AppsImage(upi.PayloadImage):
+class AppsImageV3(upi.PayloadImage):
     """Class for creating image files containing apps (Opkg packages)."""
 
     def __init__(self, app_paths):
@@ -46,17 +46,12 @@ class AppsImage(upi.PayloadImage):
     @property
     def image_type(self):
         """Implement method from PayloadImage ABC."""
-        return MBL_APPS_ID
-
-    @property
-    def image_format_version(self):
-        """Implement method from PayloadImage ABC."""
-        return 3
+        return "{}v3".format(MBL_APPS_ID)
 
     @property
     def archived_path(self):
         """Implement method from PayloadImage ABC."""
-        return pathlib.Path("{}.tar.xz".format(MBL_APPS_ID))
+        return pathlib.Path("{}.tar.xz".format(self.image_type))
 
 
 def _validate_app_paths(apps):

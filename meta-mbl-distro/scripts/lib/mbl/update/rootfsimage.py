@@ -12,7 +12,7 @@ import mbl.util.tinfoilutil as tutil
 MBL_ROOTFS_ID = "ROOTFS"
 
 
-class RootfsImage(upi.PayloadImage):
+class RootfsImageV3(upi.PayloadImage):
     """Class for creating image files for rootfs partitions."""
 
     def __init__(self, image_name, deploy_dir, tinfoil):
@@ -29,7 +29,7 @@ class RootfsImage(upi.PayloadImage):
         machine = tutil.get_bitbake_conf_var("MACHINE", tinfoil)
         rootfs_filename = "{}-{}.tar.xz".format(image_name, machine)
         self._archived_file_spec = uutil.ArchivedFileSpec(
-            deploy_dir / rootfs_filename, "{}.tar.xz".format(MBL_ROOTFS_ID)
+            deploy_dir / rootfs_filename, "{}.tar.xz".format(self.image_type)
         )
 
     def stage(self, staging_dir):
@@ -46,12 +46,7 @@ class RootfsImage(upi.PayloadImage):
     @property
     def image_type(self):
         """Implement method from PayloadImage ABC."""
-        return MBL_ROOTFS_ID
-
-    @property
-    def image_format_version(self):
-        """Implement method from PayloadImage ABC."""
-        return 3
+        return "{}v3".format(MBL_ROOTFS_ID)
 
     @property
     def archived_path(self):

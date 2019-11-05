@@ -46,13 +46,8 @@ class PayloadImage(abc.ABC):
         Get the "type" of this image.
 
         I.e. get the name of the swupdate handler used to install the image.
+        This should include the format version of the image, e.g. "BOOTv3"
         """
-        ...
-
-    @property
-    @abc.abstractmethod
-    def image_format_version(self):
-        """Get the format version of this image."""
         ...
 
     @property

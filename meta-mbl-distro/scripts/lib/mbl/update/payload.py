@@ -56,14 +56,14 @@ class UpdatePayload:
                         "must be updated together. "
                         "Adding kernel to payload..."
                     )
-                    images.append(bootimage.BootImage(deploy_dir, tinfoil))
+                    images.append(bootimage.BootImageV3(deploy_dir, tinfoil))
 
                 bootloader_components_copy.remove("1")
 
             for bootloader_slot_number in bootloader_components_copy:
                 slot_name = "WKS_BOOTLOADER{}".format(bootloader_slot_number)
                 self.images.append(
-                    wksbootloaderslotimage.WksBootloaderSlotImage(
+                    wksbootloaderslotimage.WksBootloaderSlotImageV3(
                         slot_name, deploy_dir, tinfoil
                     )
                 )
@@ -76,14 +76,14 @@ class UpdatePayload:
                         "must be updated together. "
                         "Adding bootloader 1 component to payload..."
                     )
-            self.images.append(bootimage.BootImage(deploy_dir, tinfoil))
+            self.images.append(bootimage.BootImageV3(deploy_dir, tinfoil))
 
         if apps is not None:
-            self.images.append(appsimage.AppsImage(apps))
+            self.images.append(appsimage.AppsImageV3(apps))
 
         if rootfs is not None:
             self.images.append(
-                rootfsimage.RootfsImage(rootfs, deploy_dir, tinfoil)
+                rootfsimage.RootfsImageV3(rootfs, deploy_dir, tinfoil)
             )
 
     def create_payload_file(self, output_path):

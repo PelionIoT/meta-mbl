@@ -21,4 +21,7 @@ do_deploy_append() {
     # Thus we need to change the dtb address to 0x03000000
     echo "device_tree_address=0x03000000" >> ${DEPLOYDIR}/bcm2835-bootfiles/config.txt
 
+    # Since bootfiles update on 20191021 default boot mode for RPI 3 is 32-bit,
+    # but TF-A assumes we are in 64-bit (ARMv8). Enable 64-bit mode.
+    echo "arm_control=0x200" >> ${DEPLOYDIR}/bcm2835-bootfiles/config.txt
 }

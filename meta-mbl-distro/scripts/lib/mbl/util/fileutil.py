@@ -36,6 +36,7 @@ def read_chunks(f, chunk_size=4096):
     * f file-like: object from which to read chunks.
     * chunk_size int: size of chunks to read in bytes. The default chunk_size
       is 4096.
+
     """
     # Default chunk size 4096 was chosen to because:
     # * It's small enough that we won't use up too much memory.

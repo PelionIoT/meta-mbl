@@ -10,7 +10,7 @@ DESCRIPTION = "Small image capable of booting a device. The kernel includes \
 the Minimal RAM-based Initial Root Filesystem (initramfs). This image includes \
 initramfs script for switching to rootfs."
 
-PACKAGE_INSTALL = "mbl-initramfs-init util-linux-findfs util-linux-mount busybox mbl-watchdog-init"
+PACKAGE_INSTALL = "mbl-initramfs-init"
 
 # Do not pollute the initrd image with rootfs features
 IMAGE_FEATURES = ""

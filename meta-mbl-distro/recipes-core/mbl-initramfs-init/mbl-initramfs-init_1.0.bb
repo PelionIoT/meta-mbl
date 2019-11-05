@@ -11,6 +11,8 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 SRC_URI = "file://initramfs-init-script.sh"
 
+RDEPENDS_${PN} = "util-linux-findfs util-linux-mount e2fsprogs-e2fsck e2fsprogs-badblocks busybox mbl-watchdog-init"
+
 S = "${WORKDIR}"
 
 export SYS_DEFAULT_DIRS = " \

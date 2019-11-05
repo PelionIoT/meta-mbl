@@ -29,7 +29,7 @@ def strict_path_resolve(path):
 def read_chunks(f, chunk_size=4096):
     """
     Read chunks from a file-like object.
-        
+
     This function is a generator for reading a file in chunks.
 
     Args:

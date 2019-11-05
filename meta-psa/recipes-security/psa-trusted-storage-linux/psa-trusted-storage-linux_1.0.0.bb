@@ -22,7 +22,7 @@ LIC_FILES_CHKSUM = " \
     file://apache-2.0.txt;md5=3b83ef96387f14655fc854ddc3c6bd57 \
     "
 
-SRC_URI = "git://git@github.com/armmbed/psa_trusted_storage_linux.git;protocol=ssh;nobranch=1"
+SRC_URI = "git://github.com/ARMmbed/psa_trusted_storage_linux.git;protocol=https;nobranch=1"
 SRCREV = "7b67400f58dddc4f5ff419df3575749b84b42abf"
 
 PACKAGES =+ "${PN}-test"

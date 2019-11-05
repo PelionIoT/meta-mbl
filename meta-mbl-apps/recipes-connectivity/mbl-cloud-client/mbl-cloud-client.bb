@@ -100,7 +100,7 @@ do_setup_pal_env() {
 
     # Clean the old build directory
     rm -rf "__${TARGET}"
-    mbed deploy --protocol ssh
+    mbed deploy --protocol git
     python ./pal-platform/pal-platform.py -v deploy --target="${TARGET}" generate
     cd ${CUR_DIR}
 }

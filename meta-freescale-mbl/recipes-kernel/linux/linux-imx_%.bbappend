@@ -15,7 +15,7 @@ SRCREV = "2e56e2ce9e3296e46dd74c5c01f4ee14a0f4059a"
 
 KBUILD_DEFCONFIG_imx8mmevk-mbl = "imx8mmevk_mbl_defconfig"
 
-SRC_URI = "git://git@github.com/ARMmbed/linux-mbl.git;protocol=ssh;nobranch=1 \
+SRC_URI = "git://github.com/ARMmbed/linux-mbl.git;protocol=https;nobranch=1 \
            file://0001-menuconfig-check-lxdiaglog.sh-Allow-specification-of.patch \
            file://watchdog-mbl.cfg \
           "

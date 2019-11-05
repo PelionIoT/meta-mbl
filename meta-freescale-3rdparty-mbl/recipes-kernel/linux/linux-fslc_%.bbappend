@@ -21,7 +21,7 @@ KBUILD_DEFCONFIG_imx6ul-des0258-mbl ?= "imx6ul_des0258_defconfig"
 
 FILESEXTRAPATHS_prepend:="${THISDIR}/files:"
 
-SRC_URI = "git://git@github.com/ARMmbed/linux-mbl.git;protocol=ssh;nobranch=1 \
+SRC_URI = "git://github.com/ARMmbed/linux-mbl.git;protocol=https;nobranch=1 \
            file://0001-menuconfig-check-lxdiaglog.sh-Allow-specification-of.patch \
            file://mqueue-mbl.cfg \
            file://cgroups-mbl.cfg \

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 inherit mbl-kernel-config
+require recipes-kernel/linux/linux-mbl.inc
 
 FILESEXTRAPATHS_prepend:="${THISDIR}/files:"
 

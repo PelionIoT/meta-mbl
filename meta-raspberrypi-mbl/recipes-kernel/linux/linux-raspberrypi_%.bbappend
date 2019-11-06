@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 inherit mbl-kernel-config
+require recipes-kernel/linux/linux-mbl.inc
 
 LINUX_VERSION = "4.14.95"
 
@@ -27,4 +28,3 @@ SRC_URI += "file://mqueue-mbl.cfg \
 # LOADADDR is 0x00080000 by default. But we need to put FIP between
 # 0x00020000 ~ 0x00200000. Thus we move kernel to another address.
 KERNEL_EXTRA_ARGS += " LOADADDR=0x04000000 "
-

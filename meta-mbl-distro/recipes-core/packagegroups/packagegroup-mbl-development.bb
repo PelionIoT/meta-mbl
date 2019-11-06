@@ -31,6 +31,7 @@ PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " optee-test"
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " openssh-sftp-server"
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " ${@bb.utils.contains('COMBINED_FEATURES', 'usbgadget', 'systemd-net-conf-dbg-iface', '', d)}"
 PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " systemd-analyze"
+PACKAGEGROUP_MBL_DEVELOPMENT_PKGS_append = " psa-trusted-storage-linux-test"
 
 ###############################################################################
 # Packages that can optionally be added (irrespective of MACHINE)

@@ -11,7 +11,7 @@ Description=A initialisation script and user space daemon for managing ecryptfs 
 After=systemd-udevd.service
 
 [Service]
-ExecStart=/usr/bin/ecryptfs-init.sh
+ExecStart=/usr/bin/psa-ecryptfs-init.sh
 
 [Install]
 WantedBy=multi-user.target

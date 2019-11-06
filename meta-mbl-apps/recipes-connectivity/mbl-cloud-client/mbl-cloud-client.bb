@@ -41,6 +41,7 @@ RDEPENDS_${PN} = "\
 
 RDEPENDS_${PN}-update += "\
     e2fsprogs-mke2fs \
+    swupdate \
     tar \
     util-linux-mkfs \
     util-linux-blkid \
@@ -64,6 +65,11 @@ FILES_${PN}-update = "\
     /opt/arm/arm_update_cmdline.sh \
     /opt/arm/arm_update_common.sh \
     /opt/arm/arm_update_local_config.sh \
+    /opt/arm/bootloader_installer.sh \
+    /opt/arm/boot_partition_installer.sh \
+    /opt/arm/apps_installer.sh \
+    /opt/arm/rootfs_installer.sh \
+    ${libdir}/lua/5.3/swupdate_handlers.lua \
 "
 
 FILES_${PN}-dbg += "/opt/arm/.debug \
@@ -157,7 +163,16 @@ do_install() {
     install -m 755 "${output_dir}/mbl-cloud-client/scripts/arm_update_activate.sh" "${D}/opt/arm"
     install -m 755 "${output_dir}/mbl-cloud-client/scripts/arm_update_active_details.sh" "${D}/opt/arm"
     install -m 755 "${output_dir}/mbl-cloud-client/scripts/arm_update_common.sh" "${D}/opt/arm"
+
+    install -m 755 "${output_dir}/mbl-cloud-client/scripts/rootfs_installer.sh" "${D}/opt/arm"
+    install -m 755 "${output_dir}/mbl-cloud-client/scripts/bootloader_installer.sh" "${D}/opt/arm"
+    install -m 755 "${output_dir}/mbl-cloud-client/scripts/apps_installer.sh" "${D}/opt/arm"
+    install -m 755 "${output_dir}/mbl-cloud-client/scripts/boot_partition_installer.sh" "${D}/opt/arm"
+
     install -m 755 "${S}/cloud-services/mbl-cloud-client/mbed-cloud-client/update-client-hub/modules/pal-linux/scripts/arm_update_cmdline.sh" "${D}/opt/arm"
+
+    install -d "${D}${libdir}/lua/5.3"
+    install -m 755 "${output_dir}/mbl-cloud-client/scripts/swupdate_handlers.lua" "${D}${libdir}/lua/5.3/swupdate_handlers.lua"
 
     install -d "${D}${systemd_unitdir}/system/"
     install -m 0644 "${WORKDIR}/mbl-cloud-client.service" "${D}${systemd_unitdir}/system/"

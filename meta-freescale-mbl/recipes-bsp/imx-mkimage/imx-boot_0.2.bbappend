@@ -12,6 +12,9 @@ do_compile[depends] += " firmware-imx-8m:do_deploy"
 
 ATF_MACHINE_NAME_mx8mm = "bl2-${MACHINE}.bin"
 
+# Workaround to prevent the main recipe dealing with optee binary
+DEPLOY_OPTEE = "false"
+
 FILESEXTRAPATHS_prepend := "${THISDIR}/files/:"
 SRC_URI += "file://0001-iMX8M-Add-a-FIP-entry-into-the-mkimage-command.patch \
 	    file://0002-iMX8M-Del-UBOOT-OPTEE-FDT-entry-into-the-mkimage-command.patch \

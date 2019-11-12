@@ -2,7 +2,7 @@ Index: git/net/net.c
 ===================================================================
 --- git.orig/net/net.c
 +++ git/net/net.c
-@@ -347,7 +347,9 @@ void net_auto_load(void)
+@@ -343,7 +343,9 @@ void net_auto_load(void)
  #endif
  		return;
  	}
@@ -12,7 +12,7 @@ Index: git/net/net.c
  }
  
  static void net_init_loop(void)
-@@ -457,8 +459,10 @@ restart:
+@@ -453,8 +455,10 @@ restart:
  #ifdef CONFIG_CMD_TFTPPUT
  		case TFTPPUT:
  #endif
@@ -23,7 +23,7 @@ Index: git/net/net.c
  			break;
  #ifdef CONFIG_CMD_TFTPSRV
  		case TFTPSRV:
-@@ -478,11 +482,13 @@ restart:
+@@ -474,11 +478,13 @@ restart:
  			break;
  #endif
  

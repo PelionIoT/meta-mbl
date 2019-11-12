@@ -2,8 +2,8 @@ Index: git/include/configs/rpi.h
 ===================================================================
 --- git.orig/include/configs/rpi.h
 +++ git/include/configs/rpi.h
-@@ -155,7 +155,22 @@
- 	func(DHCP, dhcp, na)
+@@ -181,7 +181,22 @@
+ 
  #include <config_distro_bootcmd.h>
  
 +#if defined(CONFIG_SILENT_CONSOLE)

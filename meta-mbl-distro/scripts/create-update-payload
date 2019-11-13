@@ -77,6 +77,7 @@ def parse_args():
         help="Add one or more bootloader components (N) to the payload.",
         metavar="N",
         nargs="+",
+        default=[],
     )
     parser.add_argument(
         "-a",
@@ -86,6 +87,7 @@ def parse_args():
         metavar="IPK_PATH",
         type=lambda x: pathlib.Path(x).absolute(),
         nargs="+",
+        default=[],
     )
     parser.add_argument(
         "-k",
@@ -117,8 +119,8 @@ def parse_args():
 
     args = parser.parse_args()
     if (
-        args.bootloader_components is None
-        and args.apps is None
+        not args.bootloader_components
+        and not args.apps
         and not args.kernel
         and not args.rootfs
     ):

@@ -56,7 +56,9 @@ class UpdatePayload:
                         "must be updated together. "
                         "Adding kernel to payload..."
                     )
-                    images.append(bootimage.BootImageV3(deploy_dir, tinfoil))
+                    self.images.append(
+                        bootimage.BootImageV3(deploy_dir, tinfoil)
+                    )
 
                 bootloader_components_copy.remove("1")
 

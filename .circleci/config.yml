@@ -1,0 +1,34 @@
+version: 2
+
+jobs:
+  licenses:
+    machine: true
+    steps:
+      - checkout:
+          path: repo-under-test
+      - run:
+          name: Get mbl-tools
+          command: git clone https://github.com/ARMmbed/mbl-tools
+      - run:
+          name: Licensing check
+          command: mbl-tools/ci/licensing-check/run-me.sh --no-tty --workdir repo-under-test
+
+  sanity:
+    machine: true
+    steps:
+      - checkout:
+          path: repo-under-test
+      - run:
+          name: Get mbl-tools
+          command: git clone https://github.com/ARMmbed/mbl-tools
+      - run:
+          name: Sanity check
+          command: mbl-tools/ci/sanity-check/run-me.sh --no-tty --workdir repo-under-test
+
+workflows:
+  version: 2
+
+  checkers:
+    jobs:
+      - licenses
+      - sanity

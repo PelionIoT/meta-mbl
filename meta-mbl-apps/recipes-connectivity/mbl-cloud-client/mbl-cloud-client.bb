@@ -81,8 +81,6 @@ FILES_${PN}-dbg += "/opt/arm/.debug \
 # and other non-production code issues.
 TARGET = "x86_x64_NativeLinux_mbedtls"
 
-export SSH_AUTH_SOCK
-
 # Allowed [Debug|Release]
 RELEASE_TYPE="Debug"
 

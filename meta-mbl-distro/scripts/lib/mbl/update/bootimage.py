@@ -15,25 +15,21 @@ import mbl.util.tinfoilutil as tutil
 MBL_BOOT_ID = "BOOT"
 
 
-class BootImageV3(upi.PayloadImage):
-    """Class for creating image files boot and blfs partitions."""
+class _TarXzBootImageBase(upi.PayloadImage):
+    """Base class for creating boot/blfs partition .tar.xz images."""
 
-    def __init__(self, deploy_dir, tinfoil):
+    def __init__(self, deploy_dir, tinfoil, image_format_version):
         """
         Create a BootImage object.
 
         Args:
         * deploy_dir Path: path to the directory containing build artifacts.
         * tinfoil Tinfoil: BitBake Tinfoil object.
+        * image_format_version: format version to use.
 
         """
         self._boot_files = _get_archived_file_specs(deploy_dir, tinfoil)
-
-    def stage(self, staging_dir):
-        """Implement method from PayloadImage ABC."""
-        upi.stage_multi_file_component(
-            staging_dir, self.archived_path, self._boot_files
-        )
+        self._image_format_version = image_format_version
 
     def generate_testinfo(self):
         """Implement method from PayloadImage ABC."""
@@ -47,12 +43,62 @@ class BootImageV3(upi.PayloadImage):
     @property
     def image_type(self):
         """Implement method from PayloadImage ABC."""
-        return "{}v3".format(MBL_BOOT_ID)
+        return "{}v{}".format(MBL_BOOT_ID, self._image_format_version)
+
+
+class TarXzBootImage(_TarXzBootImageBase):
+    """
+    Standard class for creating boot/blfs partition images.
+
+    The images are just .tar.xz archives of the partitions.
+    """
+
+    def __init__(self, deploy_dir, tinfoil):
+        """Create a TarXzBootImage object."""
+        super().__init__(deploy_dir, tinfoil, image_format_version=3)
+
+    def stage(self, staging_dir):
+        """Implement method from PayloadImage ABC."""
+        assert len(self.archived_paths) == 1
+        upi.stage_multi_file_component(
+            staging_dir, self.archived_paths[0], self._boot_files
+        )
 
     @property
-    def archived_path(self):
+    def archived_paths(self):
         """Implement method from PayloadImage ABC."""
-        return pathlib.Path("{}.tar.xz".format(self.image_type))
+        return [pathlib.Path("{}.tar.xz".format(self.image_type))]
+
+
+class TarXzWithBootSubdirBootImage(_TarXzBootImageBase):
+    """
+    Class for creating .tar.xz boot/blfs partition images with an extra subdir.
+
+    The images are just .tar.xz archives of the partitions, except the paths of
+    all files in the archives are prefixed with "BOOT/".
+    """
+
+    def __init__(self, deploy_dir, tinfoil):
+        """Create a TarXzWithBootSubdirBootImage object."""
+        super().__init__(deploy_dir, tinfoil, image_format_version=1)
+
+    def stage(self, staging_dir):
+        """Implement method from PayloadImage ABC."""
+        boot_files_with_BOOT = [
+            uutil.ArchivedFileSpec(
+                afs.path, pathlib.Path("BOOT", afs.archived_path)
+            )
+            for afs in self._boot_files
+        ]
+        assert len(self.archived_paths) == 1
+        upi.stage_multi_file_component(
+            staging_dir, self.archived_paths[0], boot_files_with_BOOT
+        )
+
+    @property
+    def archived_paths(self):
+        """Implement method from PayloadImage ABC."""
+        return [pathlib.Path("BOOT.tar.xz")]
 
 
 def _get_archived_file_specs(deploy_dir, tinfoil):

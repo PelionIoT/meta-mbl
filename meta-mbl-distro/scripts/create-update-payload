@@ -62,7 +62,7 @@ import argparse_oe  # noqa: E402
 mbl_lib_path = this_dir / "lib"
 sys.path.insert(0, str(mbl_lib_path))
 
-import mbl.update.payload  # noqa: E402
+import mbl.update.payload as upayload # noqa: E402
 
 
 def parse_args():
@@ -116,6 +116,13 @@ def parse_args():
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Emit verbose output"
     )
+    parser.add_argument(
+        "-f",
+        "--format-version",
+        type=int,
+        help="Version of payload format to use",
+        default=upayload.CURRENT_PAYLOAD_FORMAT_VERSION,
+    )
 
     args = parser.parse_args()
     if (
@@ -154,7 +161,8 @@ def main(args):
                 "mega-manual.html#var-BBPATH"
             )
 
-        payload = mbl.update.payload.UpdatePayload(
+        payload = upayload.UpdatePayload(
+            payload_format_version=args.format_version,
             tinfoil=tinfoil,
             bootloader_components=args.bootloader_components,
             kernel=args.kernel,

@@ -52,11 +52,15 @@ class PayloadImage(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def archived_path(self):
+    def archived_paths(self):
         """
-        Get the filename this image should have in the payload archive.
+        Get the filenames this image should have in the payload archive.
 
-        This must be the name of the file that the stage() method creates.
+        Notes:
+        * Must return the names of the files that the stage() method creates.
+        * Not all PayloadArchive types support multiple files per image (e.g.
+          SwupdateArchiver).
+
         """
         ...
 

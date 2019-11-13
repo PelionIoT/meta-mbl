@@ -12,14 +12,23 @@ import mbl.util.tinfoilutil as tutil
 MBL_ROOTFS_ID = "ROOTFS"
 
 
-class RootfsImageV3(upi.PayloadImage):
-    """Class for creating image files for rootfs partitions."""
+class TarXzRootfsImage(upi.PayloadImage):
+    """Class for creating .tar.xz image files for rootfs partitions."""
 
-    def __init__(self, image_name, deploy_dir, tinfoil):
+    def __init__(
+        self,
+        image_format_version,
+        archived_path,
+        image_name,
+        deploy_dir,
+        tinfoil,
+    ):
         """
-        Create a RootfsImage object.
+        Create a TarXzRootfsImage object.
 
         Args:
+        * image_format_version int: version of rootfs image format.
+        * archived_path Path: name of rootfs image in the payload archive.
         * image_name str: name of the BitBake image recipe that was used to
           create the rootfs image.
         * deploy_dir Path: path to the directory containing build artifacts.
@@ -29,8 +38,15 @@ class RootfsImageV3(upi.PayloadImage):
         machine = tutil.get_bitbake_conf_var("MACHINE", tinfoil)
         rootfs_filename = "{}-{}.tar.xz".format(image_name, machine)
         self._archived_file_spec = uutil.ArchivedFileSpec(
-            deploy_dir / rootfs_filename, "{}.tar.xz".format(self.image_type)
+            deploy_dir / rootfs_filename, archived_path
         )
+        if image_format_version not in (1, 3):
+            bb.fatal(
+                'Unrecognized image format version "{}" '
+                "for .tar.xz based rootfs image".format(image_format_version)
+            )
+
+        self._image_format_version = image_format_version
 
     def stage(self, staging_dir):
         """Implement method from PayloadImage ABC."""
@@ -46,9 +62,9 @@ class RootfsImageV3(upi.PayloadImage):
     @property
     def image_type(self):
         """Implement method from PayloadImage ABC."""
-        return "{}v3".format(MBL_ROOTFS_ID)
+        return "{}v{}".format(MBL_ROOTFS_ID, self._image_format_version)
 
     @property
-    def archived_path(self):
+    def archived_paths(self):
         """Implement method from PayloadImage ABC."""
-        return self._archived_file_spec.archived_path
+        return [self._archived_file_spec.archived_path]

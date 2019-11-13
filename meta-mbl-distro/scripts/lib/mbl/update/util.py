@@ -32,7 +32,7 @@ class ArchivedFileSpec:
         """
         self.path = pathlib.Path(path)
         if archived_path is None:
-            self.archived_path = path.name
+            self.archived_path = pathlib.Path(path.name)
         else:
             self.archived_path = pathlib.Path(archived_path)
 

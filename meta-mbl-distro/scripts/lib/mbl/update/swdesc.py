@@ -19,7 +19,10 @@ def create_swdesc_file(images, path):
 
 
 def _generate_swdesc_for_image(image):
-    return {"type": image.image_type, "filename": str(image.archived_path)}
+    # Payloads that use sw-description files only support one file name per
+    # image
+    assert len(image.archived_paths) == 1
+    return {"type": image.image_type, "filename": str(image.archived_paths[0])}
 
 
 def _generate_swdesc(images):

@@ -15,26 +15,22 @@ import mbl.update.util as uutil
 MBL_APPS_ID = "APPS"
 
 
-class AppsImageV3(upi.PayloadImage):
-    """Class for creating image files containing apps (Opkg packages)."""
+class _AppsImageBase(upi.PayloadImage):
+    """Base class for Image classes for sets of apps."""
 
-    def __init__(self, app_paths):
+    def __init__(self, app_paths, image_format_version):
         """
-        Create an AppsImage object.
+        Create an AppsImageBase object.
 
         Args:
         * app_paths list<str>: list of paths to the ipk files to add to the
           payload.
+        * image_format_version int: version of apps image format.
 
         """
         self._apps = [uutil.ArchivedFileSpec(app) for app in app_paths]
         _validate_app_paths(self._apps)
-
-    def stage(self, staging_dir):
-        """Implement method from PayloadImage ABC."""
-        upi.stage_multi_file_component(
-            staging_dir, self.archived_path, self._apps
-        )
+        self._image_format_version = image_format_version
 
     def generate_testinfo(self):
         """Implement method from PayloadImage ABC."""
@@ -46,12 +42,69 @@ class AppsImageV3(upi.PayloadImage):
     @property
     def image_type(self):
         """Implement method from PayloadImage ABC."""
-        return "{}v3".format(MBL_APPS_ID)
+        return "{}v{}".format(MBL_APPS_ID, self._image_format_version)
+
+
+class TarXzAppsImage(_AppsImageBase):
+    """
+    Class for creating .tar.xz image files containing apps (ipk files).
+
+    With this image format, all ipks are bundled together in a .tar.xz
+    archive before being added to the payload archive.
+    """
+
+    def __init__(self, app_paths):
+        """
+        Create a TarXzAppsImage object.
+
+        Args:
+        * app_paths list<str>: list of paths to the ipk files to add to the
+          payload.
+
+        """
+        super().__init__(app_paths, image_format_version=3)
+
+    def stage(self, staging_dir):
+        """Implement method from PayloadImage ABC."""
+        assert len(self.archived_paths) == 1
+        upi.stage_multi_file_component(
+            staging_dir, self.archived_paths[0], self._apps
+        )
 
     @property
-    def archived_path(self):
+    def archived_paths(self):
         """Implement method from PayloadImage ABC."""
-        return pathlib.Path("{}.tar.xz".format(self.image_type))
+        return [pathlib.Path("{}.tar.xz".format(self.image_type))]
+
+
+class IndividualIpksAppsImage(_AppsImageBase):
+    """
+    Class for creating separate image files for each app.
+
+    With this image format, each ipk is added to the payload archive
+    separately.
+    """
+
+    def __init__(self, app_paths):
+        """
+        Create an IndividualIpksAppsImage object.
+
+        Args:
+        * app_paths list<str>: list of paths to the ipk files to add to the
+          payload.
+
+        """
+        super().__init__(app_paths, image_format_version=1)
+
+    def stage(self, staging_dir):
+        """Implement method from PayloadImage ABC."""
+        for app in self._apps:
+            upi.stage_single_file(staging_dir, app)
+
+    @property
+    def archived_paths(self):
+        """Implement method from PayloadImage ABC."""
+        return [app.archived_path for app in self._apps]
 
 
 def _validate_app_paths(apps):

@@ -41,7 +41,6 @@ class PayloadArchiver(abc.ABC):
         * output_path Path: path where we output the payload.
         * images list<PayloadImage>: images in the payload.
         """
-        ...
 
 
 class SwupdateArchiver(PayloadArchiver):

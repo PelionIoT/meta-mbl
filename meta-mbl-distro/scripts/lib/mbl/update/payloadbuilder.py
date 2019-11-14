@@ -62,27 +62,22 @@ class PayloadBuilder(abc.ABC):
     @abc.abstractmethod
     def create_archiver(self):
         """Create a PayloadArchiver."""
-        ...
 
     @abc.abstractmethod
     def create_wks_bootloader_slot_image(self, slot_name):
         """Create a PayloadImage for a bootloader slot."""
-        ...
 
     @abc.abstractmethod
     def create_boot_image(self):
         """Create a PayloadImage for a boot/blfs partition."""
-        ...
 
     @abc.abstractmethod
     def create_apps_image(self, apps):
         """Create a PayloadImage for a set of apps."""
-        ...
 
     @abc.abstractmethod
     def create_rootfs_image(self, image_name):
         """Create a PayloadImage for a rootfs."""
-        ...
 
 
 class PayloadBuilderV3(PayloadBuilder):

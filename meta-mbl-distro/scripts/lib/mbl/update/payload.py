@@ -23,10 +23,10 @@ class UpdatePayload:
         self,
         payload_format_version,
         tinfoil,
-        bootloader_components=[],
+        bootloader_components=None,
         kernel=False,
         rootfs=False,
-        apps=[],
+        apps=None,
     ):
         """
         Create an UpdatePayload object.
@@ -43,6 +43,11 @@ class UpdatePayload:
         * apps list<str|Path>: list of apps (ipk files) to add to the payload.
 
         """
+        if bootloader_components is None:
+            bootloader_components = []
+        if apps is None:
+            apps = []
+
         self.builder = payloadbuilder.PayloadBuilder(
             payload_format_version, tinfoil
         )

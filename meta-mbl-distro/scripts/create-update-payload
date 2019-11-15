@@ -77,7 +77,6 @@ def parse_args():
         help="Add one or more bootloader components (N) to the payload.",
         metavar="N",
         nargs="+",
-        default=[],
     )
     parser.add_argument(
         "-a",
@@ -87,7 +86,6 @@ def parse_args():
         metavar="IPK_PATH",
         type=lambda x: pathlib.Path(x).absolute(),
         nargs="+",
-        default=[],
     )
     parser.add_argument(
         "-k",

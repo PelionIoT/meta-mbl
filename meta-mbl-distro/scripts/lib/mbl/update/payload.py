@@ -93,6 +93,7 @@ class UpdatePayload:
 
         Args:
         * output_path Path: path where we output the payload.
+
         """
         self.builder.create_archiver().create_payload_file(
             self.images, output_path
@@ -104,6 +105,7 @@ class UpdatePayload:
 
         Args:
         * output_path Path: path where we output the testinfo file.
+
         """
         testinfo.create_testinfo_file(self.images, output_path)
 

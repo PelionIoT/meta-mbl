@@ -20,6 +20,7 @@ def register_versioned_class(name, version, cls):
     * name str: name of the thing that cls represents.
     * version int: version of the thing that cls represents.
     * cls class: class that represents the thing.
+
     """
     if name not in _registry:
         _registry[name] = {}
@@ -35,6 +36,7 @@ def get_versioned_class(name, version):
     Args:
     * name str: name of the thing.
     * version int: version of the thing.
+
     """
     assert name in _registry
     assert version in _registry[name]
@@ -49,5 +51,6 @@ def create(name, version, *args, **kwargs):
     * name str: name of the thing to create.
     * version int: version of the thing to create.
     * *args/**kwargs: args to pass to the thing's __init__ method.
+
     """
     return get_versioned_class(name, version)(*args, **kwargs)

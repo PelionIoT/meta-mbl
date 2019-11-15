@@ -6,9 +6,10 @@
 # We also remove its remote handler and webserver features.
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
-# Tell swupdate to not try and install systemd.service files which don't exist, as we're
-# overriding do_install to remove them.
-SYSTEMD_SERVICE_${PN} = ""
+# We don't want any swupdate systemd service enabled by default
+SYSTEMD_AUTO_ENABLE_${PN}-sd = "disable"
+SYSTEMD_AUTO_ENABLE_${PN}-progress-sd = "disable"
+SYSTEMD_AUTO_ENABLE_${PN}-usb-sd = "disable"
 
 # Change the location of the software versions file to our user config partition.
 do_configure_prepend() {

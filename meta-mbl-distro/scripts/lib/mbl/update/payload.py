@@ -43,7 +43,7 @@ class UpdatePayload:
         * apps list<str|Path>: list of apps (ipk files) to add to the payload.
 
         """
-        self.builder = payloadbuilder.PayloadBuilder.for_format_version(
+        self.builder = payloadbuilder.PayloadBuilder(
             payload_format_version, tinfoil
         )
         self.images = []

@@ -14,6 +14,9 @@ import tempfile
 import time
 
 import mbl.update.swdesc as swdesc
+import mbl.update.versionedclassregistry as vcr
+
+MBL_PAYLOAD_ARCHIVER_ID = "ARCHIVER"
 
 
 def _with_staging_dir(f):
@@ -32,6 +35,13 @@ def _with_staging_dir(f):
 class PayloadArchiver(abc.ABC):
     """ABC for creating containers that contain update payloads."""
 
+    @classmethod
+    def register(cls):
+        """Register subclass with the versioned class registry."""
+        vcr.register_versioned_class(
+            MBL_PAYLOAD_ARCHIVER_ID, cls.ARCHIVE_FORMAT_VERSION, cls
+        )
+
     @abc.abstractmethod
     def create_payload_file(self, images, output_path):
         """
@@ -43,13 +53,17 @@ class PayloadArchiver(abc.ABC):
         """
 
 
-class SwupdateArchiver(PayloadArchiver):
+class _SwupdateArchiver(PayloadArchiver):
     """
     Class for creating payload containers that swupdate can use.
 
     Payloads crated using SwupdateArchiver are CPIO archives that contain a
     sw-description file describing the contents.
     """
+
+    def __init__(self, payload_format_version):
+        """Create a TarWithVersionFileArchiver object."""
+        self._payload_format_version = payload_format_version
 
     @_with_staging_dir
     def create_payload_file(self, images, output_path, staging_dir):
@@ -90,7 +104,16 @@ class SwupdateArchiver(PayloadArchiver):
         )
 
 
-class TarWithVersionFileArchiver(PayloadArchiver):
+class PayloadArchiverV3(_SwupdateArchiver):
+    """PayloadArchiver for archiver format 3."""
+
+    ARCHIVE_FORMAT_VERSION = 3
+
+
+PayloadArchiverV3.register()
+
+
+class _TarWithVersionFileArchiver(PayloadArchiver):
     """
     Class for creating tar payload containers.
 
@@ -98,15 +121,10 @@ class TarWithVersionFileArchiver(PayloadArchiver):
     contain a payload_format_version that specifies the payload format version.
     """
 
+    ARCHIVE_FORMAT_VERSION = 1
+
     def __init__(self, payload_format_version):
-        """
-        Create a TarWithVersionFileArchiver object.
-
-        Args:
-        * payload_format_version int: format version to put in the
-          payload_format_version file.
-
-        """
+        """Create a TarWithVersionFileArchiver object."""
         self._payload_format_version = payload_format_version
 
     @_with_staging_dir
@@ -138,3 +156,12 @@ class TarWithVersionFileArchiver(PayloadArchiver):
         tar_info.gname = "root"
         tar_info.mtime = time.time()
         tar.addfile(tar_info, buf)
+
+
+class PayloadArchiverV1(_TarWithVersionFileArchiver):
+    """PayloadArchiver for archiver format 1."""
+
+    ARCHIVE_FORMAT_VERSION = 1
+
+
+PayloadArchiverV1.register()

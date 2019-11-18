@@ -31,6 +31,11 @@ BUILDHISTORY_COMMIT = "1"
 
 IMAGE_FSTYPES = "ext4 wic.gz wic.bmap tar.xz"
 
+# Create minimal rootfs file system images
+IMAGE_ROOTFS_SIZE = "0"
+IMAGE_OVERHEAD_FACTOR = "1"
+IMAGE_ROOTFS_EXTRA_SPACE = "0"
+
 # Prevent OE from messing around too much with /var/log - we have a separate
 # partition for it
 VOLATILE_LOG_DIR = "no"

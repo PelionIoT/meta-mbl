@@ -35,8 +35,10 @@ TOPDIR is ./mbl-manifest/build-mbl-development or
 ./mbl-manifest/build-mbl-production in the MBL workspace.
 """
 
+import bisect
 import logging
 import pathlib
+import pkg_resources
 import sys
 
 from argparse import RawTextHelpFormatter
@@ -63,6 +65,37 @@ mbl_lib_path = this_dir / "lib"
 sys.path.insert(0, str(mbl_lib_path))
 
 import mbl.update.payload as upayload  # noqa: E402
+
+# list of mbl-os versions in which the payload format changed, along with the
+# format version used
+FORMAT_CHANGES = (
+    ("0.9.0", 1),
+    ("0.10.0", 3),
+)
+
+def _str_remove_prefix(orig_str, prefix):
+    if orig_str.startswith(prefix):
+        return orig_str[len(prefix):]
+    return orig_str
+
+def _payload_format_version_for_os_version(os_version_str):
+    parsed_format_changes = sorted(
+        (pkg_resources.parse_version(x[0]), x[1]) for x in FORMAT_CHANGES
+    )
+    keys = [ x[0] for x in parsed_format_changes ]
+
+    os_version = pkg_resources.parse_version(os_version_str)
+    # Find the index into keys (and parsed_format_changes) where os_version
+    # would be inserted to keep order (inserting to the right if os_version
+    # equals one of the keys). I.e.  find the index just after the latest OS
+    # version in which the format changed that is earlier (or the same as)
+    # os_version.
+    pos = bisect.bisect_right(keys, os_version)
+    if pos == 0:
+        # pos == 0 means that os_version is earlier than any os version version
+        # in parsed_format_changes.
+        bb.fatal("Unsupported Mbed Linux OS version \"{}\".".format(os_version_str))
+    return parsed_format_changes[pos-1][1]
 
 
 def parse_args():
@@ -114,12 +147,23 @@ def parse_args():
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Emit verbose output"
     )
-    parser.add_argument(
+    format_version_group = parser.add_mutually_exclusive_group()
+    format_version_group.add_argument(
         "-f",
         "--format-version",
         type=int,
         help="Version of payload format to use",
-        default=upayload.CURRENT_PAYLOAD_FORMAT_VERSION,
+    )
+    format_version_group.add_argument(
+        "-m",
+        "--mbl-os-version",
+        metavar="MBL_OS_VERSION",
+        help=(
+            "Version of Mbed Linux OS for which to create a payload. "
+            "E.g. if MBL_OS_VERSION is \"0.9\" then a payload will be "
+            "created that can be installed on a device running Mbed Linux "
+            "OS 0.9"
+        ),
     )
 
     args = parser.parse_args()
@@ -131,8 +175,17 @@ def parse_args():
     ):
         parser.error("No input arguments given.")
 
+    if args.mbl_os_version is not None:
+        assert args.format_version is None
+        args.format_version = _payload_format_version_for_os_version(args.mbl_os_version)
+
+    if args.format_version is None:
+        args.format_version = upayload.CURRENT_PAYLOAD_FORMAT_VERSION
+
     if args.verbose:
         logging.getLogger().setLevel(logging.INFO)
+
+    logging.info("Using payload format version {}.".format(args.format_version))
 
     return args
 

@@ -4,6 +4,8 @@
 
 """PayloadImage subclass for bootloader raw partition images."""
 
+import pathlib
+
 import mbl.update.payloadimage as upi
 import mbl.update.testinfo as testinfo
 import mbl.update.util as uutil
@@ -13,46 +15,96 @@ MBL_WKS_BOOTLOADER1_ID = "WKS_BOOTLOADER1"
 MBL_WKS_BOOTLOADER2_ID = "WKS_BOOTLOADER2"
 
 
-class WksBootloaderSlotImageV3(upi.PayloadImage):
-    """Class for creating image files for bootloader raw partitions."""
+class _WksBootloaderSlotImageBase(upi.PayloadImage):
+    """Base class for creating image files for bootloader raw partitions."""
 
-    def __init__(self, bootloader_slot_name, deploy_dir, tinfoil):
+    def __init__(self, deploy_dir, tinfoil):
         """
-        Create a WksBootloaderSlotImage object.
+        Create a _WksBootloaderSlotImageBase object.
 
         Args:
-        * bootloader_slot_name str: name of the bootloader slot/partition.
         * deploy_dir Path: path to the directory containing build artifacts.
         * tinfoil Tinfoil: BitBake Tinfoil object.
 
         """
-        self._bootloader_slot_name = bootloader_slot_name
-        filename_var_name = "MBL_{}_FILENAME".format(bootloader_slot_name)
+        filename_var_name = "MBL_{}_FILENAME".format(self.image_base_type)
         filename = tutil.get_bitbake_conf_var(filename_var_name, tinfoil)
-        self._archived_file_spec = uutil.ArchivedFileSpec(
-            deploy_dir / filename, "{}.xz".format(self.image_type)
-        )
-
-    def stage(self, staging_dir):
-        """Implement method from PayloadImage ABC."""
-        upi.stage_single_file_with_compression(
-            staging_dir, self._archived_file_spec
-        )
+        self._path = deploy_dir / filename
 
     def generate_testinfo(self):
         """Implement method from PayloadImage ABC."""
-        return [
-            testinfo.partition_sha256(
-                self._bootloader_slot_name, self._archived_file_spec.path
-            )
-        ]
+        return [testinfo.partition_sha256(self.image_base_type, self._path)]
+
+
+class _XzWksBootloaderSlotImage(_WksBootloaderSlotImageBase):
+    """
+    Class for creating xz compressed raw bootloader image files.
+
+    An _XzWksBootloaderSlotImage is just a bootloader image compressed with
+    xz named after the bootloader slot that it should be written to.
+    """
+
+    def stage(self, staging_dir):
+        """Implement method from PayloadImage ABC."""
+        assert len(self.archived_paths) == 1
+        upi.stage_single_file_with_compression(
+            staging_dir,
+            uutil.ArchivedFileSpec(self._path, self.archived_paths[0]),
+        )
 
     @property
-    def image_type(self):
+    def archived_paths(self):
         """Implement method from PayloadImage ABC."""
-        return "{}v3".format(self._bootloader_slot_name)
+        return [pathlib.Path("{}.xz".format(self.image_type))]
+
+
+class WksBootloader1ImageV3(_XzWksBootloaderSlotImage):
+    """Class for creating WKS_BOOTLOADER1 images with format version 3."""
+
+    IMAGE_FORMAT_VERSION = 3
+    IMAGE_BASE_TYPE = MBL_WKS_BOOTLOADER1_ID
+
+
+class WksBootloader2ImageV3(_XzWksBootloaderSlotImage):
+    """Class for creating WKS_BOOTLOADER2 images with format version 3."""
+
+    IMAGE_FORMAT_VERSION = 3
+    IMAGE_BASE_TYPE = MBL_WKS_BOOTLOADER2_ID
+
+
+class _TarXzWksBootloaderSlotImage(_WksBootloaderSlotImageBase):
+    """
+    Class for creating .tar.xz archives containing raw bootloader image files.
+
+    A _TarXzWksBootloaderSlotImage is a bootloader image named after its
+    bootloader slot name inside a .tar.xz file, also named after the bootloader
+    slot name.
+    """
+
+    def stage(self, staging_dir):
+        """Implement method from PayloadImage ABC."""
+        assert len(self.archived_paths) == 1
+        upi.stage_multi_file_component(
+            staging_dir,
+            self.archived_paths[0],
+            [uutil.ArchivedFileSpec(self._path, self.image_base_type)],
+        )
 
     @property
-    def archived_path(self):
+    def archived_paths(self):
         """Implement method from PayloadImage ABC."""
-        return self._archived_file_spec.archived_path
+        return [pathlib.Path("{}.tar.xz".format(self.image_base_type))]
+
+
+class WksBootloader1ImageV1(_TarXzWksBootloaderSlotImage):
+    """Class for creating WKS_BOOTLOADER1 images with format version 1."""
+
+    IMAGE_FORMAT_VERSION = 1
+    IMAGE_BASE_TYPE = MBL_WKS_BOOTLOADER1_ID
+
+
+class WksBootloader2ImageV1(_TarXzWksBootloaderSlotImage):
+    """Class for creating WKS_BOOTLOADER2 images with format version 1."""
+
+    IMAGE_FORMAT_VERSION = 1
+    IMAGE_BASE_TYPE = MBL_WKS_BOOTLOADER2_ID

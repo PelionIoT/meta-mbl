@@ -15,8 +15,10 @@ import mbl.util.tinfoilutil as tutil
 MBL_BOOT_ID = "BOOT"
 
 
-class BootImageV3(upi.PayloadImage):
-    """Class for creating image files boot and blfs partitions."""
+class _TarXzBootImageBase(upi.PayloadImage):
+    """Base class for creating boot/blfs partition .tar.xz images."""
+
+    IMAGE_BASE_TYPE = MBL_BOOT_ID
 
     def __init__(self, deploy_dir, tinfoil):
         """
@@ -29,12 +31,6 @@ class BootImageV3(upi.PayloadImage):
         """
         self._boot_files = _get_archived_file_specs(deploy_dir, tinfoil)
 
-    def stage(self, staging_dir):
-        """Implement method from PayloadImage ABC."""
-        upi.stage_multi_file_component(
-            staging_dir, self.archived_path, self._boot_files
-        )
-
     def generate_testinfo(self):
         """Implement method from PayloadImage ABC."""
         return [testinfo.file_compare("/proc/version")] + [
@@ -44,15 +40,64 @@ class BootImageV3(upi.PayloadImage):
             for afs in self._boot_files
         ]
 
-    @property
-    def image_type(self):
+
+class _TarXzBootImage(_TarXzBootImageBase):
+    """
+    Standard class for creating boot/blfs partition images.
+
+    The images are just .tar.xz archives of the partitions.
+    """
+
+    def stage(self, staging_dir):
         """Implement method from PayloadImage ABC."""
-        return "{}v3".format(MBL_BOOT_ID)
+        assert len(self.archived_paths) == 1
+        upi.stage_multi_file_component(
+            staging_dir, self.archived_paths[0], self._boot_files
+        )
 
     @property
-    def archived_path(self):
+    def archived_paths(self):
         """Implement method from PayloadImage ABC."""
-        return pathlib.Path("{}.tar.xz".format(self.image_type))
+        return [pathlib.Path("{}.tar.xz".format(self.image_type))]
+
+
+class _TarXzWithBootSubdirBootImage(_TarXzBootImageBase):
+    """
+    Class for creating .tar.xz boot/blfs partition images with an extra subdir.
+
+    The images are just .tar.xz archives of the partitions, except the paths of
+    all files in the archives are prefixed with "BOOT/".
+    """
+
+    def stage(self, staging_dir):
+        """Implement method from PayloadImage ABC."""
+        boot_files_with_BOOT = [
+            uutil.ArchivedFileSpec(
+                afs.path, pathlib.Path("BOOT", afs.archived_path)
+            )
+            for afs in self._boot_files
+        ]
+        assert len(self.archived_paths) == 1
+        upi.stage_multi_file_component(
+            staging_dir, self.archived_paths[0], boot_files_with_BOOT
+        )
+
+    @property
+    def archived_paths(self):
+        """Implement method from PayloadImage ABC."""
+        return [pathlib.Path("BOOT.tar.xz")]
+
+
+class BootImageV3(_TarXzBootImage):
+    """Class for creating boot images with format version 3."""
+
+    IMAGE_FORMAT_VERSION = 3
+
+
+class BootImageV1(_TarXzWithBootSubdirBootImage):
+    """Class for creating boot images with format version 1."""
+
+    IMAGE_FORMAT_VERSION = 1
 
 
 def _get_archived_file_specs(deploy_dir, tinfoil):

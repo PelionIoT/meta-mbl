@@ -9,13 +9,11 @@ import pathlib
 import subprocess
 import tempfile
 
-import mbl.update.appsimage as appsimage
-import mbl.update.bootimage as bootimage
-import mbl.update.rootfsimage as rootfsimage
-import mbl.update.swdesc as swdesc
+import mbl.update.payloadbuilder as payloadbuilder
 import mbl.update.testinfo as testinfo
-import mbl.update.wksbootloaderslotimage as wksbootloaderslotimage
 import mbl.util.tinfoilutil as tutil
+
+CURRENT_PAYLOAD_FORMAT_VERSION = 3
 
 
 class UpdatePayload:
@@ -23,16 +21,18 @@ class UpdatePayload:
 
     def __init__(
         self,
+        payload_format_version,
         tinfoil,
-        bootloader_components=[],
+        bootloader_components=None,
         kernel=False,
         rootfs=False,
-        apps=[],
+        apps=None,
     ):
         """
         Create an UpdatePayload object.
 
         Args:
+        * payload_format_version int: version of payload format to use.
         * tinfoil Tinfoil: BitBake Tinfoil object.
         * bootloader_components list<str>: names of bootloader components to
           add to the payload. I.e. a sublist of ["1", "2"].
@@ -43,8 +43,13 @@ class UpdatePayload:
         * apps list<str|Path>: list of apps (ipk files) to add to the payload.
 
         """
-        deploy_dir = pathlib.Path(
-            tutil.get_bitbake_conf_var("DEPLOY_DIR_IMAGE", tinfoil)
+        if bootloader_components is None:
+            bootloader_components = []
+        if apps is None:
+            apps = []
+
+        self.builder = payloadbuilder.PayloadBuilder(
+            payload_format_version, tinfoil
         )
         self.images = []
         if bootloader_components:
@@ -56,18 +61,14 @@ class UpdatePayload:
                         "must be updated together. "
                         "Adding kernel to payload..."
                     )
-                    self.images.append(
-                        bootimage.BootImageV3(deploy_dir, tinfoil)
-                    )
+                    self.images.append(self.builder.create_boot_image())
 
                 bootloader_components_copy.remove("1")
 
             for bootloader_slot_number in bootloader_components_copy:
                 slot_name = "WKS_BOOTLOADER{}".format(bootloader_slot_number)
                 self.images.append(
-                    wksbootloaderslotimage.WksBootloaderSlotImageV3(
-                        slot_name, deploy_dir, tinfoil
-                    )
+                    self.builder.create_wks_bootloader_slot_image(slot_name)
                 )
 
         if kernel:
@@ -78,41 +79,34 @@ class UpdatePayload:
                         "must be updated together. "
                         "Adding bootloader 1 component to payload..."
                     )
-            self.images.append(bootimage.BootImageV3(deploy_dir, tinfoil))
+            self.images.append(self.builder.create_boot_image())
 
-        if apps is not None:
-            self.images.append(appsimage.AppsImageV3(apps))
+        if apps:
+            self.images.append(self.builder.create_apps_image(apps))
 
-        if rootfs is not None:
-            self.images.append(
-                rootfsimage.RootfsImageV3(rootfs, deploy_dir, tinfoil)
-            )
+        if rootfs:
+            self.images.append(self.builder.create_rootfs_image(rootfs))
 
     def create_payload_file(self, output_path):
         """
         Create an update payload.
 
-        :param output_path Path: path where we output the payload.
+        Args:
+        * output_path Path: path where we output the payload.
+
         """
-        with tempfile.TemporaryDirectory() as staging_dir:
-            staging_dir_path = pathlib.Path(staging_dir)
-            swdesc_name = "sw-description"
-            swdesc.create_swdesc_file(
-                self.images, staging_dir_path / swdesc_name
-            )
-            # swupdate requires that the  sw-description file is first in the
-            # payload
-            _append_to_payload(
-                staging_dir_path, swdesc_name, output_path, create=True
-            )
-            for image in self.images:
-                image.stage(staging_dir_path)
-                _append_to_payload(
-                    staging_dir_path, image.archived_path, output_path
-                )
+        self.builder.create_archiver().create_payload_file(
+            self.images, output_path
+        )
 
     def create_testinfo_file(self, output_path):
-        """Create a "testinfo" file for the update payload."""
+        """
+        Create a "testinfo" file for the update payload.
+
+        Args:
+        * output_path Path: path where we output the testinfo file.
+
+        """
         testinfo.create_testinfo_file(self.images, output_path)
 
 
@@ -134,23 +128,3 @@ def _bootloader_one_with_kernel(bootloader_components, tinfoil):
 
 def _kernel_with_bootloader_one(bootloader_components, tinfoil):
     return _is_part_skipped("WKS_BOOTLOADER1", tinfoil)
-
-
-def _append_to_payload(staging_dir, archived_path, output_path, create=False):
-    cpio_args = [
-        "cpio",
-        "--format",
-        "crc",
-        "--quiet",
-        "-o",
-        "-F",
-        str(output_path),
-    ]
-    if not create:
-        cpio_args.append("--append")
-
-    subprocess.check_output(
-        cpio_args,
-        input=bytes(str(archived_path), "utf-8"),
-        cwd=str(staging_dir),
-    )

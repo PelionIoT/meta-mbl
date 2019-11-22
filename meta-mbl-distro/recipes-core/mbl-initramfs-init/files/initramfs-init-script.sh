@@ -19,6 +19,27 @@ MBL_WATCHDOG_DEVICE_FILENAME="__REPLACE_ME_WITH_MBL_WATCHDOG_DEVICE_FILENAME__"
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 
+# Mount a filesystem at a directory, creating the directory if necessary. If
+# the "mount" command fails, run fsck and then try again.
+#
+# $1: device file
+# $2: mount point
+# $3-N: other arguments for "mount"
+mount_or_fsck() {
+    mof_device_file="$1"
+    shift
+    mof_mount_point="$1"
+    shift
+
+    mkdir -p "$mof_mount_point"
+    if ! mount "$@" "$mof_device_file" "$mof_mount_point"; then
+        # if we fail to mount, try to fix the partition and mount it again
+        e2fsck -p -c -f "$mof_device_file"
+        mount "$@" "$mof_device_file" "$mof_mount_point"
+    fi
+}
+
+
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
 mount -t devtmpfs devtmpfs /dev
@@ -55,12 +76,7 @@ done
 # stored in the log partition. Mount the log partition so we can check them.
 
 LOG_PARTITION="$(findfs "LABEL=${LOG_PARTITION_LABEL}")"
-mkdir -p "$LOG_MOUNT_POINT"
-if [ "$(mount -o "$LOG_MOUNT_OPTS" "$LOG_PARTITION" "$LOG_MOUNT_POINT")" ]; then
-    # if we fail to mount, try to fix the partition and mount it again
-    e2fsck -p -c -f "$LOG_PARTITION"
-    mount -o "$LOG_MOUNT_OPTS" "$LOG_PARTITION" "$LOG_MOUNT_POINT"
-fi
+mount_or_fsck "$LOG_PARTITION" "$LOG_MOUNT_POINT" -o "$LOG_MOUNT_OPTS"
 
 # Check for the existence of a flag file indicating that we should use the
 # second rootfs bank rather than the first.
@@ -72,12 +88,7 @@ fi
 ROOTFS_PARTITION="$(findfs LABEL=$ROOTFS_LABEL)"
 
 # Switch from initramfs to rootfs
-mkdir -p /mnt/rootfs
-if [ "$(mount "$ROOTFS_PARTITION" /mnt/rootfs)" ]; then
-    # if we fail to mount, try to fix the partition and mount it again
-    e2fsck -p -c -f "$ROOTFS_PARTITION"
-    mount "$ROOTFS_PARTITION" /mnt/rootfs
-fi
+mount_or_fsck "$ROOTFS_PARTITION" /mnt/rootfs
 
 mount --move /dev /mnt/rootfs/dev
 mount --move /proc /mnt/rootfs/proc

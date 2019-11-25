@@ -9,7 +9,7 @@ hostname_pn-base-files = ""
 
 # This is where write_partition_info temporarily stores the partition variable
 # files. The files are installed into the factory config partition in do_install.
-MBL_PART_FILES_TMP_DIR = "${WORKDIR}/part-info-tmp"
+MBL_PART_INFO_TMP_DIR = "${WORKDIR}/part-info-tmp"
 
 python __anonymous() {
     # MBL_PARTITION_INFOS is set in mbl-partitions.bbclass. It's a list of
@@ -52,7 +52,7 @@ python do_write_partition_vars() {
 
     # Create a temporary directory to hold the partition var files.
     # They will be picked up from the temporary dir in do_install.
-    part_files_tmp = pathlib.Path(d.getVar("MBL_PART_FILES_TMP_DIR"))
+    part_files_tmp = pathlib.Path(d.getVar("MBL_PART_INFO_TMP_DIR"))
     part_files_tmp.mkdir(parents=True, exist_ok=True)
 
     # MBL_PARTITION_VARS is a list of the variable names set in mbl-partitions.
@@ -92,11 +92,10 @@ EOF
 
     # This directory is where the values of mbl-partitions variables are stored
     # as files on the factory config partition.
-    MBL_PARTITIONS_DIR="${D}${MBL_FACTORY_CONFIG_MOUNT_POINT}/part-info"
-    install -d "${MBL_PARTITIONS_DIR}"
+    install -d "${D}${MBL_PART_INFO_DIR}"
 
     # Install the partition variable files with correct permissions.
-    for fpath in "${MBL_PART_FILES_TMP_DIR}"/*; do
-        install -m 0444 "${fpath}" "${MBL_PARTITIONS_DIR}"
+    for fpath in "${MBL_PART_INFO_TMP_DIR}"/*; do
+        install -m 0444 "${fpath}" "${D}${MBL_PART_INFO_DIR}"
     done
 }

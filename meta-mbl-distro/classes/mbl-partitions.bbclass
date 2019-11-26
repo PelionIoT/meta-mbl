@@ -30,24 +30,28 @@ MBL_FLASH_ERASE_BLOCK_SIZE_KiB ?= "16384"
 
 # Default alignment used for partitions when MBL_<partition>_ALIGN_KiB
 # (documented below) isn't set.
-MBL_DEFAULT_ALIGN_KiB ?= "${MBL_FLASH_ERASE_BLOCK_SIZE_KiB}"
+MBL_PARTITIONS_DEFAULT_ALIGN_KiB ?= "${MBL_FLASH_ERASE_BLOCK_SIZE_KiB}"
 
 # Default file system type for file system partitions when
 # MBL_<partition>_FSTYPE (documented below) isn't set.
-MBL_DEFAULT_FSTYPE ?= "ext4"
+MBL_PARTITIONS_DEFAULT_FSTYPE ?= "ext4"
 
 # Default mount options for file system partitions when
 # MBL_<partition>_MOUNT_OPTS (documented below) isn't set.
-MBL_DEFAULT_MOUNT_OPTS ?= "defaults"
+MBL_PARTITIONS_DEFAULT_MOUNT_OPTS ?= "defaults"
 
 # Default fs_freq (the fifth fstab field - see "man 5 fstab") for file system
 # partitions when MBL_<partition>_FS_FREQ (documented below) isn't set.
-MBL_DEFAULT_FS_FREQ ?= "0"
+MBL_PARTITIONS_DEFAULT_FS_FREQ ?= "0"
 
 # Default fs_passno (the sixth fstab field - see "man 5 fstab") for file system
 # partitions when MBL_<partition>_FS_PASSNO (documented below) is set to 2 to
 # force the fsck to run.
-MBL_DEFAULT_FS_PASSNO ?= "2"
+MBL_PARTITIONS_DEFAULT_FS_PASSNO ?= "2"
+
+# Default device name (file name in /dev) for the storage device on which
+# partitions live.
+MBL_PARTITIONS_DEFAULT_DEVICE_NAME ?= "${MBL_WKS_STORAGE_DEVICE_NAME}"
 
 
 # ------------------------------------------------------------------------------
@@ -481,7 +485,7 @@ python __anonymous() {
         Returns the value of the variable, converted into its natural type.
         """
         full_var_name = "MBL_{}_{}".format(part_name, var_name)
-        default_var_name = "MBL_DEFAULT_{}".format(var_name)
+        default_var_name = "MBL_PARTITIONS_DEFAULT_{}".format(var_name)
         var_value = None
         for vn in (full_var_name, default_var_name):
             if _is_var_set(d, vn):
@@ -538,6 +542,7 @@ python __anonymous() {
         return bool(d.getVar(var, True))
 
 
+    device_name = d.getVar("MBL_PARTITIONS_DEFAULT_DEVICE_NAME", True)
     part_names = d.getVar("MBL_PARTITION_NAMES", True).split()
     part_infos = []
     prev_part_info = {}
@@ -571,6 +576,10 @@ python __anonymous() {
                 part_info["size_KiB"],
                 part_info["offsets_KiB"][0],
             )
+        part_info["device_names"] = []
+        for i, p in enumerate(part_info["offsets_KiB"]):
+            part_info["device_names"].append(device_name)
+            d.setVar("MBL_{}_DEVICE_NAME_BANK{}".format(part_name, i + 1), device_name)
         prev_part_info = part_info
         if not part_info["is_fs"]:
             continue

@@ -11,7 +11,7 @@ TCLIBCAPPEND = ""
 INHERIT += "mbl-partitions"
 
 DISTRO_NAME = "Mbed Linux OS"
-DISTRO_VERSION = "0.0"
+DISTRO_VERSION = "mbl-os-0.10.0"
 DISTRO_FEATURES_append = " virtualization"
 
 # Set systemd as the init manager

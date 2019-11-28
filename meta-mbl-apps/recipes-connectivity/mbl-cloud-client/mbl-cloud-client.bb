@@ -44,7 +44,6 @@ RDEPENDS_${PN}-update += "\
     swupdate \
     tar \
     util-linux-mkfs \
-    util-linux-blkid \
     util-linux-lsblk \
     util-linux-mount \
     util-linux-umount \
@@ -136,8 +135,6 @@ do_configure() {
           -DBOOTFLAGS_DIR="${MBL_BOOTFLAGS_DIR}" \
           -DUPDATE_PAYLOAD_DIR="${MBL_SCRATCH_DIR}" \
           -DLOG_DIR="${localstatedir}/log" \
-          -DROOTFS1_LABEL="${MBL_ROOT_LABEL}1" \
-          -DROOTFS2_LABEL="${MBL_ROOT_LABEL}2" \
           -DROOTFS_TYPE="${MBL_ROOT_FSTYPE}" \
           -DFACTORY_CONFIG_PARTITION="${MBL_FACTORY_CONFIG_DIR}"
 

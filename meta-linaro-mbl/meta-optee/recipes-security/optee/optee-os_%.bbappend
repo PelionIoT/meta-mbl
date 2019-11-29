@@ -2,21 +2,17 @@
 #
 # SPDX-License-Identifier: MIT
 
-DEPENDS += " u-boot-tools-native python3-pyelftools-native "
+DEPENDS += " u-boot-tools-native "
 DEPENDS_append_raspberrypi3-mbl = " arm-aarch64-toolchain-native "
 
-inherit python3native
-
-LICENSE = "BSD-2-Clause"
-
 # MBL_OPTEE_VERSION should be updated to match version pointed to by SRCREV
-MBL_OPTEE_VERSION = "3.6.0"
+MBL_OPTEE_VERSION = "3.7.0"
 
-SRCREV="f398d4923da875370149ffee45c963d7adb41495"
+SRCREV="a2fa5018cb595a9cd9ab62e82c7485ca57a62084"
 SRC_URI="git://github.com/OP-TEE/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
-file://0004-remove-extra-param-from-print_stack_arm64.patch \
 "
+
 SRC_URI_append_imx6ul-pico-mbl=" \
 	file://0001-core-imx-imx6ul-Define-the-base-address-of-UART6.patch \
 	file://0002-plat-imx-add-i.MX6UL-Pico-Pi-MBL-support.patch \
@@ -27,7 +23,7 @@ SRC_URI_append_imx8mmevk-mbl = " file://0001-generic_boot-init-new-dtb-if-CFG_DT
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/optee-os:"
 
-LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=c1f21c4f72f372ef38a5a4aee55ec173"
+#LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=c1f21c4f72f372ef38a5a4aee55ec173"
 OPTEEMACHINE_imx7s-warp-mbl="imx-mx7swarp7_mbl"
 OPTEEMACHINE_imx7d-pico-mbl="imx-mx7dpico_mbl"
 OPTEEMACHINE_imx8mmevk-mbl = "imx-imx8mmevk"
@@ -37,7 +33,7 @@ OPTEEOUTPUTMACHINE_imx="imx"
 OPTEEMACHINE_raspberrypi3-mbl="rpi3"
 OPTEEOUTPUTMACHINE_raspberrypi3-mbl="rpi3"
 
-OPTEE_ARCH = "arm32"
+#OPTEE_ARCH = "arm32"
 
 # CFG_DT
 #    Enable device tree support.

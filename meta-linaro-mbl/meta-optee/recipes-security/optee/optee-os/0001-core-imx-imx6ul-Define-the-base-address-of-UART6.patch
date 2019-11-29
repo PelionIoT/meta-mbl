@@ -7,14 +7,14 @@ This patch defines the base address of UART6 on the i.MX6 series.
 
 Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 ---
- core/arch/arm/plat-imx/imx-regs.h | 1 +
+ core/arch/arm/plat-imx/registers/imx6.h | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/core/arch/arm/plat-imx/imx-regs.h b/core/arch/arm/plat-imx/imx-regs.h
+diff --git a/core/arch/arm/plat-imx/registers/imx6.h b/core/arch/arm/plat-imx/registers/imx6.h
 index e1dafff..c577865 100644
---- a/core/arch/arm/plat-imx/imx-regs.h
-+++ b/core/arch/arm/plat-imx/imx-regs.h
-@@ -56,6 +56,7 @@
+--- a/core/arch/arm/plat-imx/registers/imx6.h
++++ b/core/arch/arm/plat-imx/registers/imx6.h
+@@ -59,6 +59,7 @@
  #define UART3_BASE			0x021EC000
  #define UART4_BASE			0x021F0000
  #define UART5_BASE			0x021F4000

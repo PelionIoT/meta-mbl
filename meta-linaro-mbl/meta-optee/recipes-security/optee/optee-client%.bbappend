@@ -5,7 +5,8 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/optee-client:"
 SRC_URI += "file://init.d.optee"
 
-SRCREV = "1cdf49d9259ad83c3fbdf416e5ea223a18a28da8"
+# Version 3.7.0
+SRCREV = "bc0ec8ce1e4dc5ae23f4737ef659338b7cd408fe"
 
 inherit update-rc.d
 

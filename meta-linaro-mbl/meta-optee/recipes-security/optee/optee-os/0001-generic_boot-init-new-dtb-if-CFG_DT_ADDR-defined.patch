@@ -19,7 +19,7 @@ diff --git a/core/arch/arm/kernel/generic_boot.c b/core/arch/arm/kernel/generic_
 index 2757b1f..fbd8166 100644
 --- a/core/arch/arm/kernel/generic_boot.c
 +++ b/core/arch/arm/kernel/generic_boot.c
-@@ -564,12 +564,14 @@ static int init_dt_overlay(struct dt_descriptor *dt, int __maybe_unused dt_size)
+@@ -581,12 +581,14 @@ static int init_dt_overlay(struct dt_descriptor *dt, int __maybe_unused dt_size)
  	int fragment;
  	int ret;
  

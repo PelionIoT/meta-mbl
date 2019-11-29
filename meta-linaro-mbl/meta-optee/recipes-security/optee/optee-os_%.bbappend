@@ -8,6 +8,10 @@ DEPENDS_append_raspberrypi3-mbl = " arm-aarch64-toolchain-native "
 # MBL_OPTEE_VERSION should be updated to match version pointed to by SRCREV
 MBL_OPTEE_VERSION = "3.7.0"
 
+# Be more specific than BSD for license
+LICENSE = "BSD-2-Clause"
+LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=c1f21c4f72f372ef38a5a4aee55ec173"
+
 SRCREV="a2fa5018cb595a9cd9ab62e82c7485ca57a62084"
 SRC_URI="git://github.com/OP-TEE/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
@@ -23,7 +27,6 @@ SRC_URI_append_imx8mmevk-mbl = " file://0001-generic_boot-init-new-dtb-if-CFG_DT
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/optee-os:"
 
-#LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=c1f21c4f72f372ef38a5a4aee55ec173"
 OPTEEMACHINE_imx7s-warp-mbl="imx-mx7swarp7_mbl"
 OPTEEMACHINE_imx7d-pico-mbl="imx-mx7dpico_mbl"
 OPTEEMACHINE_imx8mmevk-mbl = "imx-imx8mmevk"

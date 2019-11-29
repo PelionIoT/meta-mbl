@@ -1,11 +1,9 @@
-# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+# Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: MIT
 
-SRC_URI = "git://github.com/OP-TEE/optee_test.git;protocol=https"
-
-# Tip of tree @ Version 3.6 for imx7 and rpi
-SRCREV="40aacb6dc33bbf6ee329f40274bfe7bb438bbf53"
+# Version 3.7.0
+SRCREV="227d6f4c40eaa6f84fe049b9e48c7b27ad7fab08"
 
 # Tell the xtest makefile to link against 32 bit openssl when verifying TAs
 EXTRA_OEMAKE_append = " COMPILE_NS_USER=32 "

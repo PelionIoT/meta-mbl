@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Arm Limited and Contributors. All rights reserved.
+# Copyright (c) 2019 Arm Limited and Contributors. All rights reserved.
 #
 # SPDX-License-Identifier: MIT
 

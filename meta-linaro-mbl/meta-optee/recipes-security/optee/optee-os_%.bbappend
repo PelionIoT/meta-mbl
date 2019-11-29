@@ -39,7 +39,8 @@ OPTEEOUTPUTMACHINE_imx="imx"
 OPTEEMACHINE_raspberrypi3-mbl="rpi3"
 OPTEEOUTPUTMACHINE_raspberrypi3-mbl="rpi3"
 
-#OPTEE_ARCH = "arm32"
+# Build output directory
+OPTEE_ARCH = "arm32"
 
 # CFG_DT
 #    Enable device tree support.

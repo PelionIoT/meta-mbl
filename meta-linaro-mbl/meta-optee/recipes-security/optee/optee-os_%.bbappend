@@ -20,8 +20,11 @@ file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 SRC_URI_append_imx6ul-pico-mbl=" \
 	file://0001-core-imx-imx6ul-Define-the-base-address-of-UART6.patch \
 	file://0002-plat-imx-add-i.MX6UL-Pico-Pi-MBL-support.patch \
-	file://0003-core-imx-Use-core_mmu_get_va-to-access-CAAM-regs.patch \
 "
+
+# XX - Try without:
+#	file://0003-core-imx-Use-core_mmu_get_va-to-access-CAAM-regs.patch \
+#
 
 SRC_URI_append_imx8mmevk-mbl = " file://0001-generic_boot-init-new-dtb-if-CFG_DT_ADDR-defined.patch"
 

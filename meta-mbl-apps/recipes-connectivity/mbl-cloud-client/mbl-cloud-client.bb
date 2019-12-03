@@ -19,8 +19,6 @@ SRC_URI_COMMON = "file://yocto-toolchain.cmake \
 
 # specific sources for the mbl-cloud-client public version
 SRC_URI_MBL_CLOUD_CLIENT_PUBLIC = "${SRC_URI_MBL_CORE_REPO} \
-  file://arg_too_long_fix_1.patch;patchdir=${S} \
-  file://arg_too_long_fix_2.patch;patchdir=${S}/cloud-services/mbl-cloud-client/mbed-cloud-client \
   file://linux-paths-update-client-pal-filesystem.patch;patchdir=${S}/cloud-services/mbl-cloud-client/mbed-cloud-client \
   file://check-min-pthread-stack-size.patch;patchdir=${S}/cloud-services/mbl-cloud-client/mbed-cloud-client \
   "

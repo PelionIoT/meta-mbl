@@ -6,6 +6,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/optee-client:"
 SRC_URI += "file://init.d.optee"
 
 SRCREV = "1cdf49d9259ad83c3fbdf416e5ea223a18a28da8"
+PV = "3.6.0+git${SRCPV}"
 
 inherit update-rc.d
 

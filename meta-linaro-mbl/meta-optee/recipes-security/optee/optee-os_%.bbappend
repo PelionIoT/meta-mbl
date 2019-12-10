@@ -13,6 +13,8 @@ LICENSE = "BSD-2-Clause"
 MBL_OPTEE_VERSION = "3.6.0"
 
 SRCREV="f398d4923da875370149ffee45c963d7adb41495"
+PV = "3.6.0+git${SRCPV}"
+
 SRC_URI="git://github.com/OP-TEE/optee_os.git;protocol=https;nobranch=1 \
 file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
 file://0004-remove-extra-param-from-print_stack_arm64.patch \

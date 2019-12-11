@@ -83,28 +83,27 @@ def get_part_number_col(d, part_name, bank):
 
 def get_name_col(d, part_name, bank):
     """
-    Get the content of the "Name/label" table cell for the given partition name
+    Get the content of the "Name" table cell for the given partition name
     and bank.
     """
-    label_str = ""
-    name_str = ""
-    if part_name == "WKS_BOOTLOADER1":
-        name_str = "Bootloader slot 1"
-    elif part_name == "WKS_BOOTLOADER2":
-        name_str = "Bootloader slot 2"
-    elif part_name == "BANK_AND_UPDATE_STATE":
-        name_str = "Bank/Update state"
-    else:
-        label_str = get_var_for_part(d, "LABEL", part_name)
-        name_str = label_str or part_name
+    display_names = {
+        "WKS_BOOTLOADER1": "Bootloader slot 1",
+        "WKS_BOOTLOADER2": "Bootloader slot 2",
+        "BANK_AND_UPDATE_STATE": "Bank/Update state",
+        "WKS_BOOTLOADER_FS": "Bootloader FS slot",
+        "BOOT": "Boot",
+        "ROOT": "Rootfs",
+        "FACTORY_CONFIG": "Factory config",
+        "CONFIG": "Config",
+        "LOG": "Log",
+        "SCRATCH": "Scratch",
+        "HOME": "Home",
+    }
 
     bank_str = ""
     if int(get_var_for_part(d, "IS_BANKED", part_name, default="0")):
-        if label_str:
-            bank_str = str(bank)
-        else:
-            bank_str = " (Bank {})".format(bank)
-    return "{}{}".format(name_str, bank_str)
+        bank_str = " (Bank {})".format(bank)
+    return "{}{}".format(display_names[part_name], bank_str)
 
 
 def get_offset_col(d, part_name, bank):
@@ -189,7 +188,7 @@ def get_notes_col(d, part_name, bank):
 # a function to get the content for a cell in that column.
 COLUMN_SPECS = (
     ("Number", get_part_number_col),
-    ("Label/Name", get_name_col),
+    ("Name", get_name_col),
     ("Offset", get_offset_col),
     ("Size", get_size_col),
     ("Partition type", get_partition_type_col),

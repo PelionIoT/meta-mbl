@@ -9,12 +9,15 @@ import logging
 import lzma
 import shutil
 import tarfile
+import gzip
 
 import mbl.util.fileutil as futil
 
 
 class PayloadImage(abc.ABC):
     """ABC for creating image files for components in an update payload."""
+
+    IMAGE_COMPRESSION_TYPE = ""
 
     @property
     def image_type(self):
@@ -42,6 +45,18 @@ class PayloadImage(abc.ABC):
     def image_format_version(self):
         """Get the image's format version."""
         return self.IMAGE_FORMAT_VERSION
+
+    @property
+    def compression_type(self):
+        """
+        Get the image's compression type.
+
+        The image's compression type is either zlib or zstd. Which are the
+        only compression algorithms swupdate knows about. Images which use
+        one of the known compression types must set IMAGE_COMPRESSION_TYPE
+        to either 'zlib' or 'zstd'.
+        """
+        return self.IMAGE_COMPRESSION_TYPE
 
     @abc.abstractmethod
     def stage(self, staging_dir):
@@ -102,6 +117,20 @@ def stage_single_file_with_compression(staging_dir, archived_file_spec):
     out_path = staging_dir / archived_file_spec.archived_path
     with archived_file_spec.path.open("rb") as in_file:
         with lzma.open(str(out_path), "w") as out_file:
+            for chunk in futil.read_chunks(in_file):
+                out_file.write(chunk)
+
+
+def stage_single_file_with_gzip_compression(staging_dir, archived_file_spec):
+    """Stage a single file when gzip compression is required."""
+    logging.info(
+        "Adding {} to payload as {}".format(
+            archived_file_spec.path, archived_file_spec.archived_path
+        )
+    )
+    out_path = staging_dir / archived_file_spec.archived_path
+    with archived_file_spec.path.open("rb") as in_file:
+        with gzip.open(str(out_path), "w") as out_file:
             for chunk in futil.read_chunks(in_file):
                 out_file.write(chunk)
 

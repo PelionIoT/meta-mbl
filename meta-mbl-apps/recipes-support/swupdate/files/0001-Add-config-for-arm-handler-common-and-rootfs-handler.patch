@@ -1,0 +1,23 @@
+From 2af15b4355b215b02cdd10acb4dfadeb24ec62dc Mon Sep 17 00:00:00 2001
+From: Rob Walton <rob.walton@arm.com>
+Date: Mon, 25 Nov 2019 20:36:11 +0000
+Subject: [PATCH] Add config for arm handler common and rootfs handler
+
+Signed-off-by: Rob Walton <rob.walton@arm.com>
+---
+ handlers/Config.in | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/handlers/Config.in b/handlers/Config.in
+index 91d43f3..bf6e991 100644
+--- a/handlers/Config.in
++++ b/handlers/Config.in
+@@ -246,4 +246,8 @@ config UCFW_OLD_LIBGPIOD
+ 	  Rather there is no way to get this changes from the library
+ 	  at build time.
+ 
++config ARMHANDLERS
++    bool "enable arm update handlers"
++    default y
++
+ endmenu

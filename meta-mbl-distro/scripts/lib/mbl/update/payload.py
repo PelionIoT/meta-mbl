@@ -13,7 +13,7 @@ import mbl.update.payloadbuilder as payloadbuilder
 import mbl.update.testinfo as testinfo
 import mbl.util.tinfoilutil as tutil
 
-CURRENT_PAYLOAD_FORMAT_VERSION = 3
+CURRENT_PAYLOAD_FORMAT_VERSION = 4
 
 
 class UpdatePayload:

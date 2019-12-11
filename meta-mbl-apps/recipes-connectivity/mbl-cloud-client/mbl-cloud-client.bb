@@ -68,7 +68,6 @@ FILES_${PN}-update = "\
     /opt/arm/bootloader_installer.sh \
     /opt/arm/boot_partition_installer.sh \
     /opt/arm/apps_installer.sh \
-    /opt/arm/rootfs_installer.sh \
     ${libdir}/lua/5.3/swupdate_handlers.lua \
 "
 
@@ -136,8 +135,6 @@ do_configure() {
           -DBOOTFLAGS_DIR="${MBL_BOOTFLAGS_DIR}" \
           -DUPDATE_PAYLOAD_DIR="${MBL_SCRATCH_DIR}" \
           -DLOG_DIR="${localstatedir}/log" \
-          -DROOTFS1_LABEL="${MBL_ROOT_LABEL}1" \
-          -DROOTFS2_LABEL="${MBL_ROOT_LABEL}2" \
           -DROOTFS_TYPE="${MBL_ROOT_FSTYPE}" \
           -DFACTORY_CONFIG_PARTITION="${MBL_FACTORY_CONFIG_DIR}"
 
@@ -162,7 +159,6 @@ do_install() {
     install -m 755 "${output_dir}/mbl-cloud-client/scripts/arm_update_active_details.sh" "${D}/opt/arm"
     install -m 755 "${output_dir}/mbl-cloud-client/scripts/arm_update_common.sh" "${D}/opt/arm"
 
-    install -m 755 "${output_dir}/mbl-cloud-client/scripts/rootfs_installer.sh" "${D}/opt/arm"
     install -m 755 "${output_dir}/mbl-cloud-client/scripts/bootloader_installer.sh" "${D}/opt/arm"
     install -m 755 "${output_dir}/mbl-cloud-client/scripts/apps_installer.sh" "${D}/opt/arm"
     install -m 755 "${output_dir}/mbl-cloud-client/scripts/boot_partition_installer.sh" "${D}/opt/arm"

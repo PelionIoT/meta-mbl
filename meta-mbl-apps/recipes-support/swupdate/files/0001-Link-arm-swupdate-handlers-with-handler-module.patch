@@ -1,0 +1,22 @@
+From 53f7d0f16bdef7dc9bacccc4711291fe0d5229c7 Mon Sep 17 00:00:00 2001
+From: Rob Walton <rob.walton@arm.com>
+Date: Wed, 4 Dec 2019 14:08:52 +0000
+Subject: [PATCH] Link arm swupdate handlers with handler module
+
+Signed-off-by: Rob Walton <rob.walton@arm.com>
+---
+ handlers/Makefile | 1 +
+ 1 file changed, 1 insertions(+)
+
+diff --git a/handlers/Makefile b/handlers/Makefile
+index 61e4f76..ebd02f1 100644
+--- a/handlers/Makefile
++++ b/handlers/Makefile
+@@ -21,3 +21,4 @@ obj-$(CONFIG_SSBLSWITCH) += ssbl_handler.o
+ obj-$(CONFIG_SWUFORWARDER_HANDLER) += swuforward_handler.o swuforward-ws.o
+ obj-$(CONFIG_UBIVOL)	+= ubivol_handler.o
+ obj-$(CONFIG_UCFWHANDLER)	+= ucfw_handler.o
++obj-$(CONFIG_ARMHANDLERS) += arm-handlers.o
+-- 
+2.7.4
+

@@ -219,7 +219,6 @@ MBL_PARTITION_NAMES += "BOOT"
 # ROOT (file system; two banks)
 # ------------------------------------------------------------------------------
 MBL_ROOT_MOUNT_POINT = "/"
-MBL_ROOT_LABEL ?= "rootfs"
 MBL_ROOT_DEFAULT_SIZE_MiB ?= "512"
 MBL_ROOT_IS_BANKED = "1"
 MBL_PARTITION_NAMES += "ROOT"
@@ -583,7 +582,7 @@ python __anonymous() {
         prev_part_info = part_info
         if not part_info["is_fs"]:
             continue
-        part_info["label"] = _process_var_with_default(d, part_name, "LABEL")
+        part_info["label"] = d.getVar("MBL_{}_LABEL".format(part_name), True)
         part_info["mount_point"] = _process_var_with_default(d, part_name, "MOUNT_POINT")
         part_info["fstype"] = _process_var_with_default(d, part_name, "FSTYPE")
         part_info["mount_opts"] = _process_var_with_default(d, part_name, "MOUNT_OPTS")

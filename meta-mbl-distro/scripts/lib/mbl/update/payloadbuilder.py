@@ -35,6 +35,14 @@ class PayloadBuilder:
             ri.MBL_ROOTFS_ID: ri.RootfsImageV3,
             ai.MBL_APPS_ID: ai.AppsImageV3,
         },
+        4: {
+            pa.MBL_PAYLOAD_ARCHIVER_ID: pa.PayloadArchiverV3,
+            wi.MBL_WKS_BOOTLOADER1_ID: wi.WksBootloader1ImageV3,
+            wi.MBL_WKS_BOOTLOADER2_ID: wi.WksBootloader2ImageV3,
+            bi.MBL_BOOT_ID: bi.BootImageV3,
+            ri.MBL_ROOTFS_ID: ri.RootfsImageV4,
+            ai.MBL_APPS_ID: ai.AppsImageV3,
+        },
     }
 
     def __init__(self, payload_format_version, tinfoil):

@@ -19,6 +19,8 @@ SRC_URI = "git://github.com/ARMmbed/linux-mbl.git;protocol=https;nobranch=1 \
            file://0001-menuconfig-check-lxdiaglog.sh-Allow-specification-of.patch \
            file://watchdog-mbl.cfg \
           "
+LIC_FILES_CHKSUM = "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
+
 SRCBRANCH ?= ""
 LOCALVERSION = "mbl"
 

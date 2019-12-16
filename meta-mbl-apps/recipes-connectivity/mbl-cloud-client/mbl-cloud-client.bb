@@ -179,13 +179,16 @@ MBL_LOGROTATE_CONFIG_LOG_PATH[mbl-cloud-client] = "/var/log/mbl-cloud-client.log
 MBL_LOGROTATE_CONFIG_SIZE[mbl-cloud-client] ?= "1M"
 MBL_LOGROTATE_CONFIG_ROTATE[mbl-cloud-client] ?= "4"
 MBL_LOGROTATE_CONFIG_POSTROTATE[mbl-cloud-client] = "/usr/bin/killall -HUP mbl-cloud-client"
+MBL_LOGROTATE_CONFIG_NOARG_OPTS[mbl-cloud-client] = "missingok"
 
 MBL_LOGROTATE_CONFIG_LOG_PATH[arm_update_active_details] = "/var/log/arm_update_active_details.log"
 MBL_LOGROTATE_CONFIG_SIZE[arm_update_active_details] ?= "128k"
 MBL_LOGROTATE_CONFIG_ROTATE[arm_update_active_details] ?= "4"
+MBL_LOGROTATE_CONFIG_NOARG_OPTS[arm_update_active_details] = "missingok"
 
 MBL_LOGROTATE_CONFIG_LOG_PATH[arm_update_activate] = "/var/log/arm_update_activate.log"
 MBL_LOGROTATE_CONFIG_SIZE[arm_update_activate] ?= "128k"
 MBL_LOGROTATE_CONFIG_ROTATE[arm_update_activate] ?= "4"
+MBL_LOGROTATE_CONFIG_NOARG_OPTS[arm_update_activate] = "missingok"
 
 inherit mbl-logrotate-config

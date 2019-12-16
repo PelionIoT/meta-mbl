@@ -23,6 +23,9 @@
 # * MBL_LOGROTATE_CONFIG_SIZE[log_name]: the minimum size a log must be before
 #   it is rotated (see logrotate documentation for "size").
 #
+# * MBL_LOGROTATE_CONFIG_NOARG_OPTS[log_name]: for options with no arguments,
+#   for example "missingok", "compress", "copytruncate" etc.
+#
 # * MBL_LOGROTATE_CONFIG_POSTROTATE[log_name]: a semicolon delimited list of
 #   commands to run after a log file has been rotated (see logrotate
 #   documentation for "postrotate")
@@ -47,6 +50,7 @@
 # MBL_LOGROTATE_CONFIG_SIZE[mbl-cloud-client] ?= "2M"
 # MBL_LOGROTATE_CONFIG_ROTATE[mbl-cloud-client] ?= "5"
 # MBL_LOGROTATE_CONFIG_POSTROTATE[mbl-cloud-client] = "/usr/bin/killall -HUP mbl-cloud-client"
+# MBL_LOGROTATE_CONFIG_NOARG_OPTS[mbl-cloud-client] = "missingok"
 # inherit mbl-logrotate-config
 #
 
@@ -139,6 +143,13 @@ def mbl_logrotate_config_get_fields(d, log_name):
         d, "SIZE", log_name=log_name, pattern=r'^\d+[kMG]$'
     ).strip()
 
+
+    noarg_opt = mbl_logrotate_config_get_var(
+        d, "NOARG_OPTS", log_name=log_name, mandatory=False
+    )
+    if noarg_opt:
+        normal_fields["noarg_opt"] = str(noarg_opt).strip().split(' ')
+
     postrotate = mbl_logrotate_config_get_var(
         d, "POSTROTATE", log_name=log_name, mandatory=False
     )
@@ -169,7 +180,11 @@ def mbl_logrotate_config_write(d, log_name):
         file.write(" {\n")
 
         for key, value in normal_fields.items():
-            file.write("{}{} {}\n".format(indent, key, value))
+            if key == 'noarg_opt':
+                for noarg_opt in value:
+                    file.write("{}{}\n".format(indent, noarg_opt))
+            else:
+                file.write("{}{} {}\n".format(indent, key, value))
 
         for key, value in script_fields.items():
             file.write("{}{}\n".format(indent, key))

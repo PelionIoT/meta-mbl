@@ -20,4 +20,5 @@ MBL_LOGROTATE_CONFIG_LOG_NAMES = "dockerd"
 MBL_LOGROTATE_CONFIG_LOG_PATH[dockerd] = "/var/log/dockerd"
 MBL_LOGROTATE_CONFIG_ROTATE[dockerd] = "4"
 MBL_LOGROTATE_CONFIG_SIZE[dockerd] = "1M"
+MBL_LOGROTATE_CONFIG_NOARG_OPTS[dockerd] = "missingok"
 inherit mbl-logrotate-config

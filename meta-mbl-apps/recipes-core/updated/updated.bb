@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 
-SUMMARY = "UpdateD is a daemon which runs on the target and listens for update requests"
+SUMMARY = "UpdateD is a daemon which coordinates firmware updates"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${WORKDIR}/git/LICENSE.BSD-3-Clause;md5=1a8858961a0fa364bc79169ca26815db"
 SRC_URI = "\
@@ -13,6 +13,8 @@ SRC_URI = "\
 SRCREV = "${SRCREV_MBL_CORE_REPO}"
 SRCNAME = "updated"
 S = "${WORKDIR}/git/firmware-management/${SRCNAME}"
+
+DEPENDS += "systemd"
 
 inherit cmake
 inherit systemd

@@ -8,6 +8,7 @@ After=mbl-dbus-cloud.service
 
 [Service]
 ExecStart=/usr/bin/updated
+Type=notify
 
 [Install]
 WantedBy=multi-user.target

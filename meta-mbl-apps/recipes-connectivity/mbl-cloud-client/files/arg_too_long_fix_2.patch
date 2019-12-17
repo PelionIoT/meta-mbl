@@ -1,8 +1,8 @@
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 2719b40..314b4e2 100644
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -25,13 +25,18 @@ add_definitions(-DMBED_CONF_MBED_CLIENT_SN_COAP_DUPLICATION_MAX_MSGS_COUNT=4)
+Index: mbed-cloud-client/CMakeLists.txt
+===================================================================
+--- mbed-cloud-client.orig/CMakeLists.txt
++++ mbed-cloud-client/CMakeLists.txt
+@@ -27,13 +27,18 @@ add_definitions(-DSN_COAP_REDUCE_BLOCKWI
  
  project(mbedCloudClient)
  
@@ -22,7 +22,7 @@ index 2719b40..314b4e2 100644
  
  # mbed-client
  
-@@ -47,7 +52,7 @@ ADD_GLOBALDIR(${MBED_CLIENT_SOURCE_DIR}/mbed-client-c/source/include)
+@@ -49,7 +54,7 @@ ADD_GLOBALDIR(${MBED_CLIENT_SOURCE_DIR}/
  ADD_GLOBALDIR(${MBED_CLIENT_SOURCE_DIR}/mbed-client-classic)
  ADD_GLOBALDIR(${MBED_CLIENT_SOURCE_DIR}/mbed-client-classic/mbed-client-classic)
  ADD_GLOBALDIR(${MBED_CLIENT_SOURCE_DIR}/mbed-client-mbed-tls)
@@ -31,8 +31,7 @@ index 2719b40..314b4e2 100644
  
  # pal headers
  
-@@ -61,21 +66,21 @@ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-coap)
- ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-coap/mbed-coap)
+@@ -65,13 +70,13 @@ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR
  ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-coap/source/include)
  ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace)
  ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace/mbed-trace)
@@ -48,7 +47,8 @@ index 2719b40..314b4e2 100644
 +# ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/sal-stack-nanostack-eventloop)
  ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/sal-stack-nanostack-eventloop/nanostack-event-loop)
  ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/ns-hal-pal)
- 
+ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR}/tinycbor/src)
+@@ -79,7 +84,7 @@ ADD_GLOBALDIR(${CMAKE_CURRENT_SOURCE_DIR
  # factory-client
  
  SET(FACTORY_CLIENT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/factory-configurator-client)
@@ -57,7 +57,7 @@ index 2719b40..314b4e2 100644
  
  SET(FCC_MODULES
      ftcd-comm-base
-@@ -101,27 +106,27 @@ SET(FCC_MODULES
+@@ -104,27 +109,27 @@ SET(FCC_MODULES
  #ENDFOREACH()
  
  include_directories(${FACTORY_CLIENT_SOURCE_DIR}/factory-configurator-client/source/include)
@@ -74,6 +74,7 @@ index 2719b40..314b4e2 100644
 +# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/secure_store/secure_store)
 +# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/storage)
  include_directories(${FACTORY_CLIENT_SOURCE_DIR}/storage/storage)
+ include_directories(${FACTORY_CLIENT_SOURCE_DIR}/storage/source/include)
  include_directories(${FACTORY_CLIENT_SOURCE_DIR}/key-config-manager)
  include_directories(${FACTORY_CLIENT_SOURCE_DIR}/key-config-manager/source/include)
 -include_directories(${FACTORY_CLIENT_SOURCE_DIR}/utils)
@@ -92,7 +93,6 @@ index 2719b40..314b4e2 100644
 +# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/mbed-client-esfs/source-pal/linux)
 +# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/crypto-service/crypto-service)
 +# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/crypto-service/source/include)
- include_directories(${FACTORY_CLIENT_SOURCE_DIR}/secsrv-cbor/secsrv-cbor)
  include_directories(${FACTORY_CLIENT_SOURCE_DIR}/fcc-bundle-handler/fcc-bundle-handler)
 -include_directories(${FACTORY_CLIENT_SOURCE_DIR}/fcc-bundle-handler/source/include)
 +# include_directories(${FACTORY_CLIENT_SOURCE_DIR}/fcc-bundle-handler/source/include)

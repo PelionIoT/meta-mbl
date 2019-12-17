@@ -1,0 +1,13 @@
+Index: git/cloud-services/mbl-cloud-client/mbed-cloud-client/tinycbor/src/cborvalidation.c
+===================================================================
+--- git.orig/cloud-services/mbl-cloud-client/mbed-cloud-client/tinycbor/src/cborvalidation.c
++++ git/cloud-services/mbl-cloud-client/mbed-cloud-client/tinycbor/src/cborvalidation.c
+@@ -436,7 +436,7 @@ static CborError validate_container(Cbor
+ {
+     CborError err;
+     const uint8_t *previous = NULL;
+-    const uint8_t *previous_end;
++    const uint8_t *previous_end = NULL;
+ 
+     if (!recursionLeft)
+         return CborErrorNestingTooDeep;

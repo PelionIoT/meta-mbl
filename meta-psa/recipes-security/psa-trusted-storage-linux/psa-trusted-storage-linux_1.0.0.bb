@@ -23,7 +23,7 @@ LIC_FILES_CHKSUM = " \
     "
 
 SRC_URI = "git://github.com/ARMmbed/psa_trusted_storage_linux.git;protocol=https;nobranch=1"
-SRCREV = "7b67400f58dddc4f5ff419df3575749b84b42abf"
+SRCREV = "1547b28800e8e04cc1c6293a29c8e500f8851107"
 
 PACKAGES =+ "${PN}-test"
 
@@ -32,6 +32,7 @@ S = "${WORKDIR}/git"
 
 FILES_${PN} += "${bindir}/psa-ecryptfs-init.sh"
 FILES_${PN}-test = "${bindir}/psa-storage-example-app"
+TARGET_CFLAGS += "-DPSA_STORAGE_FILE_C_STORAGE_PREFIX=/home/root/secret"
 
 do_install () {
     oe_runmake install prefix=${D} bindir=${D}${bindir} libdir=${D}${libdir} includedir=${D}${includedir} systemd_system_unitdir=${D}${systemd_system_unitdir}

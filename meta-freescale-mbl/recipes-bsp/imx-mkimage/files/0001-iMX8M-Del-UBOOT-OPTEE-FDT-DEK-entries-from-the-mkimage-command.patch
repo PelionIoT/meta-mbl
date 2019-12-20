@@ -1,0 +1,131 @@
+Index: git/iMX8M/mkimage_fit_atf.sh
+===================================================================
+--- git.orig/iMX8M/mkimage_fit_atf.sh
++++ git/iMX8M/mkimage_fit_atf.sh
+@@ -23,7 +23,6 @@ else
+ fi
+ 
+ BL32="tee.bin"
+-LOADABLES="\"atf@1\""
+ 
+ if [ ! -f $BL32 ]; then
+ 	BL32=/dev/null
+@@ -31,18 +30,9 @@ else
+ 	echo "Building with TEE support, make sure your bl31 is compiled with spd. If you do not want tee, please delete tee.bin" >&2
+ 	echo "tee.bin size: " >&2
+ 	ls -lct tee.bin | awk '{print $5}' >&2
+-	LOADABLES="$LOADABLES, \"tee@1\""
+ fi
+ 
+ BL33="u-boot-nodtb.bin"
+-DEK_BLOB="dek_blob_fit_dummy.bin"
+-
+-if [ ! -f $DEK_BLOB ]; then
+-	DEK_BLOB=/dev/null
+-else
+-	echo "Building with encrypted boot support, make sure to replace DEK Blob in final image." >&2
+-	LOADABLES="\"dek_blob@1\", $LOADABLES"
+-fi
+ 
+ if [ ! -f $BL33 ]; then
+ 	echo "ERROR: $BL33 file NOT found" >&2
+@@ -66,31 +56,6 @@ cat << __HEADER_EOF
+ 	description = "Configuration to load ATF before U-Boot";
+ 
+ 	images {
+-		uboot@1 {
+-			description = "U-Boot (64-bit)";
+-			data = /incbin/("$BL33");
+-			type = "standalone";
+-			arch = "arm64";
+-			compression = "none";
+-			load = <0x40200000>;
+-		};
+-__HEADER_EOF
+-
+-cnt=1
+-for dtname in $*
+-do
+-	cat << __FDT_IMAGE_EOF
+-		fdt@$cnt {
+-			description = "$(basename $dtname .dtb)";
+-			data = /incbin/("$dtname");
+-			type = "flat_dt";
+-			compression = "none";
+-		};
+-__FDT_IMAGE_EOF
+-cnt=$((cnt+1))
+-done
+-
+-cat << __HEADER_EOF
+ 		atf@1 {
+ 			description = "ARM Trusted Firmware";
+ 			data = /incbin/("$BL31");
+@@ -102,31 +67,6 @@ cat << __HEADER_EOF
+ 		};
+ __HEADER_EOF
+ 
+-if [ -f $BL32 ]; then
+-cat << __HEADER_EOF
+-		tee@1 {
+-			description = "TEE firmware";
+-			data = /incbin/("$BL32");
+-			type = "firmware";
+-			arch = "arm64";
+-			compression = "none";
+-			load = <$TEE_LOAD_ADDR>;
+-			entry = <$TEE_LOAD_ADDR>;
+-		};
+-__HEADER_EOF
+-fi
+-
+-if [ -f $DEK_BLOB ]; then
+-cat << __HEADER_EOF
+-		dek_blob@1 {
+-			description = "dek_blob";
+-			data = /incbin/("$DEK_BLOB");
+-			type = "script";
+-			compression = "none";
+-			load = <$DEK_BLOB_LOAD_ADDR>;
+-		};
+-__HEADER_EOF
+-fi
+ 
+ cat << __CONF_HEADER_EOF
+ 	};
+@@ -139,33 +79,19 @@ cnt=1
+ for dtname in $*
+ do
+ if [ -f $BL32 ]; then
+-if [ $ROLLBACK_INDEX_IN_FIT ]; then
+ cat << __CONF_SECTION_EOF
+ 		config@$cnt {
+ 			description = "$(basename $dtname .dtb)";
+ 			firmware = "uboot@1";
+-			loadables = $LOADABLES;
+-			fdt = "fdt@$cnt";
+-			rbindex = "$ROLLBACK_INDEX_IN_FIT";
++			loadables = "atf@1";
+ 		};
+ __CONF_SECTION_EOF
+ else
+-cat << __CONF_SECTION_EOF
+-		config@$cnt {
+-			description = "$(basename $dtname .dtb)";
+-			firmware = "uboot@1";
+-			loadables = $LOADABLES;
+-			fdt = "fdt@$cnt";
+-		};
+-__CONF_SECTION_EOF
+-fi
+-else
+ cat << __CONF_SECTION1_EOF
+ 		config@$cnt {
+ 			description = "$(basename $dtname .dtb)";
+ 			firmware = "uboot@1";
+-			loadables = $LOADABLES;
+-			fdt = "fdt@$cnt";
++			loadables = "atf@1";
+ 		};
+ __CONF_SECTION1_EOF
+ fi

@@ -7,10 +7,10 @@ Subject: [PATCH] enable net without net commands kconfig
  Kconfig | 3 ---
  1 file changed, 3 deletions(-)
 
-diff --git a/Kconfig b/Kconfig
-index 1f0904f..58b5d63 100644
---- a/Kconfig
-+++ b/Kconfig
+Index: git/Kconfig
+===================================================================
+--- git.orig/Kconfig
++++ git/Kconfig
 @@ -79,15 +79,12 @@ config DISTRO_DEFAULTS
  	select CMDLINE_EDITING
  	select CMD_BOOTI if ARM64
@@ -24,6 +24,6 @@ index 1f0904f..58b5d63 100644
  	select CMD_PART if PARTITIONS
 -	select CMD_PING if CMD_NET
 -	select CMD_PXE if NET
+ 	select CMD_SYSBOOT
  	select ENV_VARS_UBOOT_CONFIG
  	select HUSH_PARSER
- 	select SUPPORT_RAW_INITRD

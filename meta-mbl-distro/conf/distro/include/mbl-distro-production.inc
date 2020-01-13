@@ -65,3 +65,8 @@ MACHINE_FEATURES_remove = "alsa apm ext2 keyboard screen touchscreen"
 
 # For production images we drop the virtual console support
 PACKAGECONFIG_remove_pn-systemd = "vconsole"
+
+# Launch our update daemon in 'development' or 'release' mode.
+# For now this just influences the log level.
+MBL_UPDATE_RELEASE_MODE ?= "release"
+PACKAGECONFIG_append_pn-updated = " ${MBL_UPDATE_RELEASE_MODE}"

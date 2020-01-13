@@ -7,7 +7,7 @@ Description=UpdateD
 After=mbl-dbus-cloud.service
 
 [Service]
-ExecStart=/usr/bin/updated
+ExecStart=/usr/bin/updated __REPLACE_ME_WITH_UPDATED_LOG_LEVEL__
 Type=notify
 
 [Install]

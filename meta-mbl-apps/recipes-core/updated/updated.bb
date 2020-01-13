@@ -14,14 +14,21 @@ SRCREV = "${SRCREV_MBL_CORE_REPO}"
 SRCNAME = "updated"
 S = "${WORKDIR}/git/firmware-management/${SRCNAME}"
 
-DEPENDS += "systemd protobuf grpc protobuf-native grpc-native"
+DEPENDS += "systemd protobuf grpc protobuf-native grpc-native spdlog"
 
 inherit cmake
 inherit systemd
 
 SYSTEMD_SERVICE_${PN} = "updated.service"
 
+PACKAGECONFIG[release] = ""
+
+UPDATED_LOG_LEVEL = "${@bb.utils.contains('PACKAGECONFIG', 'release', '-l ERROR', '-l INFO', d)}"
+
 do_install_append() {
     install -d "${D}${systemd_unitdir}/system/"
     install -m 0644 "${WORKDIR}/updated.service" "${D}${systemd_unitdir}/system/"
 }
+
+MBL_VAR_PLACEHOLDER_FILES = "${D}${systemd_unitdir}/system/updated.service"
+inherit mbl-var-placeholders

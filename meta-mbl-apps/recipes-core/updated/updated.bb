@@ -14,7 +14,7 @@ SRCREV = "${SRCREV_MBL_CORE_REPO}"
 SRCNAME = "updated"
 S = "${WORKDIR}/git/firmware-management/${SRCNAME}"
 
-DEPENDS += "systemd"
+DEPENDS += "systemd protobuf grpc protobuf-native grpc-native"
 
 inherit cmake
 inherit systemd
